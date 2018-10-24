@@ -17,6 +17,7 @@
 [submodule "src/lib/stm32lib"]
 	path = src/lib/stm32lib
 	url = https://github.com/micropython/stm32lib
+    branch = master
 [submodule "src/lib/nrfx"]
 	path = src/lib/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
