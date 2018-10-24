@@ -10,7 +10,7 @@ endif
 # to get to the top of the tree.
 
 THIS_MAKEFILE := $(lastword $(MAKEFILE_LIST))
-TOP ?= $(patsubst %/py/mkenv.mk,%,$(THIS_MAKEFILE))
+TOP := $(patsubst %/py/mkenv.mk,%,$(THIS_MAKEFILE))
 
 # Turn on increased build verbosity by defining BUILD_VERBOSE in your main
 # Makefile or in your environment. You can also use V=1 on the make command
@@ -57,6 +57,10 @@ CC += -m32
 CXX += -m32
 LD += -m32
 endif
+
+MAKE_FROZEN = $(PYTHON) $(TOP)/tools/make-frozen.py
+MPY_CROSS = $(TOP)/mpy-cross/mpy-cross
+MPY_TOOL = $(PYTHON) $(TOP)/tools/mpy-tool.py
 
 all:
 .PHONY: all
