@@ -1,4 +1,0 @@
-[submodule "third_party/micropython"]
-	path = third_party/micropython
-	url = https://github.com/micropython/micropython.git
-	branch = master
