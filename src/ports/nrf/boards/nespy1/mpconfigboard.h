@@ -24,7 +24,7 @@
  * THE SOFTWARE.
  */
 
-#define MICROPY_HW_BOARD_NAME       "PCA10056"
+#define MICROPY_HW_BOARD_NAME       "NESPY1"
 #define MICROPY_HW_MCU_NAME         "NRF52840"
 #define MICROPY_PY_SYS_PLATFORM     "nrf52840-PDK"
 
