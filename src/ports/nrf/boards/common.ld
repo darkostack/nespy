@@ -63,6 +63,18 @@ SECTIONS
         _ebss = .;         /* define a global symbol at bss end; used by startup code and GC */
     } >RAM
 
+    /* This symbol is used by the stack check library */
+    _stack = .;
+
+    .stack (NOLOAD) :
+    {
+        *(.stack)
+    } >RAM
+
+    _stack_origin = .;
+    _heap = .;
+    _eheap = ORIGIN(RAM) + LENGTH(RAM);
+
     /* Remove information from the standard libraries */
     /*
     /DISCARD/ :

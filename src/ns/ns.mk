@@ -1,7 +1,4 @@
-# Automatically include project-conf.h if found
-ifneq ("$(wildcard project-conf.h)","")
-CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
-endif
+# Network Stack core makefile
 
 INC += -I$(TOP)/ns
 INC += -I$(TOP)/ns/net
@@ -36,7 +33,6 @@ SRC_NS_LIB += $(addprefix ns/lib/,\
     ifft.c \
     list.c \
     memb.c \
-    random.c \
     ringbuf.c \
     ringbufindex.c \
     trickle-timer.c \

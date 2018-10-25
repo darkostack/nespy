@@ -82,10 +82,6 @@
 #define NULL (void *)0
 #endif /* NULL */
 
-#if !defined(__SDCC) && defined(SDCC_REVISION)
-#define __SDCC 1
-#endif
-
 #if VERBOSE_DEBUG
 #define DEBUG_PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -98,23 +94,98 @@
 #define PRINTF(...) do { } while(0)
 #endif
 
-#ifdef __SDCC
-static int
-strncasecmp(const char *s1, const char *s2, size_t n)
+// custom ANSI C functions to avoid link error when use -nostdlib -------------
+static int ns_tolower(int chr)
 {
-  /* TODO: Add case support! */
-  return strncmp(s1, s2, n);
+    return (chr >= 'A' && chr <= 'Z') ? (chr + 32) : (chr);
 }
-static int
-strcasecmp(const char *s1, const char *s2)
+
+static int ns_strncmp(const char *s1, const char *s2, size_t n)
 {
-  /* TODO: Add case support! */
-  return strcmp(s1, s2);
+    for ( ; n--; ++s1, ++s2) {
+        if (*s1 != *s2) {
+            return *s1 - *s2;
+        }
+    }
+
+    return 0;
 }
-#else
-int strcasecmp(const char *s1, const char *s2);
-int strncasecmp(const char *s1, const char *s2, size_t n);
-#endif /* __SDCC */
+
+static int ns_strcmp(const char *s1, const char *s2)
+{
+    while ((*s1 != '\0' && *s2 != '\0') && *s1 == *s2) {
+        s1++;
+        s2++;
+    }
+
+    if (*s1 == *s2) {
+        return 0; // strings are identical
+    } else {
+        return *s1 - *s2;
+    }
+}
+
+static size_t ns_strlen(const char *s)
+{
+    size_t ret;
+
+    for (ret = 0; s[ret] != 0; ret++) {
+        // empty loop
+    }
+
+    return ret;
+}
+
+static void ns_memcpy(void *dest, const void *src, size_t n)
+{
+    const char *csrc = (const char *)src;
+    char *cdest = (char *)dest;
+
+    for (int i = 0; i < n; i++) {
+        cdest[i] = csrc[i];
+    }
+}
+
+static size_t ns_strncpy(char *dest, const char *src, size_t size)
+{
+    const size_t slen = ns_strlen(src);
+
+    if (size != 0) {
+        size--;
+        if (slen < size) {
+            size = slen;
+        }
+        if (size != 0) {
+            ns_memcpy(dest, src, size);
+        }
+        dest[size] = 0;
+    }
+
+    return slen;
+}
+
+static size_t ns_strncat(char *dest, const char *src, size_t size)
+{
+    size_t len = ns_strlen(dest);
+
+    if (len < size - 1)
+    {
+        return (len + ns_strncpy(dest + len, src, size - len));
+    }
+
+    return len + ns_strlen(src);
+}
+
+// ----------------------------------------------------------------------------
+
+static int strncasecmp(const char *s1, const char *s2, size_t n)
+{
+    return ns_strncmp(s1, s2, n);
+}
+static int strcasecmp(const char *s1, const char *s2)
+{
+  return ns_strcmp(s1, s2);
+}
 
 #define UIP_UDP_BUF ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
@@ -386,7 +457,7 @@ dns_name_isequal(const unsigned char *queryptr, const char *name,
         return 0;
       }
 
-      if(tolower((unsigned int)*name++) != tolower((unsigned int)*queryptr++)) {
+      if(ns_tolower((unsigned int)*name++) != ns_tolower((unsigned int)*queryptr++)) {
         return 0;
       }
     }
@@ -585,7 +656,7 @@ mdns_prep_host_announce_packet(void)
     *queryptr++ = sizeof(*hdr);
   }
 
-  memcpy((void *)queryptr, (void *)&nsec_record, sizeof(nsec_record));
+  ns_memcpy((void *)queryptr, (void *)&nsec_record, sizeof(nsec_record));
 
   queryptr += sizeof(nsec_record);
 
@@ -808,7 +879,7 @@ newdata(void)
 
 #if !ARCH_DOESNT_NEED_ALIGNED_STRUCTS
       static struct dns_question aligned;
-      memcpy(&aligned, question, sizeof(aligned));
+      ns_memcpy(&aligned, question, sizeof(aligned));
       question = &aligned;
 #endif /* !ARCH_DOESNT_NEED_ALIGNED_STRUCTS */
 
@@ -924,7 +995,7 @@ newdata(void)
 #if !ARCH_DOESNT_NEED_ALIGNED_STRUCTS
     {
       static struct dns_answer aligned;
-      memcpy(&aligned, ans, sizeof(aligned));
+      ns_memcpy(&aligned, ans, sizeof(aligned));
       ans = &aligned;
     }
 #endif /* !ARCH_DOESNT_NEED_ALIGNED_STRUCTS */
@@ -1057,12 +1128,12 @@ newdata(void)
 void
 resolv_set_hostname(const char *hostname)
 {
-  strncpy(resolv_hostname, hostname, RESOLV_CONF_MAX_DOMAIN_NAME_SIZE);
+  ns_strncpy(resolv_hostname, hostname, RESOLV_CONF_MAX_DOMAIN_NAME_SIZE);
 
   /* Add the .local suffix if it isn't already there */
-  if(strlen(resolv_hostname) < 7 ||
-     strcasecmp(resolv_hostname + strlen(resolv_hostname) - 6, ".local") != 0) {
-    strncat(resolv_hostname, ".local", RESOLV_CONF_MAX_DOMAIN_NAME_SIZE - strlen(resolv_hostname));
+  if(ns_strlen(resolv_hostname) < 7 ||
+     strcasecmp(resolv_hostname + ns_strlen(resolv_hostname) - 6, ".local") != 0) {
+    ns_strncat(resolv_hostname, ".local", RESOLV_CONF_MAX_DOMAIN_NAME_SIZE - ns_strlen(resolv_hostname));
   }
 
   PRINTF("resolver: hostname changed to \"%s\"\n", resolv_hostname);
@@ -1210,10 +1281,10 @@ init(void)
 static const char *
 remove_trailing_dots(const char *name) {
   static char dns_name_without_dots[RESOLV_CONF_MAX_DOMAIN_NAME_SIZE + 1];
-  size_t len = strlen(name);
+  size_t len = ns_strlen(name);
 
   if(len && name[len - 1] == '.') {
-    strncpy(dns_name_without_dots, name, RESOLV_CONF_MAX_DOMAIN_NAME_SIZE);
+    ns_strncpy(dns_name_without_dots, name, RESOLV_CONF_MAX_DOMAIN_NAME_SIZE);
     while(len && (dns_name_without_dots[len - 1] == '.')) {
       dns_name_without_dots[--len] = 0;
     }
@@ -1273,14 +1344,14 @@ resolv_query(const char *name)
 
   memset(nameptr, 0, sizeof(*nameptr));
 
-  strncpy(nameptr->name, name, sizeof(nameptr->name) - 1);
+  ns_strncpy(nameptr->name, name, sizeof(nameptr->name) - 1);
   nameptr->state = STATE_NEW;
   nameptr->seqno = seqno;
   ++seqno;
 
 #if RESOLV_CONF_SUPPORTS_MDNS
   {
-    size_t name_len = strlen(name);
+    size_t name_len = ns_strlen(name);
 
     const char local_suffix[] = "local";
 
@@ -1293,7 +1364,7 @@ resolv_query(const char *name)
     }
   }
   nameptr->is_probe = (mdns_state == MDNS_STATE_PROBING) &&
-                      (0 == strcmp(nameptr->name, resolv_hostname));
+                      (0 == ns_strcmp(nameptr->name, resolv_hostname));
 #endif /* RESOLV_CONF_SUPPORTS_MDNS */
 
   /* Force check_entires() to run on our process. */
@@ -1322,7 +1393,7 @@ resolv_lookup(const char *name, uip_ipaddr_t ** ipaddr)
   name = remove_trailing_dots(name);
 
 #if UIP_CONF_LOOPBACK_INTERFACE
-  if(strcmp(name, "localhost")) {
+  if(ns_strcmp(name, "localhost")) {
     static uip_ipaddr_t loopback =
     { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 } };
@@ -1406,7 +1477,7 @@ static void
 resolv_found(char *name, uip_ipaddr_t * ipaddr)
 {
 #if RESOLV_CONF_SUPPORTS_MDNS
-  if(strncasecmp(resolv_hostname, name, strlen(resolv_hostname)) == 0 &&
+  if(strncasecmp(resolv_hostname, name, ns_strlen(resolv_hostname)) == 0 &&
      ipaddr
      && !uip_ds6_is_my_addr(ipaddr)
     ) {
@@ -1419,7 +1490,7 @@ resolv_found(char *name, uip_ipaddr_t * ipaddr)
       PRINTF("resolver: Name collision detected for \"%s\".\n", name);
 
       /* Remove the ".local" suffix. */
-      resolv_hostname[strlen(resolv_hostname) - 6] = 0;
+      resolv_hostname[ns_strlen(resolv_hostname) - 6] = 0;
 
       /* Append the last three hex parts of the link-level address. */
       for(i = 0; i < 3; ++i) {
@@ -1430,12 +1501,12 @@ resolv_found(char *name, uip_ipaddr_t * ipaddr)
         append_str[2] = (((val & 0xF) > 9) ? 'a' : '0') + (val & 0xF);
         val >>= 4;
         append_str[1] = (((val & 0xF) > 9) ? 'a' : '0') + (val & 0xF);
-        strncat(resolv_hostname, append_str,
-                sizeof(resolv_hostname) - strlen(resolv_hostname) - 1); /* -1 in order to fit the terminating null byte. */
+        ns_strncat(resolv_hostname, append_str,
+                sizeof(resolv_hostname) - ns_strlen(resolv_hostname) - 1); /* -1 in order to fit the terminating null byte. */
       }
 
       /* Re-add the .local suffix */
-      strncat(resolv_hostname, ".local", RESOLV_CONF_MAX_DOMAIN_NAME_SIZE - strlen(resolv_hostname));
+      ns_strncat(resolv_hostname, ".local", RESOLV_CONF_MAX_DOMAIN_NAME_SIZE - ns_strlen(resolv_hostname));
 
       start_name_collision_check(CLOCK_SECOND * 5);
     } else if(mdns_state == MDNS_STATE_READY) {

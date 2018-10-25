@@ -57,7 +57,7 @@ INC += -I./modules/board
 INC += -I./drivers/bluetooth
 INC += -I./drivers
 INC += -I./boards/$(BOARD)
-INC += -I./ns
+INC += -I./nsport
 
 MCU_VARIANT_UPPER = $(shell echo $(MCU_VARIANT) | tr '[:lower:]' '[:upper:]')
 MCU_SUB_VARIANT_UPPER = $(shell echo $(MCU_SUB_VARIANT) | tr '[:lower:]' '[:upper:]')
@@ -82,7 +82,7 @@ CFLAGS += -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--gc-sections
 endif
 
-CFLAGS += $(CFLAGS_MCU_$(MCU_SERIES)) 
+CFLAGS += $(CFLAGS_MCU_$(MCU_SERIES))
 CFLAGS += $(INC) -Wall -Werror -g -ansi -std=c11 -nostdlib $(COPT) $(NRF_DEFINES) $(CFLAGS_MOD)
 CFLAGS += -fno-strict-aliasing
 CFLAGS += -DNRF5_HAL_H='<$(MCU_VARIANT)_hal.h>'
@@ -218,6 +218,19 @@ FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py')
 FROZEN_MPY_MPY_FILES := $(addprefix $(BUILD)/,$(FROZEN_MPY_PY_FILES:.py=.mpy))
 endif
 
+# nrf porting to network stack sourcefiles
+SRC_NRF_NSPORT += $(addprefix nsport/,\
+    random.c \
+    slip-arch.c \
+    clock.c \
+    rtimer-arch.c \
+    int-master.c \
+    watchdog.c \
+    )
+
+# include nrf project-conf for network stack
+CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
+
 OBJ += $(PY_O)
 OBJ += $(addprefix $(BUILD)/,$(SRC_LIB:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_LIB_NRFX:.c=.o))
@@ -227,6 +240,7 @@ OBJ += $(addprefix $(BUILD)/,$(SRC_NRF:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_DRIVERS:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_MODULES:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_STARTUP:.c=.o))
+OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_NSPORT:.c=.o))
 OBJ += $(BUILD)/pins_gen.o
 
 # include ns networking core makefile
