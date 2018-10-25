@@ -57,6 +57,7 @@ INC += -I./modules/board
 INC += -I./drivers/bluetooth
 INC += -I./drivers
 INC += -I./boards/$(BOARD)
+INC += -I./ns
 
 MCU_VARIANT_UPPER = $(shell echo $(MCU_VARIANT) | tr '[:lower:]' '[:upper:]')
 MCU_SUB_VARIANT_UPPER = $(shell echo $(MCU_SUB_VARIANT) | tr '[:lower:]' '[:upper:]')
@@ -227,6 +228,9 @@ OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_DRIVERS:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_MODULES:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_STARTUP:.c=.o))
 OBJ += $(BUILD)/pins_gen.o
+
+# include ns networking core makefile
+include ../../ns/ns.mk
 
 $(BUILD)/$(FATFS_DIR)/ff.o: COPT += -Os
 $(filter $(PY_BUILD)/../extmod/vfs_fat_%.o, $(PY_O)): COPT += -Os
