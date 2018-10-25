@@ -8,20 +8,12 @@ void rtimer_arch_init(void)
 
 void rtimer_arch_schedule(rtimer_clock_t t)
 {
-    (void) t;
-}
-
-rtimer_clock_t rtimer_arch_next_trigger(void)
-{
-    return 0;
+    (void)t;
 }
 
 rtimer_clock_t rtimer_arch_now(void)
 {
-    return 0;
+    // return current system ticks
+    return (rtimer_clock_t)clock_time();
 }
 
-void rtimer_isr()
-{
-    return;
-}

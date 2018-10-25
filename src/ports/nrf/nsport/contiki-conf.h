@@ -10,7 +10,7 @@
 #include PROJECT_CONF_PATH
 #endif
 
-#define CLOCK_CONF_SECOND 1 // TODO: based on RTC seconds
+#define CLOCK_CONF_SECOND 1 // based on RTC seconds, implemented in python
 
 typedef unsigned long clock_time_t;
 typedef unsigned int uip_stats_t;

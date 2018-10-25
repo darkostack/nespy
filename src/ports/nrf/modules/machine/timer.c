@@ -125,6 +125,11 @@ STATIC mp_obj_t machine_timer_make_new(const mp_obj_type_t *type, size_t n_args,
     }
 #endif
 
+    if (timer_id == 2) {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                  "Timer(%d) reserved by network stack.", timer_id));
+    }
+
     machine_timer_obj_t *self = (machine_timer_obj_t*)&machine_timer_obj[timer_id];
 
     if (MP_OBJ_IS_FUN(args[ARG_callback].u_obj)) {
