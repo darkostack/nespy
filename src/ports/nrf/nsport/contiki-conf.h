@@ -10,10 +10,9 @@
 #include PROJECT_CONF_PATH
 #endif
 
+#define CLOCK_CONF_SECOND 1 // TODO: based on RTC seconds
+
 typedef unsigned long clock_time_t;
-
-#define CLOCK_CONF_SECOND 1000
-
 typedef unsigned int uip_stats_t;
 
 #endif // CONTIKI_CONF_H_
