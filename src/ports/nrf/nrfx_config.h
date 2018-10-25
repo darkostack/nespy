@@ -30,6 +30,7 @@
 
 #include "mpconfigport.h"
 #include "nrf.h"
+#include "nsconfigport.h" // network stack port specific defines
 
 // Port specific defines
 #ifndef NRFX_LOG_ENABLED
