@@ -229,6 +229,11 @@ SRC_NRF_NSPORT += $(addprefix nsport/,\
     watchdog.c \
     )
 
+# network stack micropython objects
+SRC_NS_MODULES += $(addprefix ns/modules/,\
+    modns.c \
+    )
+
 # include nrf project-conf for network stack
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 
@@ -242,6 +247,7 @@ OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_DRIVERS:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_MODULES:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_STARTUP:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NRF_NSPORT:.c=.o))
+OBJ += $(addprefix $(BUILD)/,$(SRC_NS_MODULES:.c=.o))
 OBJ += $(BUILD)/pins_gen.o
 
 # include ns networking core makefile
@@ -274,7 +280,7 @@ $(BUILD)/$(OUTPUT_FILENAME).elf: $(OBJ)
 	$(Q)$(SIZE) $@
 
 # List of sources for qstr extraction
-SRC_QSTR += $(SRC_NRF) $(SRC_NRF_DRIVERS) $(SRC_NRF_MODULES)
+SRC_QSTR += $(SRC_NRF) $(SRC_NRF_DRIVERS) $(SRC_NRF_MODULES) $(SRC_NS_MODULES)
 
 # Append any auto-generated sources that are needed by sources listed in SRC_QSTR
 SRC_QSTR_AUTO_DEPS +=
