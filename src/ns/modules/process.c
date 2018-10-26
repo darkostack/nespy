@@ -10,6 +10,7 @@
 
 typedef struct _ns_process_obj_t {
     mp_obj_base_t base;
+    struct process *list;
 } ns_process_obj_t;
 
 // process = ns.Process() constructor
@@ -24,6 +25,7 @@ STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
     // create process object
     ns_process_obj_t *process = m_new_obj(ns_process_obj_t);
     process->base.type = &ns_process_type;
+    process->list = process_list;
 
     return MP_OBJ_FROM_PTR(process);
 }
@@ -39,6 +41,13 @@ STATIC void ns_process_print(const mp_print_t *print,
                              mp_obj_t self_in,
                              mp_print_kind_t kind)
 {
+    ns_process_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    struct process *p;
+    mp_printf(print, "ns: process list ---");
+    for (p = self->list; p != NULL; p = p->next) {
+        mp_printf(print, "ns: %s", p->name);
+    }
+    mp_printf(print, "ns: ----------------");
     mp_printf(print, "ns: process events waiting (%d)", process_nevents());
 }
 
