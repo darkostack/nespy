@@ -154,6 +154,13 @@ STATIC mp_obj_t machine_rtc_make_new(const mp_obj_type_t *type, size_t n_args, s
 
     int rtc_id = rtc_find(args[ARG_id].u_obj);
 
+#if MICROPY_PY_NETWORK_STACK
+    if (rtc_id == 0) {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                  "RTC(%d) reserved by network stack.", rtc_id));
+    }
+#endif
+
     // const and non-const part of the RTC object.
     const machine_rtc_obj_t * self = &machine_rtc_obj[rtc_id];
     machine_rtc_config_t *config = self->config;
