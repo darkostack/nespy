@@ -30,7 +30,11 @@
 
 #include "mpconfigport.h"
 #include "nrf.h"
-#include "nsconfigport.h" // network stack port specific defines
+
+// Network stack specific defines
+#if (MICROPY_PY_NETWORK_STACK)
+#define NRFX_SYSTICK_ENABLED 1
+#endif
 
 // Port specific defines
 #ifndef NRFX_LOG_ENABLED
