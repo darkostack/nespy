@@ -10,7 +10,11 @@
 #include PROJECT_CONF_PATH
 #endif
 
-#define CLOCK_CONF_SECOND 1 // based on RTC seconds, implemented in python
+// rtc configuration used by clock.c
+#define RTC_CONF_FREQUENCY      (32768UL)
+#define RTC_CONF_IRQ_PRIORITY   7 // 3 bit priority (7: lowest, 0: highest)
+
+#define CLOCK_CONF_SECOND       RTC_CONF_FREQUENCY
 
 typedef unsigned long clock_time_t;
 typedef unsigned int uip_stats_t;
