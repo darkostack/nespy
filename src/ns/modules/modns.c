@@ -20,6 +20,7 @@ STATIC const mp_rom_map_elem_t ns_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_ns) },
     { MP_ROM_QSTR(MP_QSTR_Hello), (mp_obj_t)&ns_hello_obj },
     { MP_ROM_QSTR(MP_QSTR_Process), MP_ROM_PTR(&ns_process_type) },
+    { MP_ROM_QSTR(MP_QSTR_Thread), MP_ROM_PTR(&ns_thread_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(ns_module_globals, ns_module_globals_table);
