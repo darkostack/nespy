@@ -1,7 +1,7 @@
 #include "py/mphal.h"
 
-#include "contiki.h"
-#include "sys/int-master.h"
+#include "ns/contiki.h"
+#include "ns/sys/int-master.h"
 
 #include <stdbool.h>
 

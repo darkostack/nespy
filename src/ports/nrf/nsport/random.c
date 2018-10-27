@@ -1,4 +1,4 @@
-#include "contiki.h"
+#include "ns/contiki.h"
 #include "ns/lib/random.h"
 
 #include "nrf_rng.h"

@@ -1,4 +1,4 @@
-#include "contiki.h"
+#include "ns/contiki.h"
 #include "ns/sys/rtimer.h"
 #include "nrfx_timer.h"
 

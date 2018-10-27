@@ -1,4 +1,4 @@
-#include "contiki.h"
+#include "ns/contiki.h"
 #include "ns/dev/watchdog.h"
 
 void watchdog_init(void)

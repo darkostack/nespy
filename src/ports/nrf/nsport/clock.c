@@ -1,4 +1,4 @@
-#include "contiki.h"
+#include "ns/contiki.h"
 #include "nrfx_systick.h"
 #include "nrfx_rtc.h"
 
