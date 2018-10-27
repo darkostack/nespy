@@ -7,6 +7,7 @@
 //
 //      process = ns.Process()           # only create once!
 //      process.run()                    # run the internal network stack process
+//      process.autostart()              # run autostart processes
 //      print(process)                   # to print the process list and number of events waiting
 //
 //      test = ns.Thread(test_callback)  # create `test` thread with it's callback
@@ -67,6 +68,13 @@ STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
 STATIC mp_obj_t ns_process_run(void)
 {
     return mp_obj_new_int(process_run());
+}
+
+// process.autostart()
+STATIC mp_obj_t ns_process_autostart(void)
+{
+    autostart_start(autostart_processes);
+    return mp_const_none;
 }
 
 // print(process)
@@ -180,6 +188,7 @@ STATIC void ns_thread_print(const mp_print_t *print,
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_process_run_obj, ns_process_run);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_process_autostart_obj, ns_process_autostart);
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_thread_alloc_event_obj, ns_thread_alloc_event);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_start_obj, ns_thread_start);
@@ -189,6 +198,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_delete_obj, ns_thread_delete);
 
 STATIC const mp_rom_map_elem_t ns_process_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&ns_process_run_obj) },
+    { MP_ROM_QSTR(MP_QSTR_autostart), MP_ROM_PTR(&ns_process_autostart_obj) },
 };
 
 STATIC const mp_rom_map_elem_t ns_thread_locals_dict_table[] = {
