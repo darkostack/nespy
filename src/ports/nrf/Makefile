@@ -233,6 +233,7 @@ SRC_NRF_NSPORT += $(addprefix nsport/,\
 SRC_NS_MODULES += $(addprefix ns/modules/,\
     modns.c \
     process.c \
+    init.c \
     )
 
 # include nrf project-conf for network stack

@@ -1,5 +1,6 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
+#include "ns/contiki.h"
 #include "ns/modules/process.h"
 #include <stdio.h>
 
@@ -8,9 +9,24 @@
 //      hello = ns.Hello("World")
 //      print (hello)
 
+PROCESS(modules_autostart, "modules autostart process");
+AUTOSTART_PROCESSES(&modules_autostart);
+
+PROCESS_THREAD(modules_autostart, ev, data)
+{
+    PROCESS_BEGIN();
+    while (1) {
+        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_POLL);
+        printf("ns: modules autostart: event poll!\n");
+    }
+
+    PROCESS_END();
+}
+
 STATIC mp_obj_t ns_hello(mp_obj_t what)
 {
     printf("Hello %s!\n", mp_obj_str_get_str(what));
+    process_post(&modules_autostart, PROCESS_EVENT_POLL, NULL);
     return mp_const_none;
 }
 
