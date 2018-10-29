@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 extern const mp_obj_type_t ns_hello_type;
+// TODO: this protection is not necessary when unix is fully port to netstack
 #if !defined(UNIX)
 extern const mp_obj_type_t ns_init_type;
 extern const mp_obj_type_t ns_process_type;

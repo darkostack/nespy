@@ -52,7 +52,7 @@ STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
     } else {
         // initialize thread status
         for (int i = 0; i < NS_THREAD_DEPTH; i++) {
-            thread_container.evid[i] = PROCESS_EVENT_NONE;
+            thread_container.evid[i] = mp_obj_new_int_from_uint(PROCESS_EVENT_NONE);
         }
         thread_container.nthread = 0;
     }
@@ -104,7 +104,7 @@ STATIC mp_obj_t ns_thread_make_new(const mp_obj_type_t *type,
     // check arguments (min: 1, max: 1)
     mp_arg_check_num(n_args, n_kw, 1, 1, true);
 
-    // make sure we get valid thread id
+    // get valid thread id and assigned PROCESS_EVENT_INT to this thread event
     ns_thread_id_t thread_id = thread_get_id();
     if (thread_id == NS_INVALID_THREAD_ID) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
@@ -159,8 +159,7 @@ STATIC mp_obj_t ns_thread_post(mp_obj_t self_in,
                                mp_obj_t data_in)
 {
     ns_thread_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    int event = mp_obj_get_int(event_in);
-    self->ev = (process_event_t)event;
+    self->ev = event_in;
     int data = mp_obj_get_int(data_in);
     // assigned this thread obj to the container and post
     thread_container.obj[self->id] = *self;
@@ -171,9 +170,13 @@ STATIC mp_obj_t ns_thread_post(mp_obj_t self_in,
 STATIC mp_obj_t ns_thread_delete(mp_obj_t self_in)
 {
     ns_thread_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    if (thread_container.evid[self->id] == PROCESS_EVENT_INIT &&
-        process_is_running(ns_process[self->id])) {
+    if ((process_event_t)mp_obj_get_int(thread_container.evid[self->id]) ==
+        PROCESS_EVENT_INIT && process_is_running(ns_process[self->id])) {
         process_post(ns_process[self->id], PROCESS_EVENT_EXIT, NULL);
+    } else {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                  "ns: thread id (%d) is not running or can't get event init!",
+                  (int)self->id));
     }
     return mp_const_none;
 }
@@ -183,8 +186,9 @@ STATIC void ns_thread_print(const mp_print_t *print,
                             mp_print_kind_t kind)
 {
     ns_thread_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "ns: thread id (%d)\n", self->id);
-    mp_printf(print, "ns: thread event assigned (0x%x)\n", self->ev);
+    mp_printf(print, "ns: thread id (%d)\n", (int)self->id);
+    mp_printf(print, "ns: thread event assigned (0x%x)\n",
+              (process_event_t)mp_obj_get_int(self->ev));
     mp_printf(print, "ns: thread is running (%s)\n",
               process_is_running(ns_process[self->id]) ? "true" : "false");
     mp_printf(print, "ns: thread num (%d)\n", (int)thread_container.nthread);
@@ -233,7 +237,7 @@ const mp_obj_type_t ns_thread_type = {
 
 static ns_thread_id_t thread_get_id(void)
 {
-    process_event_t *ev;
+    mp_obj_t *ev;
     ns_thread_id_t id;
 
     int_master_status_t int_status = int_master_read_and_disable();
@@ -241,7 +245,7 @@ static ns_thread_id_t thread_get_id(void)
     // find an unused thread id based on it's event
     ev = &thread_container.evid[0];
     id = 0;
-    while (*ev != PROCESS_EVENT_NONE &&
+    while (*ev != mp_obj_new_int_from_uint(PROCESS_EVENT_NONE) &&
            ev <= &thread_container.evid[NS_THREAD_DEPTH - 1]) {
         ev++;
         id++;
@@ -251,7 +255,9 @@ static ns_thread_id_t thread_get_id(void)
         return NS_INVALID_THREAD_ID;
     }
 
-    *ev = PROCESS_EVENT_INIT; // this mean this thread id is occupied and initialized
+    // this mean this thread id is occupied and initialized
+    *ev = mp_obj_new_int_from_uint(PROCESS_EVENT_INIT);
+
     thread_container.nthread++;
 
     int_master_status_set(int_status);
@@ -259,4 +265,3 @@ static ns_thread_id_t thread_get_id(void)
 
     return id;
 }
-
