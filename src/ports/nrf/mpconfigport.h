@@ -219,6 +219,7 @@ extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_ubluepy;
 extern const struct _mp_obj_module_t music_module;
 extern const struct _mp_obj_module_t random_module;
+extern const struct _mp_obj_module_t ns_module;
 
 #if MICROPY_PY_UBLUEPY
 #define UBLUEPY_MODULE                      { MP_ROM_QSTR(MP_QSTR_ubluepy), MP_ROM_PTR(&mp_module_ubluepy) },
@@ -236,6 +237,12 @@ extern const struct _mp_obj_module_t random_module;
 #define RANDOM_MODULE                       { MP_ROM_QSTR(MP_QSTR_random), MP_ROM_PTR(&random_module) },
 #else
 #define RANDOM_MODULE
+#endif
+
+#if MICROPY_PY_NETWORK_STACK
+#define NETSTACK_MODULE                     { MP_ROM_QSTR(MP_QSTR_ns), MP_ROM_PTR(&ns_module) },
+#else
+#define NETSTACK_MODULE
 #endif
 
 #if BOARD_SPECIFIC_MODULES
@@ -265,6 +272,7 @@ extern const struct _mp_obj_module_t ble_module;
     UBLUEPY_MODULE \
     RANDOM_MODULE \
     MICROPY_BOARD_BUILTINS \
+    NETSTACK_MODULE \
 
 
 #else
