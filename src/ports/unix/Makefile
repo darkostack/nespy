@@ -165,12 +165,18 @@ LIB_SRC_C += $(addprefix lib/,\
 	oofatfs/option/unicode.c \
 	)
 
+# ns modules
+NS_SRC_C += $(addprefix ns/modules/,\
+    modns.c \
+    )
+
 OBJ = $(PY_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(LIB_SRC_C:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(NS_SRC_C:.c=.o))
 
 # List of sources for qstr extraction
-SRC_QSTR += $(SRC_C) $(LIB_SRC_C)
+SRC_QSTR += $(SRC_C) $(LIB_SRC_C) $(NS_SRC_C)
 # Append any auto-generated sources that are needed by sources listed in
 # SRC_QSTR
 SRC_QSTR_AUTO_DEPS +=
