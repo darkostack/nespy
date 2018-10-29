@@ -87,12 +87,12 @@ STATIC void ns_process_print(const mp_print_t *print,
 {
     ns_process_base_obj_t *self = MP_OBJ_TO_PTR(self_in);
     struct process *p;
-    mp_printf(print, "ns: process list ---");
+    mp_printf(print, "ns: process list ---\n");
     for (p = self->list; p != NULL; p = p->next) {
-        mp_printf(print, "ns: %s", p->name);
+        mp_printf(print, "ns: %s\n", p->name);
     }
-    mp_printf(print, "ns: ----------------");
-    mp_printf(print, "ns: process events waiting (%d)", process_nevents());
+    mp_printf(print, "ns: ----------------\n");
+    mp_printf(print, "ns: process events waiting (%d)\n", process_nevents());
 }
 
 // test = ns.Thread(test_callback) # thread creation
@@ -183,11 +183,11 @@ STATIC void ns_thread_print(const mp_print_t *print,
                             mp_print_kind_t kind)
 {
     ns_thread_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "ns: thread id (%d)", self->id);
-    mp_printf(print, "ns: thread event assigned (0x%x)", self->ev);
-    mp_printf(print, "ns: thread is running (%s)",
+    mp_printf(print, "ns: thread id (%d)\n", self->id);
+    mp_printf(print, "ns: thread event assigned (0x%x)\n", self->ev);
+    mp_printf(print, "ns: thread is running (%s)\n",
               process_is_running(ns_process[self->id]) ? "true" : "false");
-    mp_printf(print, "ns: thread num (%d)", (int)thread_container.nthread);
+    mp_printf(print, "ns: thread num (%d)\n", (int)thread_container.nthread);
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_process_run_obj, ns_process_run);

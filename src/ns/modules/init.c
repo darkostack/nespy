@@ -43,6 +43,7 @@
 //      init.tsch_cs_adaptions()
 
 const mp_obj_type_t ns_init_type;
+static uip_ds6_addr_t *lladdr;
 
 typedef struct _ns_init_obj_t {
     mp_obj_base_t base;
@@ -176,11 +177,9 @@ STATIC mp_obj_t ns_init_node_id(void)
 STATIC mp_obj_t ns_init_ipv6_addr(void)
 {
 #if NETSTACK_CONF_WITH_IPV6
-    uip_ds6_addr_t *lladdr;
     memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
     process_start(&tcpip_process, NULL);
     lladdr = uip_ds6_get_link_local(-1);
-    (void)lladdr; // TODO: print tentative link-local IPv6 address
 #endif
     return mp_const_none;
 }
@@ -244,7 +243,41 @@ STATIC void ns_init_print(const mp_print_t *print,
                           mp_obj_t self_in,
                           mp_print_kind_t kind)
 {
-    return; // TODO: print initialized information
+    mp_printf(print, "ns: --- Nespy network stack ---\n");
+    mp_printf(print, "ns: Routing: %s\n", NETSTACK_ROUTING.name);
+    mp_printf(print, "ns: Net: %s\n", NETSTACK_NETWORK.name);
+    mp_printf(print, "ns: MAC: %s\n", NETSTACK_MAC.name);
+    mp_printf(print, "ns: 802.15.4 PANID: 0x%04x\n", IEEE802154_PANID);
+#if MAC_CONF_WITH_TSCH
+    mp_printf(print, "ns: 802.15.4 TSCH default hopping sequence length: %u\n",
+              (unsigned)sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE));
+#else
+    mp_printf(print, "ns: 802.15.4 Default channel: %u\n", IEEE802154_DEFAULT_CHANNEL);
+#endif
+    mp_printf(print, "ns: Node ID: %u\n", node_id);
+    mp_printf(print, "ns: Link-layer address: ");
+
+    linkaddr_t *laddr = &linkaddr_node_addr;
+
+    if (laddr == NULL) {
+        mp_printf(print, "(NULL LL addr)");
+    } else {
+        unsigned i;
+        for (i = 0; i < LINKADDR_SIZE; i++) {
+            if (i > 0 && i % 2 == 0) {
+                mp_printf(print, ".");
+            }
+            mp_printf(print, "%02x", laddr->u8[i]);
+        }
+    }
+    mp_printf(print, "\n");
+
+#if NESTACK_CONF_WITH_IPV6
+    // print ipv6 address
+    char buf[UIPLIB_IPV6_MAX_STR_LEN];
+    uiplib_ipaddr_snprintf(buf, sizeof(buf), lladdr != NULL ? &lladdr->ipaddr : NULL);
+    mp_printf(print, "ns: Tentative link-local IPv6 address: %s\n", buf);
+#endif
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_platform_obj, ns_init_platform);
