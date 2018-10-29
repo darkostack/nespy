@@ -1,0 +1,1 @@
+# Nespy assets directory
