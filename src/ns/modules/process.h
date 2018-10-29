@@ -48,8 +48,4 @@ typedef struct _ns_process_base_obj_t {
     struct process *list;
 } ns_process_base_obj_t;
 
-
-extern const mp_obj_type_t ns_process_type;
-extern const mp_obj_type_t ns_thread_type;
-
 #endif // NS_MODULES_PROCESS_H_

@@ -13,7 +13,6 @@
 #include "ns/services/shell/serial-shell.h"
 #include "ns/services/simple-energest/simple-energest.h"
 #include "ns/services/tsch-cs/tsch-cs.h"
-#include "ns/modules/init.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -42,6 +41,8 @@
 //      init.coap_engine()
 //      init.simple_energest()
 //      init.tsch_cs_adaptions()
+
+const mp_obj_type_t ns_init_type;
 
 typedef struct _ns_init_obj_t {
     mp_obj_base_t base;

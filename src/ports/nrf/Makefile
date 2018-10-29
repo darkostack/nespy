@@ -232,9 +232,11 @@ SRC_NRF_NSPORT += $(addprefix nsport/,\
 
 # network stack micropython objects
 SRC_NS_MODULES += $(addprefix ns/modules/,\
+    autostart.c \
+    hello.c \
+    init.c \
     modns.c \
     process.c \
-    init.c \
     )
 
 # include nrf project-conf for network stack

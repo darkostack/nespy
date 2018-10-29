@@ -18,6 +18,9 @@
 //      test.delete()                    # delete `test` process thread
 //      print(test)                      # print this thread information
 
+const mp_obj_type_t ns_process_type;
+const mp_obj_type_t ns_thread_type;
+
 static ns_thread_container_t thread_container;
 static bool is_process_obj_created = false;
 static ns_thread_id_t thread_get_id(void);

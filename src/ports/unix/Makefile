@@ -167,6 +167,7 @@ LIB_SRC_C += $(addprefix lib/,\
 
 # ns modules
 NS_SRC_C += $(addprefix ns/modules/,\
+    hello.c \
     modns.c \
     )
 
