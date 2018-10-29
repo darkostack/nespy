@@ -227,6 +227,7 @@ SRC_NRF_NSPORT += $(addprefix nsport/,\
     rtimer-arch.c \
     int-master.c \
     watchdog.c \
+    platform.c \
     )
 
 # network stack micropython objects

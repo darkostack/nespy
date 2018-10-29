@@ -49,21 +49,6 @@ typedef struct _ns_init_obj_t {
 
 static bool is_init_obj_created = false;
 
-void platform_init_stage_one(void)
-{
-    // TODO: init platform stage 1
-}
-
-void platform_init_stage_two(void)
-{
-    // TODO: init platform stage 2
-}
-
-void platform_init_stage_three(void)
-{
-    // TODO: init platform stage 3
-}
-
 // init = ns.Init() # init object constructor
 STATIC mp_obj_t ns_init_make_new(const mp_obj_type_t *type,
                                  size_t n_args,
@@ -107,6 +92,9 @@ STATIC mp_obj_t ns_init_platform(mp_obj_t self_in, mp_obj_t stage_in)
         platform_init_stage_three();
         break;
     default:
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                  "ns: unknown platform init stage (%d), stages (1-3)",
+                  stage));
         break;
     }
 
