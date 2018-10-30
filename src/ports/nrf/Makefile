@@ -233,6 +233,7 @@ SRC_NRF_NSPORT += $(addprefix nsport/,\
 # network stack micropython objects
 SRC_NS_MODULES += $(addprefix ns/modules/,\
     autostart.c \
+    clock.c \
     hello.c \
     init.c \
     modns.c \

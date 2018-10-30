@@ -10,8 +10,8 @@
 #include PROJECT_CONF_PATH
 #endif
 
-#define CLOCK_CONF_SECOND       1
-#define RTIMER_ARCH_SECOND      1
+#define CLOCK_CONF_SECOND       1000000 // microseconds resolutions
+#define RTIMER_ARCH_SECOND      1000 // milliseconds resolutions
 
 typedef unsigned long clock_time_t;
 typedef unsigned int uip_stats_t;
