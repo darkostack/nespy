@@ -1,10 +1,11 @@
 import ns
 
-def main():
-    init = ns.Init()
-    process = ns.Process()
-    unix = ns.Unix()
+# initialize basic objects
+init    = ns.Init()
+process = ns.Process()
+unix    = ns.Unix()
 
+def main():
     init.clock()
     init.rtimer()
     init.process()
@@ -14,8 +15,7 @@ def main():
     init.node_id()
     init.ipv6_addr()
     
-    print(init)
-
+    # autostart internal nespy processes
     process.autostart()
 
     while True:
