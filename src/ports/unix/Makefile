@@ -174,6 +174,7 @@ NSMOD_SRC_C += $(addprefix ns/modules/,\
     init.c \
     modns.c \
     process.c \
+    unix.c \
     )
 
 NSPORT_SRC_C += $(addprefix nsport/,\

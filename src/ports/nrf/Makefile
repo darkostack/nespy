@@ -238,6 +238,7 @@ SRC_NS_MODULES += $(addprefix ns/modules/,\
     init.c \
     modns.c \
     process.c \
+    unix.c \
     )
 
 # include nrf project-conf for network stack
