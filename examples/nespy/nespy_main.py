@@ -14,10 +14,9 @@ def main():
     init.node_id()
     init.ipv6_addr()
     
-    process.autostart()
-
     print(init)
-    print(process)
+
+    process.autostart()
 
     while True:
         process.run()

@@ -11,9 +11,9 @@ static uint32_t rtimer_alarm_milli_get_now(void)
     return (uint32_t)(clock_time() / RTIMER_ARCH_SECOND);
 }
 
-static void rtimer_alarm_milli_start_at(uint32_t t0, uint32_t dt)
+static void rtimer_alarm_milli_start_at(uint32_t dt)
 {
-    ms_alarm = t0 + dt;
+    ms_alarm = dt;
     is_ms_running = true;
 }
 
@@ -41,7 +41,7 @@ void rtimer_arch_init(void)
 
 void rtimer_arch_schedule(rtimer_clock_t t)
 {
-    rtimer_alarm_milli_start_at(clock_time(), (uint32_t)t);
+    rtimer_alarm_milli_start_at((uint32_t)t);
 }
 
 rtimer_clock_t rtimer_arch_now(void)

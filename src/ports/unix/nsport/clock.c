@@ -6,7 +6,6 @@
 #define US_PER_S 1000000
 
 static struct timeval start;
-static uint32_t etimer_timeout = 1000;
 
 void clock_init(void)
 {
@@ -47,9 +46,7 @@ void clock_delay(unsigned int i)
 
 void etimer_pending_process(void)
 {
-    int32_t remaining = (int32_t)(etimer_timeout - ((uint32_t)(clock_time() / US_PER_MS)));
-    if (remaining <= 0) {
-        etimer_timeout = 1000 + clock_time(); // set next 1ms timeout
+    if ((clock_time() % US_PER_MS) == 0) {
         if (etimer_pending()) {
             etimer_request_poll();
         }
