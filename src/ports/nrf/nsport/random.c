@@ -1,6 +1,5 @@
 #include "ns/contiki.h"
 #include "ns/lib/random.h"
-
 #include "nrf_rng.h"
 
 static inline uint32_t gen_hw_random(void)

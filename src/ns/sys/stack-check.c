@@ -40,6 +40,8 @@
  *     Atis Elsts <atis.elsts@bristol.ac.uk>
  */
 
+#if !defined(UNIX)
+
 #include "contiki.h"
 #include "sys/stack-check.h"
 #include "dev/watchdog.h"
@@ -160,3 +162,4 @@ PROCESS_THREAD(stack_check_process, ev, data)
 #endif /* STACK_CHECK_PERIODIC_CHECKS */
 /*---------------------------------------------------------------------------*/
 /** @} */
+#endif // if !defined(UNIX)

@@ -3,7 +3,7 @@
 
 void slip_arch_writeb(unsigned char c)
 {
-    (void) c;
+    (void)c;
 }
 
 void slip_arch_init()

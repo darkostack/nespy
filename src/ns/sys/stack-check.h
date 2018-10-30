@@ -52,6 +52,8 @@
 #ifndef STACK_CHECK_H_
 #define STACK_CHECK_H_
 
+#if !defined(UNIX)
+
 #include "contiki-conf.h"
 
 /* Determine whether stack checking is supported depending on the plaform. */
@@ -122,6 +124,8 @@ uint16_t stack_check_get_reserved_size(void);
 #ifdef STACK_CONF_ORIGIN
 #define STACK_ORIGIN STACK_CONF_ORIGIN
 #endif
+
+#endif // #if !defined(UNIX)
 
 #endif /* STACK_CHECK_H_ */
 

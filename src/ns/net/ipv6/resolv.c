@@ -178,11 +178,11 @@ static size_t ns_strncat(char *dest, const char *src, size_t size)
 
 // ----------------------------------------------------------------------------
 
-static int strncasecmp(const char *s1, const char *s2, size_t n)
+static int ns_strncasecmp(const char *s1, const char *s2, size_t n)
 {
     return ns_strncmp(s1, s2, n);
 }
-static int strcasecmp(const char *s1, const char *s2)
+static int ns_strcasecmp(const char *s1, const char *s2)
 {
   return ns_strcmp(s1, s2);
 }
@@ -1132,7 +1132,7 @@ resolv_set_hostname(const char *hostname)
 
   /* Add the .local suffix if it isn't already there */
   if(ns_strlen(resolv_hostname) < 7 ||
-     strcasecmp(resolv_hostname + ns_strlen(resolv_hostname) - 6, ".local") != 0) {
+     ns_strcasecmp(resolv_hostname + ns_strlen(resolv_hostname) - 6, ".local") != 0) {
     ns_strncat(resolv_hostname, ".local", RESOLV_CONF_MAX_DOMAIN_NAME_SIZE - ns_strlen(resolv_hostname));
   }
 
@@ -1182,7 +1182,7 @@ PROCESS_THREAD(mdns_probe_process, ev, data)
 
   do {
     PROCESS_WAIT_EVENT_UNTIL(ev == resolv_event_found);
-  } while(strcasecmp(resolv_hostname, data) != 0);
+  } while(ns_strcasecmp(resolv_hostname, data) != 0);
 
   mdns_state = MDNS_STATE_READY;
   mdns_announce_requested();
@@ -1319,7 +1319,7 @@ resolv_query(const char *name)
 
   for(i = 0; i < RESOLV_ENTRIES; ++i) {
     nameptr = &names[i];
-    if(0 == strcasecmp(nameptr->name, name)) {
+    if(0 == ns_strcasecmp(nameptr->name, name)) {
       break;
     }
     if((nameptr->state == STATE_UNUSED)
@@ -1356,7 +1356,7 @@ resolv_query(const char *name)
     const char local_suffix[] = "local";
 
     if((name_len > (sizeof(local_suffix) - 1)) &&
-       (0 == strcasecmp(name + name_len - (sizeof(local_suffix) - 1), local_suffix))) {
+       (0 == ns_strcasecmp(name + name_len - (sizeof(local_suffix) - 1), local_suffix))) {
       PRINTF("resolver: Using MDNS to look up \"%s\".\n", name);
       nameptr->is_mdns = 1;
     } else {
@@ -1408,7 +1408,7 @@ resolv_lookup(const char *name, uip_ipaddr_t ** ipaddr)
   for(i = 0; i < RESOLV_ENTRIES; ++i) {
     nameptr = &names[i];
 
-    if(strcasecmp(name, nameptr->name) == 0) {
+    if(ns_strcasecmp(name, nameptr->name) == 0) {
       switch (nameptr->state) {
       case STATE_DONE:
         ret = RESOLV_STATUS_CACHED;
@@ -1477,7 +1477,7 @@ static void
 resolv_found(char *name, uip_ipaddr_t * ipaddr)
 {
 #if RESOLV_CONF_SUPPORTS_MDNS
-  if(strncasecmp(resolv_hostname, name, ns_strlen(resolv_hostname)) == 0 &&
+  if(ns_strncasecmp(resolv_hostname, name, ns_strlen(resolv_hostname)) == 0 &&
      ipaddr
      && !uip_ds6_is_my_addr(ipaddr)
     ) {
