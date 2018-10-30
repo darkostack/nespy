@@ -68,13 +68,13 @@ STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
 }
 
 // process.run()
-STATIC mp_obj_t ns_process_run(void)
+STATIC mp_obj_t ns_process_run(mp_obj_t self_in)
 {
     return mp_obj_new_int(process_run());
 }
 
 // process.autostart()
-STATIC mp_obj_t ns_process_autostart(void)
+STATIC mp_obj_t ns_process_autostart(mp_obj_t self_in)
 {
     autostart_start(autostart_processes);
     return mp_const_none;
@@ -132,7 +132,7 @@ STATIC mp_obj_t ns_thread_make_new(const mp_obj_type_t *type,
 }
 
 // test_event = test.alloc_event()
-STATIC mp_obj_t ns_thread_alloc_event(void)
+STATIC mp_obj_t ns_thread_alloc_event(mp_obj_t self_in)
 {
     return mp_obj_new_int_from_uint(process_alloc_event());
 }
@@ -163,7 +163,7 @@ STATIC mp_obj_t ns_thread_post(mp_obj_t self_in,
     int data = mp_obj_get_int(data_in);
     // assigned this thread obj to the container and post
     thread_container.obj[self->id] = *self;
-    process_post(ns_process[self->id], PROCESS_EVENT_POLL, (void *)&data);
+    process_post(ns_process[self->id], PROCESS_EVENT_POLL, (process_data_t *)&data);
     return mp_const_none;
 }
 
@@ -194,10 +194,10 @@ STATIC void ns_thread_print(const mp_print_t *print,
     mp_printf(print, "ns: thread num (%d)\n", (int)thread_container.nthread);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_process_run_obj, ns_process_run);
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_process_autostart_obj, ns_process_autostart);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_process_run_obj, ns_process_run);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_process_autostart_obj, ns_process_autostart);
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(ns_thread_alloc_event_obj, ns_thread_alloc_event);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_alloc_event_obj, ns_thread_alloc_event);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_start_obj, ns_thread_start);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_is_running_obj, ns_thread_is_running);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_thread_post_obj, ns_thread_post);
