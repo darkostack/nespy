@@ -1,6 +1,10 @@
 #ifndef NSPORT_PORT_UNIX_H_
 #define NSPORT_PORT_UNIX_H_
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <arpa/inet.h>
 #include <fcntl.h>

@@ -13,8 +13,7 @@ typedef struct _ns_unix_obj_t {
     mp_obj_base_t base;
 } ns_unix_obj_t;
 
-extern void rtimer_alarm_process(void);
-extern void etimer_pending_process(void);
+extern void unix_process_update(void);
 
 STATIC mp_obj_t ns_unix_make_new(const mp_obj_type_t *type,
                                  size_t n_args,
@@ -33,8 +32,7 @@ STATIC mp_obj_t ns_unix_make_new(const mp_obj_type_t *type,
 
 STATIC mp_obj_t ns_unix_process_update(mp_obj_t self_in)
 {
-    rtimer_alarm_process();
-    etimer_pending_process();
+    unix_process_update();
     return mp_const_none;
 }
 

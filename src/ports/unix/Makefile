@@ -181,9 +181,11 @@ NSPORT_SRC_C += $(addprefix nsport/,\
     clock.c \
     int-master.c \
     platform.c \
+    radio.c \
     random.c \
     rtimer-arch.c \
     slip-arch.c \
+    system.c \
     watchdog.c \
     )
 
