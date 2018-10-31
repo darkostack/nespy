@@ -31,14 +31,38 @@ static ns_thread_id_t thread_get_id(void);
 
 PROCESS(thread0, "thread0");
 PROCESS(thread1, "thread1");
+PROCESS(thread2, "thread2");
+PROCESS(thread3, "thread3");
+PROCESS(thread4, "thread4");
+PROCESS(thread5, "thread5");
+PROCESS(thread6, "thread6");
+PROCESS(thread7, "thread7");
+PROCESS(thread8, "thread8");
+PROCESS(thread9, "thread9");
 
 struct process *ns_process[] = {
     &thread0,
-    &thread1
+    &thread1,
+    &thread2,
+    &thread3,
+    &thread4,
+    &thread5,
+    &thread6,
+    &thread7,
+    &thread8,
+    &thread9,
 };
 
 NS_PROCESS_THREAD(0);
 NS_PROCESS_THREAD(1);
+NS_PROCESS_THREAD(2);
+NS_PROCESS_THREAD(3);
+NS_PROCESS_THREAD(4);
+NS_PROCESS_THREAD(5);
+NS_PROCESS_THREAD(6);
+NS_PROCESS_THREAD(7);
+NS_PROCESS_THREAD(8);
+NS_PROCESS_THREAD(9);
 
 // process = ns.Process() constructor
 STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
