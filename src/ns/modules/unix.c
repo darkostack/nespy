@@ -2,6 +2,11 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 
+// Example usage to Unix objects
+//
+//      unix = ns.Unix()
+//      unix.process_update() # use to update low level driver process
+
 const mp_obj_type_t ns_unix_type;
 
 typedef struct _ns_unix_obj_t {

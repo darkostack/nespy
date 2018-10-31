@@ -2,6 +2,11 @@
 #include "py/runtime.h"
 #include "ns/contiki.h"
 
+// Example usage to Clock objects
+//
+//      clock = ns.Clock()
+//      print(clock.get())  # use to get netstack clock time
+
 const mp_obj_type_t ns_clock_type;
 
 typedef struct _ns_clock_obj_t {
