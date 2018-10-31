@@ -18,4 +18,11 @@
 #include <unistd.h>
 #define POLL poll
 
+void rtimer_alarm_process(void);
+void etimer_pending_process(void);
+void unix_radio_update_fd_set(fd_set *read_fd_set,
+                              fd_set *write_fd_set,
+                              int *max_fd);
+void unix_radio_process(void);
+
 #endif // NSPORT_PORT_UNIX_H_

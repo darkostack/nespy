@@ -1,11 +1,6 @@
 #include "port_unix.h"
 #include <errno.h>
 
-extern void rtimer_alarm_process(void);
-extern void etimer_pending_process(void);
-extern void unix_radio_update_fd_set(fd_set *read_fd_set, fd_set *write_fd_set, int *max_fd);
-extern void unix_radio_process(void);
-
 void unix_process_update(void)
 {
     fd_set read_fds;
