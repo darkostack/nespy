@@ -8,13 +8,17 @@
 //      process = ns.Process()           # only create once!
 //      process.run()                    # run the internal network stack process
 //      process.autostart()              # run autostart processes
+//      event = process.alloc_event()    # allocate new event in process
 //      print(process)                   # to print the process list and number of events waiting
 //
-//      test = ns.Thread(test_callback)  # create `test` thread with it's callback
-//      test_event = test.alloc_event()  # allocate an event to `test` thread
+//      # callback function example
+//      def cb(ev, data):
+//          # do something with the event and data
+//
+//      test = ns.Thread(callback=cb)    # create `test` thread with it's callback
 //      test.start()                     # start `test` process thread
 //      test.is_running()                # use to check `test` thread is running or not
-//      test.post(test_event, data)      # post event with data to `test` process thread
+//      test.post(event, data)           # post event with data to `test` process thread
 //      test.delete()                    # delete `test` process thread
 //      print(test)                      # print this thread information
 
@@ -42,7 +46,7 @@ STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
                                     size_t n_kw,
                                     const mp_obj_t *all_args)
 {
-    // check arguments (min: 0, max: 0)
+    // check arguments
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
 
     // make sure we only create process object once
@@ -80,6 +84,12 @@ STATIC mp_obj_t ns_process_autostart(mp_obj_t self_in)
     return mp_const_none;
 }
 
+// process.alloc_event()
+STATIC mp_obj_t ns_process_alloc_event(mp_obj_t self_in)
+{
+    return mp_obj_new_int_from_uint(process_alloc_event());
+}
+
 // print(process)
 STATIC void ns_process_print(const mp_print_t *print,
                              mp_obj_t self_in,
@@ -101,15 +111,16 @@ STATIC mp_obj_t ns_thread_make_new(const mp_obj_type_t *type,
                                    size_t n_kw,
                                    const mp_obj_t *all_args)
 {
-    // check arguments (min: 1, max: 1)
-    mp_arg_check_num(n_args, n_kw, 1, 1, true);
-
-    // get valid thread id and assigned PROCESS_EVENT_INT to this thread event
-    ns_thread_id_t thread_id = thread_get_id();
-    if (thread_id == NS_INVALID_THREAD_ID) {
+    // make sure the process obj was created
+    if (is_process_obj_created == false) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                  "ns: thread overflow! max(%d)",
-                  NS_THREAD_DEPTH));
+                  "ns: please create process object first!"));
+    }
+
+    // check arguments (only take 1 arg (callback) (n_args=0, n_kw=1)
+    if (n_args != 0 || n_kw != 1) {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                  "ns: invalid argument!"));
     }
 
     enum { ARG_callback };
@@ -121,6 +132,14 @@ STATIC mp_obj_t ns_thread_make_new(const mp_obj_type_t *type,
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
+    // get valid thread id and assigned PROCESS_EVENT_INT to this thread event
+    ns_thread_id_t thread_id = thread_get_id();
+    if (thread_id == NS_INVALID_THREAD_ID) {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                  "ns: thread overflow! max(%d)",
+                  NS_THREAD_DEPTH));
+    }
+
     // create thread object
     ns_thread_obj_t *thread = m_new_obj(ns_thread_obj_t);
     thread->base.type = &ns_thread_type;
@@ -129,12 +148,6 @@ STATIC mp_obj_t ns_thread_make_new(const mp_obj_type_t *type,
     thread->ev = thread_container.evid[thread->id]; // asigned default event after init (PROCESS_EVENT_INIT)
 
     return MP_OBJ_FROM_PTR(thread);
-}
-
-// test_event = test.alloc_event()
-STATIC mp_obj_t ns_thread_alloc_event(mp_obj_t self_in)
-{
-    return mp_obj_new_int_from_uint(process_alloc_event());
 }
 
 // test.start() # start this thread
@@ -160,10 +173,10 @@ STATIC mp_obj_t ns_thread_post(mp_obj_t self_in,
 {
     ns_thread_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->ev = event_in;
-    int data = mp_obj_get_int(data_in);
+    self->data = data_in;
     // assigned this thread obj to the container and post
     thread_container.obj[self->id] = *self;
-    process_post(ns_process[self->id], PROCESS_EVENT_POLL, (process_data_t *)&data);
+    process_post(ns_process[self->id], PROCESS_EVENT_POLL, NULL);
     return mp_const_none;
 }
 
@@ -172,6 +185,8 @@ STATIC mp_obj_t ns_thread_delete(mp_obj_t self_in)
     ns_thread_obj_t *self = MP_OBJ_TO_PTR(self_in);
     if ((process_event_t)mp_obj_get_int(thread_container.evid[self->id]) ==
         PROCESS_EVENT_INIT && process_is_running(ns_process[self->id])) {
+        self->ev = mp_obj_new_int_from_uint(PROCESS_EVENT_NONE);
+        self->data = mp_obj_new_int_from_uint(0);
         process_post(ns_process[self->id], PROCESS_EVENT_EXIT, NULL);
     } else {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
@@ -191,13 +206,13 @@ STATIC void ns_thread_print(const mp_print_t *print,
               (process_event_t)mp_obj_get_int(self->ev));
     mp_printf(print, "ns: thread is running (%s)\n",
               process_is_running(ns_process[self->id]) ? "true" : "false");
-    mp_printf(print, "ns: thread num (%d)\n", (int)thread_container.nthread);
+    mp_printf(print, "ns: thread queue num (%d)", (int)thread_container.nthread);
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_process_run_obj, ns_process_run);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_process_autostart_obj, ns_process_autostart);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_process_alloc_event_obj, ns_process_alloc_event);
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_alloc_event_obj, ns_thread_alloc_event);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_start_obj, ns_thread_start);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_is_running_obj, ns_thread_is_running);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_thread_post_obj, ns_thread_post);
@@ -206,10 +221,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_thread_delete_obj, ns_thread_delete);
 STATIC const mp_rom_map_elem_t ns_process_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&ns_process_run_obj) },
     { MP_ROM_QSTR(MP_QSTR_autostart), MP_ROM_PTR(&ns_process_autostart_obj) },
+    { MP_ROM_QSTR(MP_QSTR_alloc_event), MP_ROM_PTR(&ns_process_alloc_event_obj) },
 };
 
 STATIC const mp_rom_map_elem_t ns_thread_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_alloc_event), MP_ROM_PTR(&ns_thread_alloc_event_obj) },
     { MP_ROM_QSTR(MP_QSTR_start), MP_ROM_PTR(&ns_thread_start_obj) },
     { MP_ROM_QSTR(MP_QSTR_is_running), MP_ROM_PTR(&ns_thread_is_running_obj) },
     { MP_ROM_QSTR(MP_QSTR_post), MP_ROM_PTR(&ns_thread_post_obj) },

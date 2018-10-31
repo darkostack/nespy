@@ -13,7 +13,7 @@ STATIC mp_obj_t ns_clock_make_new(const mp_obj_type_t *type,
                                   size_t n_kw,
                                   const mp_obj_t *all_args)
 {
-    // check arguments (min: 0, max: 0)
+    // check arguments
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
 
     // create clock object

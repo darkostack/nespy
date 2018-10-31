@@ -19,7 +19,7 @@ STATIC mp_obj_t ns_hello_make_new(const mp_obj_type_t *type,
                                   size_t n_kw,
                                   const mp_obj_t *all_args)
 {
-    // check arguments (min: 0, max 0)
+    // check arguments
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
     ns_hello_obj_t *hello = m_new_obj(ns_hello_obj_t);
     hello->base.type = &ns_hello_type;

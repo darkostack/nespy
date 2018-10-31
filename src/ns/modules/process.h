@@ -17,7 +17,7 @@ PROCESS_THREAD(thread ## id, ev, data) {                                      \
                 PROCESS_EVENT_INIT) {                                         \
                 ns_thread_obj_t *self = &thread_container.obj[id];            \
                 mp_obj_t cbev = self->ev;                                     \
-                mp_obj_t cbdata = mp_obj_new_int(*(int *)data);               \
+                mp_obj_t cbdata = self->data;                                 \
                 mp_call_function_2(self->cb, cbev, cbdata);                   \
             }                                                                 \
         } else if (ev == PROCESS_EVENT_EXIT) {                                \
@@ -36,6 +36,7 @@ typedef struct _ns_thread_obj_t {
     mp_obj_t cb;
     ns_thread_id_t id;
     mp_obj_t ev;
+    mp_obj_t data;
 } ns_thread_obj_t;
 
 typedef struct _ns_thread_container_t {
