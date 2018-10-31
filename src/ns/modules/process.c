@@ -88,8 +88,6 @@ STATIC mp_obj_t ns_process_make_new(const mp_obj_type_t *type,
     // create process object
     ns_process_base_obj_t *process = m_new_obj(ns_process_base_obj_t);
     process->base.type = &ns_process_type;
-    process->list = process_list;
-
     is_process_obj_created = true;
 
     return MP_OBJ_FROM_PTR(process);
@@ -119,14 +117,13 @@ STATIC void ns_process_print(const mp_print_t *print,
                              mp_obj_t self_in,
                              mp_print_kind_t kind)
 {
-    ns_process_base_obj_t *self = MP_OBJ_TO_PTR(self_in);
     struct process *p;
     mp_printf(print, "ns: process list ---\n");
-    for (p = self->list; p != NULL; p = p->next) {
+    for (p = process_list; p != NULL; p = p->next) {
         mp_printf(print, "ns: %s\n", p->name);
     }
     mp_printf(print, "ns: ----------------\n");
-    mp_printf(print, "ns: process events waiting (%d)\n", process_nevents());
+    mp_printf(print, "ns: process events waiting (%d)", process_nevents());
 }
 
 // test = ns.Thread(test_callback) # thread creation

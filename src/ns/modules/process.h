@@ -47,7 +47,6 @@ typedef struct _ns_thread_container_t {
 
 typedef struct _ns_process_base_obj_t {
     mp_obj_base_t base;
-    struct process *list;
 } ns_process_base_obj_t;
 
 #endif // NS_MODULES_PROCESS_H_
