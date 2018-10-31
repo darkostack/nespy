@@ -10,8 +10,12 @@
 #include PROJECT_CONF_PATH
 #endif
 
-#define CLOCK_CONF_SECOND       1000000
-#define RTIMER_ARCH_SECOND      1000
+#define MS_PER_S 1000
+#define US_PER_MS 1000
+#define US_PER_S 1000000
+
+#define CLOCK_CONF_SECOND 1000000
+#define RTIMER_ARCH_SECOND 1000
 
 typedef unsigned long clock_time_t;
 typedef unsigned int uip_stats_t;

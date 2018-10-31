@@ -1,10 +1,6 @@
 #include "ns/contiki.h"
 #include "port_unix.h"
 
-#define MS_PER_S 1000
-#define US_PER_MS 1000
-#define US_PER_S 1000000
-
 static struct timeval start;
 
 void clock_init(void)
