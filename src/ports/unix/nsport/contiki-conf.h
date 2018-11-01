@@ -20,4 +20,6 @@
 typedef unsigned long clock_time_t;
 typedef unsigned int uip_stats_t;
 
+#define NETSTACK_CONF_RADIO unix_radio_driver
+
 #endif // CONTIKI_CONF_H_

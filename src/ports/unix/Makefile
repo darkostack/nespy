@@ -172,6 +172,7 @@ NSMOD_SRC_C += $(addprefix ns/modules/,\
     hello.c \
     init.c \
     modns.c \
+    nstd.c \
     process.c \
     unix.c \
     test/timer.c \

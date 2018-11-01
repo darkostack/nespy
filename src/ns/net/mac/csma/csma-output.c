@@ -135,7 +135,7 @@ MEMB(packet_memb, struct packet_queue, MAX_QUEUED_PACKETS);
 MEMB(metadata_memb, struct qbuf_metadata, MAX_QUEUED_PACKETS);
 LIST(neighbor_list);
 
-static void packet_sent(void *ptr, int status, int num_transmissions);
+void packet_sent(void *ptr, int status, int num_transmissions);
 static void transmit_from_queue(void *ptr);
 /*---------------------------------------------------------------------------*/
 static struct neighbor_queue *
@@ -165,11 +165,10 @@ backoff_period(void)
 #endif /* CONTIKI_TARGET_COOJA */
 }
 /*---------------------------------------------------------------------------*/
-static int
-send_one_packet(void *ptr)
+#if !defined(UNIX)
+void send_one_packet(void *ptr)
 {
   int ret;
-  int last_sent_ok = 0;
 
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
@@ -254,13 +253,13 @@ send_one_packet(void *ptr)
       }
     }
   }
-  if(ret == MAC_TX_OK) {
-    last_sent_ok = 1;
-  }
 
   packet_sent(ptr, ret, 1);
-  return last_sent_ok;
 }
+#else
+extern void send_one_packet(void *ptr);
+#endif
+
 /*---------------------------------------------------------------------------*/
 static void
 transmit_from_queue(void *ptr)
@@ -408,7 +407,7 @@ tx_ok(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
   tx_done(MAC_TX_OK, q, n);
 }
 /*---------------------------------------------------------------------------*/
-static void
+void
 packet_sent(void *ptr, int status, int num_transmissions)
 {
   struct neighbor_queue *n;
