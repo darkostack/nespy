@@ -10,5 +10,3 @@ micropython_minimal
 micropython_coverage
 micropython_nanbox
 micropython_freedos*
-*.py
-*.gcov
