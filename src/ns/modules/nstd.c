@@ -1,5 +1,10 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <ctype.h>
+#include <inttypes.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 int ns_tolower(int chr)
 {
@@ -90,4 +95,15 @@ int ns_strncasecmp(const char *s1, const char *s2, size_t n)
 int ns_strcasecmp(const char *s1, const char *s2)
 {
   return ns_strcmp(s1, s2);
+}
+
+void ns_log(const char *format, ...)
+{
+    char log_string[512];
+    int chars_written;
+    va_list args;
+    va_start(args, format);
+    chars_written = vsnprintf(&log_string[0], sizeof(log_string), format, args);
+    va_end(args);
+    printf("%s\r\n", log_string);
 }

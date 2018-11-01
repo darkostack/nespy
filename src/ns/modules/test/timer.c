@@ -3,6 +3,7 @@
 #include "ns/sys/stimer.h"
 #include "ns/sys/timer.h"
 #include "ns/sys/rtimer.h"
+#include "ns/modules/nstd.h"
 #include <stdio.h>
 
 PROCESS(timer_test_process, "timer test process");
@@ -20,12 +21,12 @@ static struct rtimer timer_rtimer;
 void ctimer_callback(void *ptr)
 {
     ctimer_reset(&timer_ctimer);
-    printf("ctimer callback called\n");
+    ns_log("ctimer callback called");
 }
 
 void rtimer_callback(struct rtimer *timer, void *ptr)
 {
-    printf("rtimer callback called: %d\n", counter_rtimer++);
+    ns_log("rtimer callback called: %d", counter_rtimer++);
     rtimer_set(&timer_rtimer, RTIMER_NOW() + RTIMER_SECOND / 2, 0,
                rtimer_callback, NULL);
 }
@@ -36,7 +37,7 @@ PROCESS_THREAD(timer_test_process, ev, data)
 
     PROCESS_BEGIN();
 
-    printf("timer test process start\n");
+    ns_log("timer test process start");
 
     ctimer_set(&timer_ctimer, CLOCK_SECOND, ctimer_callback, NULL);
     rtimer_set(&timer_rtimer, RTIMER_NOW() + RTIMER_SECOND / 2, 0,
@@ -58,7 +59,7 @@ PROCESS_THREAD(timer_test_process, ev, data)
             counter_stimer++;
         }
 
-        printf("timer process: -------- %s\n", counter_timer == counter_etimer &&
+        ns_log("timer process: -------- %s", counter_timer == counter_etimer &&
                counter_timer == counter_stimer ? "SUCCESS" : "FAIL");
     }
 

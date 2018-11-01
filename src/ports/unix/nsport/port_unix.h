@@ -20,9 +20,14 @@
 
 void rtimer_alarm_process(void);
 void etimer_pending_process(void);
-void unix_radio_update_fd_set(fd_set *read_fd_set,
-                              fd_set *write_fd_set,
-                              int *max_fd);
+
+void unix_radio_update_fd_set(fd_set *read_fd_set, fd_set *write_fd_set, int *max_fd);
 void unix_radio_process(void);
+
+void unix_uart_restore(void);
+void unix_uart_enable(void);
+void unix_uart_disable(void);
+void unix_uart_update_fd_set(fd_set *read_fd_set, fd_set *write_fd_set, fd_set *error_fd_set, int *max_fd);
+void unix_uart_process(void);
 
 #endif // NSPORT_PORT_UNIX_H_

@@ -187,6 +187,7 @@ NSPORT_SRC_C += $(addprefix nsport/,\
     rtimer-arch.c \
     slip-arch.c \
     system.c \
+    uart.c \
     watchdog.c \
     )
 
