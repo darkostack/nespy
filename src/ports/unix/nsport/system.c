@@ -17,6 +17,7 @@ void unix_process_update(void)
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
 
+    unix_uart_update_fd_set(&read_fds, &write_fds, &error_fds, &max_fd);
     unix_radio_update_fd_set(&read_fds, &write_fds, &max_fd);
 
     rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
@@ -27,6 +28,7 @@ void unix_process_update(void)
         exit(EXIT_FAILURE);
     }
 
+    unix_uart_process();
     unix_radio_process();
     rtimer_alarm_process();
     etimer_pending_process();

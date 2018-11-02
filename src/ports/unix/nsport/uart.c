@@ -1,5 +1,6 @@
 #include "ns/contiki.h"
 #include "ns/modules/nstd.h"
+#include "ns/modules/platform.h"
 #include "port_unix.h"
 #include <assert.h>
 #include <errno.h>
@@ -28,14 +29,6 @@ static void restore_stdin_termios(void)
 static void restore_stdout_termios(void)
 {
     tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
-}
-
-__attribute__((weak)) void plat_uart_received(const uint8_t *buf, uint16_t buf_len)
-{
-}
-
-__attribute__((weak)) void plat_uart_send_done(void)
-{
 }
 
 void unix_uart_restore(void)
@@ -200,7 +193,7 @@ void unix_uart_process(void)
                 perror("read");
                 exit(EXIT_FAILURE);
             }
-            plat_uart_received(s_receive_buffer, (uint16_t)rval);
+            platform_uart_received(s_receive_buffer, (uint16_t)rval);
         }
 
         if ((s_write_length > 0) && (pollfd[1].revents & POLLOUT)) {
@@ -212,8 +205,18 @@ void unix_uart_process(void)
             s_write_buffer += (uint16_t)rval;
             s_write_length -= (uint16_t)rval;
             if (s_write_length == 0) {
-                plat_uart_send_done();
+                platform_uart_send_done();
             }
         }
     }
+}
+
+void platform_uart_init(void)
+{
+    unix_uart_enable();
+}
+
+void platform_uart_send(const uint8_t *buf, uint16_t buf_len)
+{
+    unix_uart_send(buf, buf_len);
 }

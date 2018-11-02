@@ -15,6 +15,10 @@ def main():
     init.node_id()
     init.ipv6_addr()
     
+    print("Nespy v1.0 command line interface: use Ctrl-D to exit")
+
+    init.platform(1)
+
     # autostart internal nespy processes
     process.autostart()
 

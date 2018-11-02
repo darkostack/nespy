@@ -168,6 +168,7 @@ LIB_SRC_C += $(addprefix lib/,\
 
 # ns modules
 NSMOD_SRC_C += $(addprefix ns/modules/,\
+    autostart.c \
     clock.c \
     hello.c \
     init.c \
@@ -175,7 +176,8 @@ NSMOD_SRC_C += $(addprefix ns/modules/,\
     nstd.c \
     process.c \
     unix.c \
-    test/timer.c \
+    cli/cli-uart.c \
+    cli/cli.c \
     )
 
 NSPORT_SRC_C += $(addprefix nsport/,\
