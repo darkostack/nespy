@@ -55,7 +55,7 @@ node_id_init(void) {
 #endif /* BUILD_WITH_DEPLOYMENT */
 }
 
-void
-node_id_set(int id) {
+void node_id_set(int id) {
     node_id = id;
+    linkaddr_node_addr.u8[LINKADDR_SIZE - 1] = node_id;
 }
