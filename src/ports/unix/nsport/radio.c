@@ -9,6 +9,13 @@
 #include "port_unix.h"
 #include <stdbool.h>
 
+#define RADIO_DEBUG 0
+#if RADIO_DEBUG
+#define LOG(...) ns_log(__VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+
 #define DEFAULT_PORT 9000
 #define ACK_WAIT_TIME 100 // 100ms ack timeout
 
@@ -30,7 +37,6 @@ AUTOSTART_PROCESSES(&unix_radio_thread);
 radio_value_t   s_radio_tx_mode;
 radio_value_t   s_radio_rx_mode;
 static uint8_t  s_radio_channel;
-static int8_t   s_radio_rssi;
 static bool     s_radio_on = false;
 static bool     s_radio_tx_broadcast = false;
 static uint32_t s_radio_tx_dsn;
@@ -39,6 +45,7 @@ static int8_t   s_radio_txpower;
 static uint8_t  s_radio_tx_len;
 void *          s_radio_sent_packet_ptr;
 static uint8_t  s_radio_rx_len;
+static uint16_t s_radio_port;
 
 static bool     s_ack_wait = false;
 static uint32_t s_ack_timeout;
@@ -48,7 +55,6 @@ static uint8_t  s_radio_rx_buf[UNIX_RADIO_BUFFER_SIZE];
 static uint8_t  s_radio_tx_buf[UNIX_RADIO_BUFFER_SIZE];
 
 static radio_state_t s_state = RADIO_STATE_DISABLED;
-static uint16_t      s_port_offset = 0;
 static int           s_sock_fd;
 
 static void unix_radio_init(void);
@@ -97,13 +103,18 @@ PROCESS_THREAD(unix_radio_thread, ev, data)
 
     while (1) {
         PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_POLL);
+
         packetbuf_clear();
+
         int read_len = unix_read(packetbuf_dataptr(), PACKETBUF_SIZE);
+        LOG("read_len: %d", read_len);
+
         packetbuf_set_datalen(read_len);
-        s_radio_rssi = -10; // hardcoded rssi value
         packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, s_radio_channel);
-        packetbuf_set_attr(PACKETBUF_ATTR_RSSI, s_radio_rssi);
+        packetbuf_set_attr(PACKETBUF_ATTR_RSSI, -10);
+
         NETSTACK_MAC.input();
+
         if (s_radio_rx_pkt_counter > 0) {
             s_radio_rx_pkt_counter--;
         }
@@ -157,8 +168,11 @@ static int unix_send(const void *data, unsigned short len)
 
 static int unix_read(void *buf, unsigned short size)
 {
-    ns_memcpy((uint8_t *)&s_radio_rx_buf, (void *)buf, MIN(size, UNIX_RADIO_BUFFER_SIZE));
-    return size;
+    int ret;
+    ns_memcpy((uint8_t *)&s_radio_rx_buf, (void *)buf, MIN(size, s_radio_rx_len));
+    ret = s_radio_rx_len;
+    s_radio_rx_len = 0;
+    return ret;
 }
 
 static int unix_channel_clear(void)
@@ -173,7 +187,7 @@ static int unix_receiving_packet(void)
 
 static int unix_pending_packet(void)
 {
-    return (s_radio_rx_pkt_counter != 0) ? 1 : 0;
+    return ((s_radio_rx_pkt_counter != 0) || (s_radio_rx_len != 0)) ? 1 : 0;
 }
 
 static int unix_on(void)
@@ -212,19 +226,9 @@ static void unix_radio_init(void)
 {
     struct sockaddr_in sockaddr;
     memset(&sockaddr, 0, sizeof(sockaddr));
-    char *offset;
-
-    offset = getenv("PORT_OFFSET");
+    s_radio_port = DEFAULT_PORT + node_id;
     sockaddr.sin_family = AF_INET;
-
-    if (offset)
-    {
-        char *endptr;
-        s_port_offset = (uint16_t)strtol(offset, &endptr, 0);
-        s_port_offset *= WELLKNOWN_NODE_ID;
-    }
-
-    sockaddr.sin_port = htons(DEFAULT_PORT + s_port_offset + node_id);
+    sockaddr.sin_port = htons(s_radio_port);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     s_sock_fd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -260,24 +264,66 @@ void unix_radio_process(void)
 {
     const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = {s_sock_fd, flags, 0};
+    bool is_ack_received = false;
 
     if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0) {
         unix_radio_update();
     }
 
+    // check for ack
+    if ((s_radio_rx_len == CSMA_ACK_LEN) && s_ack_wait) {
+        uint8_t ack_buf[CSMA_ACK_LEN];
+        unix_read(ack_buf, CSMA_ACK_LEN);
+        if (ack_buf[2] == s_radio_tx_dsn) {
+            // we received an ack!
+            is_ack_received = true;
+            LOG("receive: ACK!");
+        }
+    }
+
+    // transmit done and acked 
+    if (is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) && 
+        (s_ack_timeout >= RTIMER_NOW())) {
+        s_ack_wait = false;
+        s_state = RADIO_STATE_RECEIVE;
+        LOG("transmit: acked!");
+        packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
+    }
+
+    // transmit done but noack
+    if (!is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) &&
+        (s_ack_timeout < RTIMER_NOW())) {
+        s_ack_wait = false;
+        s_state = RADIO_STATE_RECEIVE;
+        LOG("transmit: noack, timeout: %d, now: %d", s_ack_timeout, (int)RTIMER_NOW());
+        packet_sent(s_radio_sent_packet_ptr, MAC_TX_NOACK, 1);
+    }
+
+    // get a packet call mac input
+    if (s_radio_rx_len > CSMA_ACK_LEN && (s_state == RADIO_STATE_RECEIVE) && !is_ack_received) {
+        LOG("receive: %d", (int)s_radio_rx_len);
+        s_radio_rx_pkt_counter++;
+        process_post(&unix_radio_thread, PROCESS_EVENT_POLL, NULL);
+    }
+
     if (s_state == RADIO_STATE_TRANSMIT && !s_ack_wait) {
         unix_radio_transmit((uint8_t *)&s_radio_tx_buf, s_radio_tx_len);
+        LOG("transmit: %d", s_radio_tx_len);
         if (s_radio_tx_len > CSMA_ACK_LEN) {
             if (s_radio_tx_broadcast) {
+                s_radio_tx_broadcast = false;
                 s_state = RADIO_STATE_RECEIVE;
                 packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
+                LOG("broadcast");
             } else {
                 // not broadcast packet and need an ack
                 s_ack_wait = true;
                 s_ack_timeout = RTIMER_NOW() + ACK_WAIT_TIME;
+                LOG("!broadcast");
             }
         } else {
             // we just sent an ack
+            LOG("transmit: ACK!");
             s_state = RADIO_STATE_RECEIVE;
         }
     }
@@ -285,60 +331,18 @@ void unix_radio_process(void)
 
 static void unix_radio_update(void)
 {
-    bool is_ack_received = false;
-
     ssize_t rval = recvfrom(s_sock_fd, (char *)&s_radio_rx_buf, sizeof(s_radio_rx_buf), 0, NULL, NULL);
-
     if (rval < 0) {
         perror("recvfrom");
         exit(EXIT_FAILURE);
     }
-
     s_radio_rx_len = (uint8_t)rval;
-
-    // check whether ack is valid
-    if ((s_radio_rx_len == CSMA_ACK_LEN) && s_ack_wait) {
-        uint8_t ack_buf[CSMA_ACK_LEN];
-        unix_read(ack_buf, CSMA_ACK_LEN);
-        if (ack_buf[2] == s_radio_tx_dsn) {
-            // we received an ack!
-            is_ack_received = true;
-        }
-    }
-
-    // transmit ok and received valid ack
-    if (is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) && 
-        (s_ack_timeout <= RTIMER_NOW())) {
-        s_ack_wait = false;
-        s_state = RADIO_STATE_RECEIVE;
-        packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
-        goto exit;
-    }
-
-    // transmit ok but can't received ack
-    if (!is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) &&
-        (s_ack_timeout > RTIMER_NOW())) {
-        s_ack_wait = false;
-        s_state = RADIO_STATE_RECEIVE;
-        packet_sent(s_radio_sent_packet_ptr, MAC_TX_NOACK, 1);
-        goto exit;
-    }
-
-    // call mac input
-    if ((s_state == RADIO_STATE_RECEIVE) && !is_ack_received) {
-        s_radio_rx_pkt_counter++;
-        process_post(&unix_radio_thread, PROCESS_EVENT_POLL, NULL);
-    }
-
-exit:
-    return;
 }
 
 static void unix_radio_transmit(uint8_t *buf, uint8_t len)
 {
     uint32_t i;
     struct sockaddr_in sockaddr;
-
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
@@ -348,7 +352,7 @@ static void unix_radio_transmit(uint8_t *buf, uint8_t len)
         if (node_id == i) {
             continue;
         }
-        sockaddr.sin_port = htons(DEFAULT_PORT + s_port_offset + i);
+        sockaddr.sin_port = htons(DEFAULT_PORT + i);
         rval = sendto(s_sock_fd, (const char *)buf, len, 0, (struct sockaddr *)&sockaddr,
                       sizeof(sockaddr));
         if (rval < 0) {
@@ -395,4 +399,9 @@ void send_one_packet(void *ptr)
     if (ret != MAC_TX_DEFERRED) {
         packet_sent(ptr, ret, 1);
     }
+}
+
+uint16_t unix_radio_get_port(void)
+{
+    return s_radio_port;
 }

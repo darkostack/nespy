@@ -1,4 +1,5 @@
 #include "ns/contiki.h"
+#include "ns/net/netstack.h"
 #include "ns/modules/cli/cli.h"
 #include "ns/modules/cli/cli-uart.h"
 #include "ns/modules/nstd.h"
@@ -9,11 +10,13 @@
 static void command_help(int argc, char *argv[]);
 static void command_ps(int argc, char *argv[]);
 static void command_version(int argc, char *argv[]);
+static void command_send(int argc, char *argv[]);
 
 static const ns_cli_cmd_t s_commands[] = {
     {"help", &command_help},
     {"ps", &command_ps},
     {"version", &command_version},
+    {"send", &command_send},
 };
 
 static void command_help(int argc, char *argv[])
@@ -37,6 +40,15 @@ static void command_version(int argc, char *argv[])
                            MICROPY_VERSION_STRING,
                            MICROPY_GIT_TAG,
                            MICROPY_BUILD_DATE);
+}
+
+static void command_send(int argc, char *argv[])
+{
+    uint8_t buf[10];
+    for (int i = 0; i < sizeof(buf); i++) {
+        buf[i] = i;
+    }
+    NETSTACK_RADIO.send((uint8_t *)&buf, sizeof(buf));
 }
 
 void cli_process_line(char *buf, uint16_t buf_len)

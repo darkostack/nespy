@@ -74,6 +74,10 @@ typedef struct _ns_init_obj_t {
 
 static bool is_init_obj_created = false;
 
+#if defined(UNIX)
+extern uint16_t unix_radio_get_port(void);
+#endif
+
 // init = ns.Init() # init object constructor
 STATIC mp_obj_t ns_init_make_new(const mp_obj_type_t *type,
                                  size_t n_args,
@@ -215,10 +219,12 @@ STATIC mp_obj_t ns_init_netstack(mp_obj_t self_in)
 }
 
 // init.node_id()
-STATIC mp_obj_t ns_init_node_id(mp_obj_t self_in)
+STATIC mp_obj_t ns_init_node_id(mp_obj_t self_in, mp_obj_t id_in)
 {
     ns_init_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    int id = mp_obj_get_int(id_in);
     node_id_init();
+    node_id_set(id);
     self->use_node_id = true;
     return mp_const_none;
 }
@@ -334,6 +340,9 @@ STATIC void ns_init_print(const mp_print_t *print,
     mp_printf(print, "ns: coap engine           : %s\n", self->use_coap_engine ? "true" : "false");
     mp_printf(print, "ns: simple energest       : %s\n", self->use_simple_energest ? "true" : "false");
     mp_printf(print, "ns: tsch cs adaptions     : %s\n", self->use_tsch_cs_adaptions ? "true" : "false");
+#if defined(UNIX)
+    mp_printf(print, "ns: radio PORT            : %u\n", unix_radio_get_port());
+#endif
     mp_printf(print, "ns: --- Nespy network stack ---\n");
     mp_printf(print, "ns: Routing: %s\n", NETSTACK_ROUTING.name);
     mp_printf(print, "ns: Net: %s\n", NETSTACK_NETWORK.name);
@@ -381,7 +390,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_watchdog_obj, ns_init_watchdog);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_energest_obj, ns_init_energest);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_stack_check_obj, ns_init_stack_check);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_netstack_obj, ns_init_netstack);
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_node_id_obj, ns_init_node_id);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_node_id_obj, ns_init_node_id);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_ipv6_addr_obj, ns_init_ipv6_addr);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_rpl_border_router_obj, ns_init_rpl_border_router);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_orchestra_obj, ns_init_orchestra);
