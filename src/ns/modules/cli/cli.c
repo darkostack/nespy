@@ -6,24 +6,24 @@
 #include <string.h>
 
 // commands
-static void process_help(int argc, char *argv[]);
-static void process_ps(int argc, char *argv[]);
-static void process_version(int argc, char *argv[]);
+static void command_help(int argc, char *argv[]);
+static void command_ps(int argc, char *argv[]);
+static void command_version(int argc, char *argv[]);
 
 static const ns_cli_cmd_t s_commands[] = {
-    {"help", &process_help},
-    {"ps", &process_ps},
-    {"version", &process_version},
+    {"help", &command_help},
+    {"ps", &command_ps},
+    {"version", &command_version},
 };
 
-static void process_help(int argc, char *argv[])
+static void command_help(int argc, char *argv[])
 {
     for (unsigned int i = 0; i < (sizeof(s_commands) / sizeof(s_commands[0])); i++) {
         cli_uart_output_format("%s\r\n", s_commands[i].name);
     }
 }
 
-static void process_ps(int argc, char *argv[])
+static void command_ps(int argc, char *argv[])
 {
     struct process *p;
     for (p = process_list; p != NULL; p = p->next) {
@@ -31,7 +31,7 @@ static void process_ps(int argc, char *argv[])
     }
 }
 
-static void process_version(int argc, char *argv[])
+static void command_version(int argc, char *argv[])
 {
     cli_uart_output_format("Nespy v%s %s : build-date %s\r\n",
                            MICROPY_VERSION_STRING,
