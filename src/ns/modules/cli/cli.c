@@ -61,6 +61,10 @@ void cli_process_line(char *buf, uint16_t buf_len)
             break;
         }
     }
+
+    if (i == (sizeof(s_commands) / sizeof(s_commands[0]))) {
+        cli_uart_output_format("unknown command: %s\r\n", cmd);
+    }
 }
 
 int cli_parse_long(char *str, long *l)
