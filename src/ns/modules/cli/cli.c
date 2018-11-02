@@ -2,15 +2,18 @@
 #include "ns/modules/cli/cli.h"
 #include "ns/modules/cli/cli-uart.h"
 #include "ns/modules/nstd.h"
+#include "genhdr/mpversion.h"
 #include <string.h>
 
 // commands
 static void process_help(int argc, char *argv[]);
 static void process_ps(int argc, char *argv[]);
+static void process_version(int argc, char *argv[]);
 
 static const ns_cli_cmd_t s_commands[] = {
     {"help", &process_help},
     {"ps", &process_ps},
+    {"version", &process_version},
 };
 
 static void process_help(int argc, char *argv[])
@@ -26,6 +29,14 @@ static void process_ps(int argc, char *argv[])
     for (p = process_list; p != NULL; p = p->next) {
         cli_uart_output_format("%s\r\n", p->name);
     }
+}
+
+static void process_version(int argc, char *argv[])
+{
+    cli_uart_output_format("Nespy v%s %s : build-date %s\r\n",
+                           MICROPY_VERSION_STRING,
+                           MICROPY_GIT_TAG,
+                           MICROPY_BUILD_DATE);
 }
 
 void cli_process_line(char *buf, uint16_t buf_len)

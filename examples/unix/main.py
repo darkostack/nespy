@@ -15,7 +15,8 @@ def main():
     init.node_id()
     init.ipv6_addr()
     
-    print("Nespy v1.0 command line interface: use Ctrl-D to exit")
+    print("Nespy command line interface: use Ctrl-D to exit")
+    print("type `help` to see list of commands")
 
     init.platform(1)
 
