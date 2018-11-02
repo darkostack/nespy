@@ -24,7 +24,8 @@ typedef enum _radio_state_t {
     RADIO_STATE_TRANSMIT = 3,
 } radio_state_t;
 
-PROCESS(unix_radio_thread, "unix radio thread");
+PROCESS(unix_radio_thread, "Unix-radio process");
+AUTOSTART_PROCESSES(&unix_radio_thread);
 
 radio_value_t   s_radio_tx_mode;
 radio_value_t   s_radio_rx_mode;
@@ -122,8 +123,6 @@ static int unix_init(void)
     s_radio_rx_mode = 0;
 
     s_state = RADIO_STATE_RECEIVE;
-
-    process_start(&unix_radio_thread, NULL);
 
     return 1;
 }

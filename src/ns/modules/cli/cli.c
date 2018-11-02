@@ -1,3 +1,4 @@
+#include "ns/contiki.h"
 #include "ns/modules/cli/cli.h"
 #include "ns/modules/cli/cli-uart.h"
 #include "ns/modules/nstd.h"
@@ -5,15 +6,25 @@
 
 // commands
 static void process_help(int argc, char *argv[]);
+static void process_ps(int argc, char *argv[]);
 
 static const ns_cli_cmd_t s_commands[] = {
     {"help", &process_help},
+    {"ps", &process_ps},
 };
 
 static void process_help(int argc, char *argv[])
 {
     for (unsigned int i = 0; i < (sizeof(s_commands) / sizeof(s_commands[0])); i++) {
         cli_uart_output_format("%s\r\n", s_commands[i].name);
+    }
+}
+
+static void process_ps(int argc, char *argv[])
+{
+    struct process *p;
+    for (p = process_list; p != NULL; p = p->next) {
+        cli_uart_output_format("%s\r\n", p->name);
     }
 }
 

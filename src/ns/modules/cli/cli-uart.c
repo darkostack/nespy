@@ -10,7 +10,7 @@ static uint16_t s_tx_head;
 static uint16_t s_tx_length;
 static uint16_t s_send_length;
 
-static const char s_command_prompt[] = {'>', ' '};
+static const char s_command_prompt[] = {'>', '>', '>', ' '};
 static const char s_erase_string[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
 
