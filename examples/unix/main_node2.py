@@ -15,8 +15,6 @@ def main():
     init.netstack()
     init.ipv6_addr()
 
-    print(init) # print initialized info
-    
     print("Nespy command line interface: use Ctrl-D to exit")
     print("type `help` to see list of commands")
 
