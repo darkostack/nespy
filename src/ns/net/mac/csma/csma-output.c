@@ -175,7 +175,7 @@ void send_one_packet(void *ptr)
 
   if(NETSTACK_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
-    LOG_ERR("failed to create packet\n");
+    LOG_ERR("failed to create packet\r\n");
     ret = MAC_TX_ERR_FATAL;
   } else {
     int is_broadcast;
@@ -270,7 +270,7 @@ transmit_from_queue(void *ptr)
     if(q != NULL) {
       LOG_INFO("preparing packet for ");
       LOG_INFO_LLADDR(&n->addr);
-      LOG_INFO_(", seqno %u, tx %u, queue %d\n",
+      LOG_INFO_(", seqno %u, tx %u, queue %d\r\n",
         queuebuf_attr(q->buf, PACKETBUF_ATTR_MAC_SEQNO),
         n->transmissions, list_length(n->packet_queue));
       /* Send first packet in the neighbor queue */
@@ -295,7 +295,7 @@ schedule_transmission(struct neighbor_queue *n)
     delay = random_rand() % delay;
   }
 
-  LOG_DBG("scheduling transmission in %u ticks, NB=%u, BE=%u\n",
+  LOG_DBG("scheduling transmission in %u ticks, NB=%u, BE=%u\r\n",
       (unsigned)delay, n->collisions, backoff_exponent);
   ctimer_set(&n->transmit_timer, delay, transmit_from_queue, n);
 }
@@ -310,7 +310,7 @@ free_packet(struct neighbor_queue *n, struct packet_queue *p, int status)
     queuebuf_free(p->buf);
     memb_free(&metadata_memb, p->ptr);
     memb_free(&packet_memb, p);
-    LOG_DBG("free_queued_packet, queue length %d, free packets %d\n",
+    LOG_DBG("free_queued_packet, queue length %d, free packets %d\r\n",
            list_length(n->packet_queue), memb_numfree(&packet_memb));
     if(list_head(n->packet_queue) != NULL) {
       /* There is a next packet. We reset current tx information */
@@ -342,7 +342,7 @@ tx_done(int status, struct packet_queue *q, struct neighbor_queue *n)
 
   LOG_INFO("packet sent to ");
   LOG_INFO_LLADDR(&n->addr);
-  LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\n",
+  LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\r\n",
               packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
               status, n->transmissions, n->collisions);
 
@@ -428,17 +428,17 @@ packet_sent(void *ptr, int status, int num_transmissions)
   }
 
   if(q == NULL) {
-    LOG_WARN("packet sent: seqno %u not found\n",
+    LOG_WARN("packet sent: seqno %u not found\r\n",
            packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     return;
   } else if(q->ptr == NULL) {
-    LOG_WARN("packet sent: no metadata\n");
+    LOG_WARN("packet sent: no metadata\r\n");
     return;
   }
 
   LOG_INFO("tx to ");
   LOG_INFO_LLADDR(&n->addr);
-  LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\n",
+  LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\r\n",
             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
             status, n->transmissions, n->collisions);
 
@@ -522,7 +522,7 @@ csma_output_packet(mac_callback_t sent, void *ptr)
 
             LOG_INFO("sending to ");
             LOG_INFO_LLADDR(addr);
-            LOG_INFO_(", len %u, seqno %u, queue length %d, free packets %d\n",
+            LOG_INFO_(", len %u, seqno %u, queue length %d, free packets %d\r\n",
                     packetbuf_datalen(),
                     packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
                     list_length(n->packet_queue), memb_numfree(&packet_memb));
@@ -533,10 +533,10 @@ csma_output_packet(mac_callback_t sent, void *ptr)
             return;
           }
           memb_free(&metadata_memb, q->ptr);
-          LOG_WARN("could not allocate queuebuf, dropping packet\n");
+          LOG_WARN("could not allocate queuebuf, dropping packet\r\n");
         }
         memb_free(&packet_memb, q);
-        LOG_WARN("could not allocate queuebuf, dropping packet\n");
+        LOG_WARN("could not allocate queuebuf, dropping packet\r\n");
       }
       /* The packet allocation failed. Remove and free neighbor entry if empty. */
       if(list_length(n->packet_queue) == 0) {
@@ -544,11 +544,11 @@ csma_output_packet(mac_callback_t sent, void *ptr)
         memb_free(&neighbor_memb, n);
       }
     } else {
-      LOG_WARN("Neighbor queue full\n");
+      LOG_WARN("Neighbor queue full\r\n");
     }
-    LOG_WARN("could not allocate packet, dropping packet\n");
+    LOG_WARN("could not allocate packet, dropping packet\r\n");
   } else {
-    LOG_WARN("could not allocate neighbor, dropping packet\n");
+    LOG_WARN("could not allocate neighbor, dropping packet\r\n");
   }
   mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 1);
 }

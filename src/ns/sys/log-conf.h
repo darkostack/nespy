@@ -146,6 +146,10 @@
 #define LOG_CONF_LEVEL_MAIN                        LOG_LEVEL_INFO
 #endif /* LOG_CONF_LEVEL_MAIN */
 
+#ifndef LOG_CONF_LEVEL_RADIO
+#define LOG_CONF_LEVEL_RADIO                       LOG_LEVEL_NONE
+#endif
+
 #endif /* __LOG_CONF_H__ */
 
 /** @} */

@@ -37,7 +37,7 @@
 //
 //      init.platform(2)            # init platform stage two
 //      init.netstack()
-//      init.node_id()
+//      init.node_id(1)             # unix wellknown node id 1-34
 //      init.ipv6_addr()
 //      init.platform(3)            # init platform stage three
 //      init.rpl_border_router()

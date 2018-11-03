@@ -84,6 +84,7 @@ extern int curr_log_level_6top;
 extern int curr_log_level_coap;
 extern int curr_log_level_lwm2m;
 extern int curr_log_level_main;
+extern int curr_log_level_radio;
 
 extern struct log_module all_modules[];
 
@@ -98,6 +99,7 @@ extern struct log_module all_modules[];
 #define LOG_LEVEL_COAP                        MIN((LOG_CONF_LEVEL_COAP), curr_log_level_coap)
 #define LOG_LEVEL_LWM2M                       MIN((LOG_CONF_LEVEL_LWM2M), curr_log_level_lwm2m)
 #define LOG_LEVEL_MAIN                        MIN((LOG_CONF_LEVEL_MAIN), curr_log_level_main)
+#define LOG_LEVEL_RADIO                       MIN((LOG_CONF_LEVEL_RADIO), curr_log_level_radio)
 
 /* Main log function */
 

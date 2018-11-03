@@ -9,12 +9,10 @@
 #include "port_unix.h"
 #include <stdbool.h>
 
-#define RADIO_DEBUG 0
-#if RADIO_DEBUG
-#define LOG(...) ns_log(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
+/* Log configuration */
+#include "ns/sys/log.h"
+#define LOG_MODULE "RADIO"
+#define LOG_LEVEL LOG_LEVEL_RADIO
 
 #define DEFAULT_PORT 9000
 #define ACK_WAIT_TIME 100 // 100ms ack timeout
@@ -106,10 +104,11 @@ PROCESS_THREAD(unix_radio_thread, ev, data)
 
         packetbuf_clear();
 
-        int read_len = unix_read(packetbuf_dataptr(), PACKETBUF_SIZE);
-        LOG("read_len: %d", read_len);
+        int len = unix_read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
-        packetbuf_set_datalen(read_len);
+        LOG_DBG("receive %d\r\n", len);
+
+        packetbuf_set_datalen(len);
         packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, s_radio_channel);
         packetbuf_set_attr(PACKETBUF_ATTR_RSSI, -10);
 
@@ -151,6 +150,7 @@ static int unix_transmit(unsigned short len)
 
     if ((s_radio_tx_mode & RADIO_TX_MODE_SEND_ON_CCA) && (s_radio_tx_len > CSMA_ACK_LEN)) {
         if (!unix_channel_clear()) {
+            LOG_WARN("transmit collision\r\n");
             return RADIO_TX_COLLISION;
         }
     }
@@ -277,7 +277,7 @@ void unix_radio_process(void)
         if (ack_buf[2] == s_radio_tx_dsn) {
             // we received an ack!
             is_ack_received = true;
-            LOG("receive: ACK!");
+            LOG_DBG("received ack\r\n");
         }
     }
 
@@ -286,7 +286,7 @@ void unix_radio_process(void)
         (s_ack_timeout >= RTIMER_NOW())) {
         s_ack_wait = false;
         s_state = RADIO_STATE_RECEIVE;
-        LOG("transmit: acked!");
+        LOG_DBG("transmit done, acked\r\n");
         packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
     }
 
@@ -295,35 +295,33 @@ void unix_radio_process(void)
         (s_ack_timeout < RTIMER_NOW())) {
         s_ack_wait = false;
         s_state = RADIO_STATE_RECEIVE;
-        LOG("transmit: noack, timeout: %d, now: %d", s_ack_timeout, (int)RTIMER_NOW());
+        LOG_WARN("transmit done, noack -- timeout: %d, now: %d", s_ack_timeout, (int)RTIMER_NOW());
         packet_sent(s_radio_sent_packet_ptr, MAC_TX_NOACK, 1);
     }
 
     // get a packet call mac input
     if (s_radio_rx_len > CSMA_ACK_LEN && (s_state == RADIO_STATE_RECEIVE) && !is_ack_received) {
-        LOG("receive: %d", (int)s_radio_rx_len);
         s_radio_rx_pkt_counter++;
         process_post(&unix_radio_thread, PROCESS_EVENT_POLL, NULL);
     }
 
     if (s_state == RADIO_STATE_TRANSMIT && !s_ack_wait) {
         unix_radio_transmit((uint8_t *)&s_radio_tx_buf, s_radio_tx_len);
-        LOG("transmit: %d", s_radio_tx_len);
         if (s_radio_tx_len > CSMA_ACK_LEN) {
             if (s_radio_tx_broadcast) {
                 s_radio_tx_broadcast = false;
                 s_state = RADIO_STATE_RECEIVE;
                 packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
-                LOG("broadcast");
+                LOG_DBG("transmit %d -- broadcast\r\n", s_radio_tx_len);
             } else {
                 // not broadcast packet and need an ack
                 s_ack_wait = true;
                 s_ack_timeout = RTIMER_NOW() + ACK_WAIT_TIME;
-                LOG("!broadcast");
+                LOG_DBG("transmit %d -- !broadcast\r\n", s_radio_tx_len);
             }
         } else {
             // we just sent an ack
-            LOG("transmit: ACK!");
+            LOG_DBG("transmit -- ack\r\n");
             s_state = RADIO_STATE_RECEIVE;
         }
     }

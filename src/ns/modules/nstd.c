@@ -105,5 +105,5 @@ void ns_log(const char *format, ...)
     va_start(args, format);
     chars_written = vsnprintf(&log_string[0], sizeof(log_string), format, args);
     va_end(args);
-    printf("%s\r\n", log_string);
+    printf("%s", log_string);
 }
