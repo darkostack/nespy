@@ -27,6 +27,15 @@
 #include "genhdr/mpversion.h"
 #include <string.h>
 
+#define PING_TIMEOUT (3 * CLOCK_SECOND)
+
+static struct uip_icmp6_echo_reply_notification echo_reply_notification;
+static uint8_t curr_ping_ttl;
+static uint16_t curr_ping_datalen;
+static uip_ipaddr_t ping_remote_addr;
+
+PROCESS(cli_ping_process, "Cli-ping process");
+
 #if defined(UNIX)
 extern uint16_t unix_radio_get_port(void);
 #endif
@@ -51,6 +60,7 @@ static void command_rpl_status(int argc, char *argv[]);
 static void command_rpl_nbr(int argc, char *argv[]);
 #endif // ROUTING_CONF_RPL_LITE
 static void command_routes(int argc, char *argv[]);
+static void command_ping(int argc, char *argv[]);
 
 // helper function
 static void cli_output_6addr(const uip_ipaddr_t *ipaddr);
@@ -59,6 +69,7 @@ static const char * ds6_nbr_state_to_str(uint8_t state);
 static const char * rpl_state_to_str(enum rpl_dag_state state);
 static const char *rpl_mop_to_str(int mop);
 static const char *rpl_ocp_to_str(int ocp);
+static void echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen);
 
 static const ns_cli_cmd_t s_commands[] = {
     { "help", &command_help },
@@ -80,6 +91,7 @@ static const ns_cli_cmd_t s_commands[] = {
     { "rpl-nbr", &command_rpl_nbr },
 #endif // ROUTING_CONF_RPL_LITE
     { "routes", &command_routes },
+    { "ping", &command_ping },
 };
 
 static void command_help(int argc, char *argv[])
@@ -380,6 +392,59 @@ static void command_routes(int argc, char *argv[])
 #endif // (UIP_MAX_ROUTES != 0)
 }
 
+static void command_ping(int argc, char *argv[])
+{
+    if (argc == 0) {
+        cli_uart_output_format("Destination IPv6 address is not specified\r\n");
+        return;
+    }
+
+    if (uiplib_ipaddrconv(argv[0], &ping_remote_addr) == 0) {
+        cli_uart_output_format("Invalid IPv6 address: %s\r\n", argv[0]);
+        return;
+    }
+
+    cli_uart_output_format("Pinging ");
+    cli_output_6addr(&ping_remote_addr);
+    cli_uart_output_format("\r\n");
+
+    process_post(&cli_ping_process, PROCESS_EVENT_INIT, NULL);
+}
+
+PROCESS_THREAD(cli_ping_process, ev, data)
+{
+    static struct etimer ping_timeout_timer;
+
+    PROCESS_BEGIN();
+
+    while (1) {
+        PROCESS_WAIT_EVENT_UNTIL((ev == PROCESS_EVENT_INIT) ||
+                                 (ev == PROCESS_EVENT_POLL) ||
+                                 (ev == PROCESS_EVENT_TIMER));
+
+        if (ev == PROCESS_EVENT_INIT) {
+            etimer_set(&ping_timeout_timer, PING_TIMEOUT);
+            uip_icmp6_send(&ping_remote_addr, ICMP6_ECHO_REQUEST, 0, 4);
+        }
+
+        if (ev == PROCESS_EVENT_POLL && !etimer_expired(&ping_timeout_timer)) {
+            etimer_stop(&ping_timeout_timer);
+            cli_uart_output_format("Received ping reply from ");
+            cli_output_6addr(&ping_remote_addr);
+            cli_uart_output_format(", len %u, ttl %u, delay %lu ms\r\n",
+                    curr_ping_datalen, curr_ping_ttl,
+                    (1000*(clock_time() - ping_timeout_timer.timer.start))/CLOCK_SECOND);
+        }
+
+        if (ev == PROCESS_EVENT_TIMER && etimer_expired(&ping_timeout_timer)) {
+            cli_uart_output_format("Timeout\r\n");
+        }
+    }
+
+    PROCESS_END();
+}
+
+// cli helper function
 void cli_process_line(char *buf, uint16_t buf_len)
 {
     char *argv[const_max_args] = {NULL};
@@ -438,6 +503,14 @@ void cli_output_bytes(const uint8_t *bytes, uint8_t len)
     for (int i = 0; i < len; i++) {
         cli_uart_output_format("%02x", bytes[i]);
     }
+}
+
+void cli_commands_init(void)
+{
+    process_start(&cli_ping_process, NULL);
+    // set up ping reply callback
+    uip_icmp6_echo_reply_callback_add(&echo_reply_notification,
+                                      echo_reply_handler);
 }
 
 static void cli_output_6addr(const uip_ipaddr_t *ipaddr)
@@ -525,6 +598,11 @@ static const char *rpl_ocp_to_str(int ocp)
         return "Unknown";
     }
 }
-#endif
+#endif // ROUTING_CONF_RPL_LITE
 
-
+static void echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
+{
+    curr_ping_ttl = ttl;
+    curr_ping_datalen = datalen;
+    process_poll(&cli_ping_process);
+}

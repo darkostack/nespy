@@ -31,6 +31,7 @@ void platform_uart_send_done(void)
 
 void cli_uart_init(void)
 {
+    cli_commands_init();
     platform_uart_init();
 }
 
