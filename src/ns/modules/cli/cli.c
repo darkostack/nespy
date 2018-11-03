@@ -36,22 +36,45 @@ static void command_help(int argc, char *argv[]);
 static void command_ps(int argc, char *argv[]);
 static void command_version(int argc, char *argv[]);
 static void command_send(int argc, char *argv[]);
+static void command_ipaddr(int argc, char *argv[]);
+static void command_ip_neighbors(int argc, char *argv[]);
 static void command_rpl_status(int argc, char *argv[]);
 static void command_rpl_nbr(int argc, char *argv[]);
 static void command_rpl_set_root(int argc, char *argv[]);
 
 // helper function
 static void cli_output_6addr(const uip_ipaddr_t *ipaddr);
+static void cli_output_lladdr(const linkaddr_t *lladdr);
 
 static const ns_cli_cmd_t s_commands[] = {
     { "help", &command_help },
     { "ps", &command_ps },
     { "version", &command_version },
     { "send", &command_send },
+    { "ip-addr", &command_ipaddr },
+    { "ip-nbr", &command_ip_neighbors },
     { "rpl-status", &command_rpl_status },
     { "rpl-nbr", &command_rpl_nbr },
     { "rpl-set-root", &command_rpl_set_root },
 };
+
+static const char * ds6_nbr_state_to_str(uint8_t state)
+{
+    switch (state) {
+    case NBR_INCOMPLETE:
+        return "Incomplete";
+    case NBR_REACHABLE:
+        return "Reachable";
+    case NBR_STALE:
+        return "Stale";
+    case NBR_DELAY:
+        return "Delay";
+    case NBR_PROBE:
+        return "Probe";
+    default:
+        return "Unknown";
+    }
+}
 
 #if ROUTING_CONF_RPL_LITE
 static const char * rpl_state_to_str(enum rpl_dag_state state)
@@ -167,6 +190,42 @@ static void command_send(int argc, char *argv[])
         buf[i] = i;
     }
     NETSTACK_RADIO.send((uint8_t *)&buf, sizeof(buf));
+}
+
+static void command_ipaddr(int argc, char *argv[])
+{
+    uint8_t state;
+    cli_uart_output_format("Node IPv6 addresses:\r\n");
+    for (int i = 0; i < UIP_DS6_ADDR_NB; i++) {
+        state = uip_ds6_if.addr_list[i].state;
+        if (uip_ds6_if.addr_list[i].isused &&
+            (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+            cli_uart_output_format("-- ");
+            cli_output_6addr(&uip_ds6_if.addr_list[i].ipaddr);
+            cli_uart_output_format("\r\n");
+        }
+    }
+}
+
+static void command_ip_neighbors(int argc, char *argv[])
+{
+    uip_ds6_nbr_t *nbr;
+    nbr = uip_ds6_nbr_head();
+    if (nbr == NULL) {
+        cli_uart_output_format("Node IPv6 neighbors: none\r\n");
+        return;
+    }
+    cli_uart_output_format("Node IPv6 neighbors:\r\n");
+    while (nbr != NULL) {
+        cli_uart_output_format("-- ");
+        cli_output_6addr(uip_ds6_nbr_get_ipaddr(nbr));
+        cli_uart_output_format(" <-> ");
+        cli_output_lladdr((linkaddr_t *)uip_ds6_nbr_get_ll(nbr));
+        cli_uart_output_format(", router %u, state %s ",
+                nbr->isrouter, ds6_nbr_state_to_str(nbr->state));
+        cli_uart_output_format("\r\n");
+        nbr = uip_ds6_nbr_next(nbr);
+    }
 }
 
 static void command_rpl_status(int argc, char *argv[])
@@ -346,4 +405,20 @@ static void cli_output_6addr(const uip_ipaddr_t *ipaddr)
     char buf[UIPLIB_IPV6_MAX_STR_LEN];
     uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
     cli_uart_output_format("%s", buf);
+}
+
+static void cli_output_lladdr(const linkaddr_t *lladdr)
+{
+    if (lladdr == NULL) {
+        cli_uart_output_format("(NULL LL addr)");
+        return;
+    } else {
+        unsigned int i;
+        for (i = 0; i < LINKADDR_SIZE; i++) {
+            if (i > 0 && i % 2 == 0) {
+                cli_uart_output_format(".");
+            }
+            cli_uart_output_format("%02x", lladdr->u8[i]);
+        }
+    }
 }
