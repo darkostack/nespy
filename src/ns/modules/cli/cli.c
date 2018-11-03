@@ -38,6 +38,7 @@ static void command_version(int argc, char *argv[]);
 static void command_send(int argc, char *argv[]);
 static void command_rpl_status(int argc, char *argv[]);
 static void command_rpl_nbr(int argc, char *argv[]);
+static void command_rpl_set_root(int argc, char *argv[]);
 
 // helper function
 static void cli_output_6addr(const uip_ipaddr_t *ipaddr);
@@ -49,6 +50,7 @@ static const ns_cli_cmd_t s_commands[] = {
     { "send", &command_send },
     { "rpl-status", &command_rpl_status },
     { "rpl-nbr", &command_rpl_nbr },
+    { "rpl-set-root", &command_rpl_set_root },
 };
 
 #if ROUTING_CONF_RPL_LITE
@@ -225,6 +227,56 @@ static void command_rpl_nbr(int argc, char *argv[])
             rpl_neighbor_snprint(buf, sizeof(buf), nbr);
             cli_uart_output_format("%s\r\n", buf);
             nbr = nbr_table_next(rpl_neighbors, nbr);
+        }
+    }
+}
+
+static void command_rpl_set_root(int argc, char *argv[])
+{
+    static int is_on;
+    static uip_ipaddr_t prefix;
+
+    if (argc == 0) {
+        cli_uart_output_format("not enough arguments\r\n");
+        return;
+    }
+
+    // get enable status
+    if (ns_strcmp(argv[0], "1") == 0) {
+        is_on = 1;
+    } else if (ns_strcmp(argv[0], "0") == 0) {
+        is_on = 0;
+    } else {
+        cli_uart_output_format("invalid argument: %s\r\n", argv[0]);
+        return;
+    }
+
+    // set prefix if it assigned, default fd00::
+    if (argc == 2) {
+        if (uiplib_ipaddrconv(argv[1], &prefix) == 0) {
+            cli_uart_output_format("Invalid prefix: %s\r\n", argv[1]);
+            return;
+        }
+    } else {
+        uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+    }
+
+    if (is_on) {
+        if (!NETSTACK_ROUTING.node_is_root()) {
+            cli_uart_output_format("Setting as DAG root with prefix ");
+            cli_output_6addr(&prefix);
+            cli_uart_output_format("/64\r\n");
+            NETSTACK_ROUTING.root_set_prefix(&prefix, NULL);
+            NETSTACK_ROUTING.root_start();
+        } else {
+            cli_uart_output_format("Node is already a DAG root\r\n");
+        }
+    } else {
+        if (NETSTACK_ROUTING.node_is_root()) {
+            cli_uart_output_format("Setting as non-root node: leaving DAG\r\n");
+            NETSTACK_ROUTING.leave_network();
+        } else {
+            cli_uart_output_format("Node is not a DAG root\r\n");
         }
     }
 }
