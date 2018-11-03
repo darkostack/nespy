@@ -12,8 +12,8 @@ def main():
     init.etimer()
     init.ctimer()
     init.node_id(1)
-    init.netstack()
     init.ipv6_addr()
+    init.netstack()
 
     print("Nespy command line interface: use Ctrl-D to exit")
     print("type `help` to see list of commands")

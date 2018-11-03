@@ -36,22 +36,19 @@ static void command_help(int argc, char *argv[]);
 static void command_ps(int argc, char *argv[]);
 static void command_version(int argc, char *argv[]);
 static void command_send(int argc, char *argv[]);
-static void command_netinfo(int argc, char *argv[]);
+static void command_rpl_status(int argc, char *argv[]);
+static void command_rpl_nbr(int argc, char *argv[]);
 
 // helper function
-void cli_output_6addr(const uip_ipaddr_t *ipaddr)
-{
-    char buf[UIPLIB_IPV6_MAX_STR_LEN];
-    uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
-    cli_uart_output_format("%s", buf);
-}
+static void cli_output_6addr(const uip_ipaddr_t *ipaddr);
 
 static const ns_cli_cmd_t s_commands[] = {
     { "help", &command_help },
     { "ps", &command_ps },
     { "version", &command_version },
     { "send", &command_send },
-    { "netinfo", &command_netinfo },
+    { "rpl-status", &command_rpl_status },
+    { "rpl-nbr", &command_rpl_nbr },
 };
 
 #if ROUTING_CONF_RPL_LITE
@@ -122,20 +119,6 @@ static void command_version(int argc, char *argv[])
                            MICROPY_VERSION_STRING,
                            MICROPY_GIT_TAG,
                            MICROPY_BUILD_DATE);
-}
-
-static void command_send(int argc, char *argv[])
-{
-    uint8_t buf[10];
-    for (int i = 0; i < sizeof(buf); i++) {
-        buf[i] = i;
-    }
-    NETSTACK_RADIO.send((uint8_t *)&buf, sizeof(buf));
-}
-
-static void command_netinfo(int argc, char *argv[])
-{
-    cli_uart_output_format("Network setting:\r\n");
     cli_uart_output_format("-- Routing: %s\r\n", NETSTACK_ROUTING.name);
     cli_uart_output_format("-- Net: %s\r\n", NETSTACK_NETWORK.name);
     cli_uart_output_format("-- MAC: %s\r\n", NETSTACK_MAC.name);
@@ -173,7 +156,19 @@ static void command_netinfo(int argc, char *argv[])
     uiplib_ipaddr_snprint(buf, sizeof(buf), lladdr != NULL ? &lladdr->ipaddr : NULL);
     cli_uart_output_format("-- Tentative link-local IPv6 address: %s\r\n", buf);
 #endif
+}
 
+static void command_send(int argc, char *argv[])
+{
+    uint8_t buf[10];
+    for (int i = 0; i < sizeof(buf); i++) {
+        buf[i] = i;
+    }
+    NETSTACK_RADIO.send((uint8_t *)&buf, sizeof(buf));
+}
+
+static void command_rpl_status(int argc, char *argv[])
+{
 #if ROUTING_CONF_RPL_LITE
     cli_uart_output_format("RPL status:\r\n");
     if (!curr_instance.used) {
@@ -216,6 +211,22 @@ static void command_netinfo(int argc, char *argv[])
                                curr_instance.dio_redundancy);
     }
 #endif
+}
+
+static void command_rpl_nbr(int argc, char *argv[])
+{
+    if (!curr_instance.used || rpl_neighbor_count() == 0) {
+        cli_uart_output_format("RPL neighbors: none\r\n");
+    } else {
+        rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
+        cli_uart_output_format("RPL neighbors:\r\n");
+        while (nbr != NULL) {
+            char buf[120];
+            rpl_neighbor_snprint(buf, sizeof(buf), nbr);
+            cli_uart_output_format("%s\r\n", buf);
+            nbr = nbr_table_next(rpl_neighbors, nbr);
+        }
+    }
 }
 
 void cli_process_line(char *buf, uint16_t buf_len)
@@ -278,3 +289,9 @@ void cli_output_bytes(const uint8_t *bytes, uint8_t len)
     }
 }
 
+static void cli_output_6addr(const uip_ipaddr_t *ipaddr)
+{
+    char buf[UIPLIB_IPV6_MAX_STR_LEN];
+    uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
+    cli_uart_output_format("%s", buf);
+}
