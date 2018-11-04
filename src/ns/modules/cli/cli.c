@@ -1,6 +1,7 @@
 #include "ns/contiki.h"
 #include "ns/contiki-net.h"
 #include "ns/sys/node-id.h"
+#include "ns/lib/random.h"
 
 #include "ns/net/netstack.h"
 #include "ns/net/ipv6/uip.h"

@@ -19,7 +19,7 @@
 
 enum {
     WELLKNOWN_NODE_ID = 34,
-    UNIX_RADIO_BUFFER_SIZE = 128,
+    UNIX_RADIO_BUFFER_SIZE = 127,
 };
 
 typedef enum _radio_state_t {
@@ -41,9 +41,9 @@ static uint32_t s_radio_tx_dsn;
 static int8_t   s_radio_rx_pkt_counter = 0;
 static int8_t   s_radio_txpower;
 static uint8_t  s_radio_tx_len;
-void *          s_radio_sent_packet_ptr;
 static uint8_t  s_radio_rx_len;
 static uint16_t s_radio_port;
+static bool     s_radio_is_ack_received = false;
 
 static bool     s_ack_wait = false;
 static uint32_t s_ack_timeout;
@@ -101,19 +101,11 @@ PROCESS_THREAD(unix_radio_thread, ev, data)
 
     while (1) {
         PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_POLL);
-
         packetbuf_clear();
-
         int len = unix_read(packetbuf_dataptr(), PACKETBUF_SIZE);
-
         LOG_DBG("receive %d\r\n", len);
-
         packetbuf_set_datalen(len);
-        packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, s_radio_channel);
-        packetbuf_set_attr(PACKETBUF_ATTR_RSSI, -10);
-
         NETSTACK_MAC.input();
-
         if (s_radio_rx_pkt_counter > 0) {
             s_radio_rx_pkt_counter--;
         }
@@ -157,6 +149,13 @@ static int unix_transmit(unsigned short len)
 
     s_state = RADIO_STATE_TRANSMIT;
 
+    // wait until send ack is finished
+    if (s_radio_tx_len == CSMA_ACK_LEN) {
+        while (s_state == RADIO_STATE_TRANSMIT) {
+            unix_process_update();
+        }
+    }
+
     return RADIO_TX_OK;
 }
 
@@ -169,7 +168,7 @@ static int unix_send(const void *data, unsigned short len)
 static int unix_read(void *buf, unsigned short size)
 {
     int ret;
-    ns_memcpy((uint8_t *)&s_radio_rx_buf, (void *)buf, MIN(size, s_radio_rx_len));
+    ns_memcpy((void *)buf, (uint8_t *)&s_radio_rx_buf, MIN(size, s_radio_rx_len));
     ret = s_radio_rx_len;
     s_radio_rx_len = 0;
     return ret;
@@ -187,7 +186,7 @@ static int unix_receiving_packet(void)
 
 static int unix_pending_packet(void)
 {
-    return ((s_radio_rx_pkt_counter != 0) || (s_radio_rx_len != 0)) ? 1 : 0;
+    return (s_radio_rx_pkt_counter != 0) ? 1 : 0;
 }
 
 static int unix_on(void)
@@ -264,7 +263,6 @@ void unix_radio_process(void)
 {
     const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = {s_sock_fd, flags, 0};
-    bool is_ack_received = false;
 
     if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0) {
         unix_radio_update();
@@ -276,42 +274,38 @@ void unix_radio_process(void)
         unix_read(ack_buf, CSMA_ACK_LEN);
         if (ack_buf[2] == s_radio_tx_dsn) {
             // we received an ack!
-            is_ack_received = true;
+            s_radio_is_ack_received = true;
             LOG_DBG("received ack\r\n");
         }
     }
 
     // transmit done and acked 
-    if (is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) && 
+    if (s_radio_is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) && 
         (s_ack_timeout >= RTIMER_NOW())) {
         s_ack_wait = false;
         s_state = RADIO_STATE_RECEIVE;
         LOG_DBG("transmit done, acked\r\n");
-        packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
     }
 
     // transmit done but noack
-    if (!is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) &&
+    if (!s_radio_is_ack_received && s_ack_wait && (s_state == RADIO_STATE_TRANSMIT) &&
         (s_ack_timeout < RTIMER_NOW())) {
         s_ack_wait = false;
         s_state = RADIO_STATE_RECEIVE;
-        LOG_WARN("transmit done, noack -- timeout: %d, now: %d", s_ack_timeout, (int)RTIMER_NOW());
-        packet_sent(s_radio_sent_packet_ptr, MAC_TX_NOACK, 1);
+        LOG_WARN("transmit done, noack -- timeout: %d, now: %d\r\n", s_ack_timeout, (int)RTIMER_NOW());
     }
 
     // get a packet call mac input
-    if (s_radio_rx_len > CSMA_ACK_LEN && (s_state == RADIO_STATE_RECEIVE) && !is_ack_received) {
+    if (s_radio_rx_len > CSMA_ACK_LEN && (s_state == RADIO_STATE_RECEIVE) && !s_radio_is_ack_received) {
         s_radio_rx_pkt_counter++;
-        process_post(&unix_radio_thread, PROCESS_EVENT_POLL, NULL);
+        process_poll(&unix_radio_thread);
     }
 
     if (s_state == RADIO_STATE_TRANSMIT && !s_ack_wait) {
         unix_radio_transmit((uint8_t *)&s_radio_tx_buf, s_radio_tx_len);
         if (s_radio_tx_len > CSMA_ACK_LEN) {
             if (s_radio_tx_broadcast) {
-                s_radio_tx_broadcast = false;
                 s_state = RADIO_STATE_RECEIVE;
-                packet_sent(s_radio_sent_packet_ptr, MAC_TX_OK, 1);
                 LOG_DBG("transmit %d -- broadcast\r\n", s_radio_tx_len);
             } else {
                 // not broadcast packet and need an ack
@@ -335,6 +329,7 @@ static void unix_radio_update(void)
         exit(EXIT_FAILURE);
     }
     s_radio_rx_len = (uint8_t)rval;
+    LOG_DBG("unix radio update recv (%d)\r\n", s_radio_rx_len);
 }
 
 static void unix_radio_transmit(uint8_t *buf, uint8_t len)
@@ -360,11 +355,26 @@ static void unix_radio_transmit(uint8_t *buf, uint8_t len)
     }
 }
 
+static const char *mac_result_to_str(int res)
+{
+    switch (res) {
+    case MAC_TX_OK:
+        return "mac tx ok";
+    case MAC_TX_COLLISION:
+        return "mac tx collision";
+    case MAC_TX_NOACK:
+        return "mac tx noack";
+    case MAC_TX_ERR:
+        return "mac tx error";
+    default:
+        return "unknown";
+    }
+}
+
 void send_one_packet(void *ptr)
 {
     int ret;
     if (s_state != RADIO_STATE_TRANSMIT && !s_ack_wait) {
-        s_radio_sent_packet_ptr = ptr;
         packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
         packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
         if (NETSTACK_FRAMER.create() < 0) {
@@ -380,7 +390,19 @@ void send_one_packet(void *ptr)
             } else {
                 switch (unix_transmit(packetbuf_totlen())) {
                 case RADIO_TX_OK:
-                    ret = MAC_TX_DEFERRED;
+                    while (s_state == RADIO_STATE_TRANSMIT) {
+                        unix_process_update();
+                    }
+                    if (!s_radio_tx_broadcast) {
+                        if (s_radio_is_ack_received) {
+                            s_radio_is_ack_received = false;
+                            ret = MAC_TX_OK;
+                        } else {
+                            ret = MAC_TX_NOACK;
+                        }
+                    } else {
+                        ret = MAC_TX_OK;
+                    }
                     break;
                 case RADIO_TX_COLLISION:
                     ret = MAC_TX_COLLISION;
@@ -394,9 +416,9 @@ void send_one_packet(void *ptr)
         ret = MAC_TX_COLLISION;
     }
 
-    if (ret != MAC_TX_DEFERRED) {
-        packet_sent(ptr, ret, 1);
-    }
+    LOG_DBG("send one packet: %s\r\n", mac_result_to_str(ret));
+
+    packet_sent(ptr, ret, 1);
 }
 
 uint16_t unix_radio_get_port(void)

@@ -114,11 +114,11 @@ create_frame(int do_create)
 
     LOG_INFO("Out: %2X ", params.fcf.frame_type);
     LOG_INFO_LLADDR((const linkaddr_t *)params.dest_addr);
-    LOG_INFO_(" %d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO_(" %d %u (%u)\r\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   } else {
-    LOG_ERR("Out: too large header: %u\n", hdr_len);
+    LOG_ERR("Out: too large header: %u\r\n", hdr_len);
     return FRAMER_FAILED;
   }
 }
@@ -128,7 +128,7 @@ framer_802154_setup_params(packetbuf_attr_t (*get_attr)(uint8_t type),
                            uint8_t dest_is_broadcast, frame802154_t *params)
 {
   if(get_attr == NULL || params == NULL) {
-    LOG_INFO("framer-802154: cannot setup params because of invalid argument\n");
+    LOG_INFO("framer-802154: cannot setup params because of invalid argument\r\n");
     return;
   }
 
@@ -245,7 +245,7 @@ parse(void)
       if(frame.dest_pid != frame802154_get_pan_id() &&
          frame.dest_pid != FRAME802154_BROADCASTPANDID) {
         /* Packet to another PAN */
-        LOG_WARN("15.4: for another pan %u\n", frame.dest_pid);
+        LOG_WARN("15.4: for another pan %u\r\n", frame.dest_pid);
         return FRAMER_FAILED;
       }
       if(!frame802154_is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
@@ -280,7 +280,7 @@ parse(void)
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_INFO_(" ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    LOG_INFO_(" %d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO_(" %d %u (%u)\r\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   }

@@ -30,4 +30,6 @@ void unix_uart_disable(void);
 void unix_uart_update_fd_set(fd_set *read_fd_set, fd_set *write_fd_set, fd_set *error_fd_set, int *max_fd);
 void unix_uart_process(void);
 
+void unix_process_update(void);
+
 #endif // NSPORT_PORT_UNIX_H_
