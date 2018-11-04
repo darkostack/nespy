@@ -47,7 +47,6 @@ extern uint16_t unix_radio_get_port(void);
 static void command_help(int argc, char *argv[]);
 static void command_ps(int argc, char *argv[]);
 static void command_version(int argc, char *argv[]);
-static void command_send(int argc, char *argv[]);
 static void command_ipaddr(int argc, char *argv[]);
 static void command_ip_neighbors(int argc, char *argv[]);
 #if UIP_CONF_IPV6_RPL
@@ -78,7 +77,6 @@ static const ns_cli_cmd_t s_commands[] = {
     { "help", &command_help },
     { "ps", &command_ps },
     { "version", &command_version },
-    { "send", &command_send },
     { "ip-addr", &command_ipaddr },
     { "ip-nbr", &command_ip_neighbors },
 #if UIP_CONF_IPV6_RPL
@@ -156,15 +154,6 @@ static void command_version(int argc, char *argv[])
     uiplib_ipaddr_snprint(buf, sizeof(buf), lladdr != NULL ? &lladdr->ipaddr : NULL);
     cli_uart_output_format("-- Tentative link-local IPv6 address: %s\r\n", buf);
 #endif
-}
-
-static void command_send(int argc, char *argv[])
-{
-    uint8_t buf[10];
-    for (int i = 0; i < sizeof(buf); i++) {
-        buf[i] = i;
-    }
-    NETSTACK_RADIO.send((uint8_t *)&buf, sizeof(buf));
 }
 
 static void command_ipaddr(int argc, char *argv[])
