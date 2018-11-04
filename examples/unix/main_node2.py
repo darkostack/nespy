@@ -6,19 +6,14 @@ process = ns.Process()
 unix    = ns.Unix()
 
 def main():
-    init.clock()
-    init.rtimer()
-    init.process()
-    init.etimer()
-    init.ctimer()
     init.node_id(2)
-    init.ipv6_addr()
     init.netstack()
+    init.platform()
 
     print("Nespy command line interface: use Ctrl-D to exit")
     print("type `help` to see list of commands")
 
-    init.platform(1)
+    init.cli() # enable netstack command line interface (optional)
 
     # autostart internal nespy processes
     process.autostart()
