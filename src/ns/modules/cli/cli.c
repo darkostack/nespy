@@ -33,6 +33,8 @@
 static struct uip_icmp6_echo_reply_notification echo_reply_notification;
 static uint8_t curr_ping_ttl;
 static uint16_t curr_ping_datalen;
+static unsigned long curr_ping_times;
+static unsigned long curr_ping_counter;
 static uip_ipaddr_t ping_remote_addr;
 
 PROCESS(cli_ping_process, "Cli-ping process");
@@ -405,9 +407,17 @@ static void command_ping(int argc, char *argv[])
         return;
     }
 
+    curr_ping_times = 1;
+    curr_ping_counter = 0;
+
+    if (argc == 2) {
+        // user specified number of ping times
+        cli_parse_unsigned_long(argv[1], &curr_ping_times);
+    }
+
     cli_uart_output_format("Pinging ");
     cli_output_6addr(&ping_remote_addr);
-    cli_uart_output_format("\r\n");
+    cli_uart_output_format(" (%lu times)\r\n", curr_ping_times);
 
     process_post(&cli_ping_process, PROCESS_EVENT_INIT, NULL);
 }
@@ -435,6 +445,11 @@ PROCESS_THREAD(cli_ping_process, ev, data)
             cli_uart_output_format(", len %u, ttl %u, delay %lu ms\r\n",
                     curr_ping_datalen, curr_ping_ttl,
                     (1000*(clock_time() - ping_timeout_timer.timer.start))/CLOCK_SECOND);
+            curr_ping_counter++;
+            if (curr_ping_times != curr_ping_counter) {
+                etimer_set(&ping_timeout_timer, PING_TIMEOUT);
+                uip_icmp6_send(&ping_remote_addr, ICMP6_ECHO_REQUEST, 0, 4);
+            }
         }
 
         if (ev == PROCESS_EVENT_TIMER && etimer_expired(&ping_timeout_timer)) {
