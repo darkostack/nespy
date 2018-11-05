@@ -63,6 +63,9 @@ static void command_rpl_nbr(int argc, char *argv[]);
 #endif // ROUTING_CONF_RPL_LITE
 static void command_routes(int argc, char *argv[]);
 static void command_ping(int argc, char *argv[]);
+#if defined(UNIX)
+static void command_exit(int argc, char *argv[]);
+#endif
 
 // helper function
 static void cli_output_6addr(const uip_ipaddr_t *ipaddr);
@@ -93,6 +96,9 @@ static const ns_cli_cmd_t s_commands[] = {
 #endif // ROUTING_CONF_RPL_LITE
     { "routes", &command_routes },
     { "ping", &command_ping },
+#if defined(UNIX)
+    { "exit", &command_exit },
+#endif
 };
 
 static void command_help(int argc, char *argv[])
@@ -447,6 +453,11 @@ PROCESS_THREAD(cli_ping_process, ev, data)
     }
 
     PROCESS_END();
+}
+
+static void command_exit(int argc, char *argv[])
+{
+    exit(EXIT_SUCCESS);
 }
 
 // cli helper function
