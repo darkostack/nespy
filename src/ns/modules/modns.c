@@ -7,9 +7,7 @@ extern const mp_obj_type_t ns_init_type;
 extern const mp_obj_type_t ns_process_type;
 extern const mp_obj_type_t ns_thread_type;
 extern const mp_obj_type_t ns_clock_type;
-#if defined(UNIX)
-extern const mp_obj_type_t ns_unix_type;
-#endif
+extern const mp_obj_type_t ns_plat_type;
 
 STATIC const mp_rom_map_elem_t ns_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_ns) },
@@ -18,9 +16,7 @@ STATIC const mp_rom_map_elem_t ns_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_Process), MP_ROM_PTR(&ns_process_type) },
     { MP_ROM_QSTR(MP_QSTR_Thread), MP_ROM_PTR(&ns_thread_type) },
     { MP_ROM_QSTR(MP_QSTR_Clock), MP_ROM_PTR(&ns_clock_type) },
-#if defined(UNIX)
-    { MP_ROM_QSTR(MP_QSTR_Unix), MP_ROM_PTR(&ns_unix_type) },
-#endif
+    { MP_ROM_QSTR(MP_QSTR_Platform), MP_ROM_PTR(&ns_plat_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(ns_module_globals, ns_module_globals_table);

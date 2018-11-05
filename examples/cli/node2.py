@@ -1,12 +1,12 @@
 import ns
 
-# initialize basic objects
-init    = ns.Init()
-process = ns.Process()
-unix    = ns.Unix()
+# initialize ns objects
+init     = ns.Init()
+process  = ns.Process()
+platform = ns.Platform()
 
 def main():
-    init.node_id(1)
+    init.node_id(2)
     init.netstack()
     init.platform()
 
@@ -20,7 +20,7 @@ def main():
 
     while True:
         process.run()
-        unix.process_update()
+        platform.process_update()
 
 if __name__ == "__main__":
     main()

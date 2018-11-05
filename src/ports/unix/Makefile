@@ -174,7 +174,7 @@ NSMOD_SRC_C += $(addprefix ns/modules/,\
     modns.c \
     nstd.c \
     process.c \
-    unix.c \
+    platform.c \
     cli/cli-uart.c \
     cli/cli.c \
     )
