@@ -41,6 +41,11 @@ static uint16_t curr_ping_datalen;
 static unsigned long curr_ping_times;
 static unsigned long curr_ping_counter;
 static uip_ipaddr_t ping_remote_addr;
+#if APP_CONF_WITH_COAP
+static coap_endpoint_t server_ep;
+static char server_ep_buf[64];
+static coap_message_t request[1];
+#endif
 
 PROCESS(cli_ping_process, "Cli-ping process");
 #if APP_CONF_WITH_COAP
@@ -480,10 +485,6 @@ static void command_exit(int argc, char *argv[])
 }
 
 #if APP_CONF_WITH_COAP
-static coap_endpoint_t server_ep;
-static char server_ep_buf[64];
-static coap_message_t request[1];
-
 static void command_coap_server_start(int argc, char *argv[])
 {
     // set this node as coap-server
