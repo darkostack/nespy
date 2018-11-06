@@ -179,8 +179,7 @@ NSMOD_SRC_C += $(addprefix ns/modules/,\
     cli/cli.c \
     )
 
-NSMOD_SRC_C += $(addprefix ns/modules/test/coap/,\
-    client/coap-client.c \
+NSMOD_SRC_C += $(addprefix ns/modules/cli/coap/,\
     server/resources/res-hello.c \
     server/coap-server.c \
     )

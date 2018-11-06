@@ -3,6 +3,11 @@
 #include "ns/sys/node-id.h"
 #include "ns/lib/random.h"
 
+#if APP_CONF_WITH_COAP
+#include "ns/net/app-layer/coap/coap-engine.h"
+#include "ns/net/app-layer/coap/coap-blocking-api.h"
+#endif
+
 #include "ns/net/netstack.h"
 #include "ns/net/ipv6/uip.h"
 #include "ns/net/ipv6/uiplib.h"
@@ -39,7 +44,7 @@ static uip_ipaddr_t ping_remote_addr;
 
 PROCESS(cli_ping_process, "Cli-ping process");
 #if APP_CONF_WITH_COAP
-PROCESS_NAME(ns_coap_client);
+PROCESS(ns_coap_client, "Nespy coap client");
 PROCESS_NAME(ns_coap_server);
 #endif
 
@@ -71,8 +76,9 @@ static void command_ping(int argc, char *argv[]);
 static void command_exit(int argc, char *argv[]);
 #endif
 #if APP_CONF_WITH_COAP
-static void command_coap_set_client(int argc, char *argv[]);
-static void command_coap_set_server(int argc, char *argv[]);
+static void command_coap_server_start(int argc, char *argv[]);
+static void command_coap_client_ep(int argc, char *argv[]);
+static void command_coap_client_get(int argc, char *argv[]);
 #endif
 
 // helper function
@@ -108,8 +114,9 @@ static const ns_cli_cmd_t s_commands[] = {
     { "exit", &command_exit },
 #endif
 #if APP_CONF_WITH_COAP
-    { "coap-set-client", &command_coap_set_client },
-    { "coap-set-server", &command_coap_set_server },
+    { "coap-server-start", &command_coap_server_start },
+    { "coap-client-ep", &command_coap_client_ep }, // set coap client end-point IPv6 address
+    { "coap-client-get", &command_coap_client_get },
 #endif
 };
 
@@ -473,16 +480,94 @@ static void command_exit(int argc, char *argv[])
 }
 
 #if APP_CONF_WITH_COAP
-static void command_coap_set_client(int argc, char *argv[])
+static coap_endpoint_t server_ep;
+static char server_ep_buf[64];
+static coap_message_t request[1];
+
+static void command_coap_server_start(int argc, char *argv[])
 {
+    // set this node as coap-server
+    cli_uart_output_format("Starting coap server\r\n");
+    process_start(&ns_coap_server, NULL);
+}
+
+static void command_coap_client_ep(int argc, char *argv[])
+{
+    // set server end-point for this client-node
+    if (argc == 0) {
+        cli_uart_output_format("Need IPv6 coap server end-point addr\r\n");
+        return;
+    }
+    // make sure it's valid IPv6 address
+    uip_ipaddr_t ep_addr;
+    if (uiplib_ipaddrconv(argv[0], &ep_addr) == 0) {
+        cli_uart_output_format("Invalid IPv6 addr: %s\r\n", argv[0]);
+        return;
+    }
+
+    strcat(server_ep_buf, "coap://[");
+    strcat(server_ep_buf, argv[0]);
+    strcat(server_ep_buf, "]");
+
+    cli_uart_output_format("Set coap client server end-point: %s\r\n", &server_ep_buf);
+
+    coap_endpoint_parse((char *)&server_ep_buf,
+                        ns_strlen((char *)&server_ep_buf),
+                        &server_ep);
+
+    cli_uart_output_format("Starting coap client\r\n");
     process_start(&ns_coap_client, NULL);
 }
 
-static void command_coap_set_server(int argc, char *argv[])
+static void coap_client_message_handler(coap_message_t *response)
 {
-    process_start(&ns_coap_server, NULL);
+    const uint8_t *msg;
+    int len = coap_get_payload(response, &msg);
+    printf("|%.*s", len, (char *)msg);
 }
-#endif
+
+static void command_coap_client_get(int argc, char *argv[])
+{
+    if (argc == 0) {
+        cli_uart_output_format("Invalid uri-path\r\n");
+        return;
+    }
+    cli_uart_output_format("Coap request: %s", argv[0]);
+    // parse uri path and uri query
+    char *uri_query = argv[0];
+    char uri_path[64];
+    int i;
+    for (i = 0; i < ns_strlen(argv[0]); i++) {
+        if (*uri_query == '?') {
+            break;
+        }
+        uri_query++;
+    }
+    ns_strncpy((char *)&uri_path, argv[0], i + 1);
+    // coap get request
+    coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+    // set uri path and uri query
+    coap_set_header_uri_path(request, (char *)&uri_path);
+    if (*uri_query == '?') { // uri query start with this symbol
+        coap_set_header_uri_query(request, uri_query);
+    }
+    cli_uart_output_format("\r\n");
+    process_poll(&ns_coap_client);
+}
+
+PROCESS_THREAD(ns_coap_client, ev, data)
+{
+    PROCESS_BEGIN();
+
+    while (1) {
+        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_POLL);
+        COAP_BLOCKING_REQUEST(&server_ep, request, coap_client_message_handler);
+        ns_log("\r\n-- done --\r\n");
+    }
+
+    PROCESS_END();
+}
+#endif // #if APP_CONF_WITH_COAP
 
 // cli helper function
 void cli_process_line(char *buf, uint16_t buf_len)

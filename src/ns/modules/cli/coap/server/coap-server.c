@@ -17,13 +17,11 @@ PROCESS_THREAD(ns_coap_server, ev, data)
     PROCESS_BEGIN();
     PROCESS_PAUSE();
 
-    LOG_INFO("Starting Nespy coap server\r\n");
-
     // bind the resources to their Uri-Path
     coap_activate_resource(&res_hello, "test/hello");
 
     while (1) {
-        PROCESS_WAIT_EVENT();
+        PROCESS_YIELD();
     }
 
     PROCESS_END();
