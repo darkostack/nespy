@@ -6,6 +6,7 @@
 
 typedef struct ns_cli_cmd_t {
     const char *name;
+    const char *desc;
     void (*command)(int argc, char *argv[]);
 } ns_cli_cmd_t;
 

@@ -96,39 +96,41 @@ static const char *rpl_ocp_to_str(int ocp);
 static void echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen);
 
 static const ns_cli_cmd_t s_commands[] = {
-    { "help", &command_help },
-    { "ps", &command_ps },
-    { "version", &command_version },
-    { "ip-addr", &command_ipaddr },
-    { "ip-nbr", &command_ip_neighbors },
+    { "help", "get list of available commands", &command_help },
+    { "ps", "get list of current running process", &command_ps },
+    { "version", "get nespy version and netstack config", &command_version },
+    { "ip-addr", "get node IPv6 address", &command_ipaddr },
+    { "ip-nbr", "get node neighbor address", &command_ip_neighbors },
 #if UIP_CONF_IPV6_RPL
-    { "rpl-set-root", &command_rpl_set_root },
-    { "rpl-local-repair", &command_rpl_local_repair },
+    { "rpl-set-root", "set node as a root (arg: 1/0)", &command_rpl_set_root },
+    { "rpl-local-repair", "trigger rpl local repair", &command_rpl_local_repair },
 #if ROUTING_CONF_RPL_LITE
-    { "rpl-refresh-routes", &command_rpl_refresh_routes },
+    { "rpl-refresh-routes", "refresh rpl routes", &command_rpl_refresh_routes },
 #endif // ROUTING_CONF_RPL_LITE
-    { "rpl-global-repair", &command_rpl_global_repair },
+    { "rpl-global-repair", "trigger rpl global repair", &command_rpl_global_repair },
 #endif // UIP_CONF_IPV6_RPL
 #if ROUTING_CONF_RPL_LITE
-    { "rpl-status", &command_rpl_status },
-    { "rpl-nbr", &command_rpl_nbr },
+    { "rpl-status", "get rpl status", &command_rpl_status },
+    { "rpl-nbr", "get rpl neighbor", &command_rpl_nbr },
 #endif // ROUTING_CONF_RPL_LITE
-    { "routes", &command_routes },
-    { "ping", &command_ping },
+    { "routes", "get node routes", &command_routes },
+    { "ping", "ping command (arg: ipaddr[ex:fe80::200:0:0:1] times[ex:100])", &command_ping },
 #if defined(UNIX)
-    { "exit", &command_exit },
+    { "exit", "exit unix program", &command_exit },
 #endif
 #if APP_CONF_WITH_COAP
-    { "coap-server-start", &command_coap_server_start },
-    { "coap-client-ep", &command_coap_client_ep }, // set coap client end-point IPv6 address
-    { "coap-client-get", &command_coap_client_get },
+    { "coap-server-start", "set this node as coap server", &command_coap_server_start },
+    { "coap-client-ep", "set server end-point & start coap client (arg: ipaddr[ex:fe80::200:0:0:2])", &command_coap_client_ep }, // set coap client end-point IPv6 address
+    { "coap-client-get", "send coap GET command (arg: uri[ex:test/hello?len=20)", &command_coap_client_get },
 #endif
 };
 
 static void command_help(int argc, char *argv[])
 {
+    cli_uart_output_format("%-20s %s\r\n", "Command", "Description");
+    cli_uart_output_format("---------------------------------------\r\n");
     for (unsigned int i = 0; i < (sizeof(s_commands) / sizeof(s_commands[0])); i++) {
-        cli_uart_output_format("%s\r\n", s_commands[i].name);
+        cli_uart_output_format("%-20s %s\r\n", s_commands[i].name, s_commands[i].desc);
     }
 }
 
