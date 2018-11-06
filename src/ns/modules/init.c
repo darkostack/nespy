@@ -95,6 +95,9 @@ STATIC mp_obj_t ns_init_netstack(mp_obj_t self_in)
     lladdr = uip_ds6_get_link_local(-1);
 #endif
     netstack_init();
+#if APP_CONF_WITH_COAP
+    coap_engine_init();
+#endif
     return mp_const_none;
 }
 

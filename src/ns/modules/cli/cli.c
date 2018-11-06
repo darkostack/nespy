@@ -38,6 +38,10 @@ static unsigned long curr_ping_counter;
 static uip_ipaddr_t ping_remote_addr;
 
 PROCESS(cli_ping_process, "Cli-ping process");
+#if APP_CONF_WITH_COAP
+PROCESS_NAME(ns_coap_client);
+PROCESS_NAME(ns_coap_server);
+#endif
 
 #if defined(UNIX)
 extern uint16_t unix_radio_get_port(void);
@@ -65,6 +69,10 @@ static void command_routes(int argc, char *argv[]);
 static void command_ping(int argc, char *argv[]);
 #if defined(UNIX)
 static void command_exit(int argc, char *argv[]);
+#endif
+#if APP_CONF_WITH_COAP
+static void command_coap_set_client(int argc, char *argv[]);
+static void command_coap_set_server(int argc, char *argv[]);
 #endif
 
 // helper function
@@ -98,6 +106,10 @@ static const ns_cli_cmd_t s_commands[] = {
     { "ping", &command_ping },
 #if defined(UNIX)
     { "exit", &command_exit },
+#endif
+#if APP_CONF_WITH_COAP
+    { "coap-set-client", &command_coap_set_client },
+    { "coap-set-server", &command_coap_set_server },
 #endif
 };
 
@@ -459,6 +471,18 @@ static void command_exit(int argc, char *argv[])
 {
     exit(EXIT_SUCCESS);
 }
+
+#if APP_CONF_WITH_COAP
+static void command_coap_set_client(int argc, char *argv[])
+{
+    process_start(&ns_coap_client, NULL);
+}
+
+static void command_coap_set_server(int argc, char *argv[])
+{
+    process_start(&ns_coap_server, NULL);
+}
+#endif
 
 // cli helper function
 void cli_process_line(char *buf, uint16_t buf_len)

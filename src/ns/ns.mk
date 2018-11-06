@@ -228,6 +228,22 @@ OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_FRAMER:.c=.o))
 
+# configure APP layer
+MAKE_APP_COAP = 0
+MAKE_APP_MQTT = 1
+
+MAKE_APP ?= MAKE_APP_COAP
+
+ifeq ($(MAKE_APP),MAKE_APP_COAP)
+	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_APP_LAYER_COAP:.c=.o))
+	CFLAGS += -DAPP_CONF_WITH_COAP=1
+endif
+
+ifeq ($(MAKE_APP),MAKE_APP_MQTT)
+	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_APP_LAYER_MQTT:.c=.o))
+	CFLAGS += -DAPP_CONF_WITH_MQTT=1
+endif
+
 # configure MAC layer
 
 MAKE_MAC_NULLMAC = 0
@@ -240,27 +256,27 @@ MAKE_MAC_OTHER = 4
 MAKE_MAC ?= MAKE_MAC_CSMA
 
 ifeq ($(MAKE_MAC),MAKE_MAC_NULLMAC)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_NULLMAC:.c=.o))
-  CFLAGS += -DMAC_CONF_WITH_NULLMAC=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_NULLMAC:.c=.o))
+  	CFLAGS += -DMAC_CONF_WITH_NULLMAC=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_CSMA)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_CSMA:.c=.o))
-  CFLAGS += -DMAC_CONF_WITH_CSMA=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_CSMA:.c=.o))
+  	CFLAGS += -DMAC_CONF_WITH_CSMA=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_TSCH)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_TSCH:.c=.o))
-  CFLAGS += -DMAC_CONF_WITH_TSCH=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_TSCH:.c=.o))
+  	CFLAGS += -DMAC_CONF_WITH_TSCH=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_BLE)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_BLE:.c=.o))
-  CFLAGS += -DMAC_CONF_WITH_BLE=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_MAC_BLE:.c=.o))
+  	CFLAGS += -DMAC_CONF_WITH_BLE=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_OTHER)
-  CFLAGS += -DMAC_CONF_WITH_OTHER=1
+  	CFLAGS += -DMAC_CONF_WITH_OTHER=1
 endif
 
 # Configure Network layer
@@ -273,21 +289,21 @@ MAKE_NET_OTHER = 2
 MAKE_NET ?= MAKE_NET_IPV6
 
 ifeq ($(MAKE_NET),MAKE_NET_NULLNET)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_NULLNET:.c=.o))
-  CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_NULLNET:.c=.o))
+  	CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_IPV6)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_IPV6:.c=.o))
-  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_IPV6:.c=.o))
+  	CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_OTHER)
-  CFLAGS += -DNETSTACK_CONF_WITH_OTHER=1
+  	CFLAGS += -DNETSTACK_CONF_WITH_OTHER=1
 endif
 
 ifeq ($(WITH_IP64),1)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_SERVICES_IP64:.c=.o))
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_SERVICES_IP64:.c=.o))
 endif
 
 # Configure Routing protocol
@@ -303,13 +319,13 @@ MAKE_ROUTING ?= MAKE_ROUTING_NULLROUTING
 endif
 
 ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_ROUTING_RPL_CLASSIC:.c=.o))
-  CFLAGS += -DROUTING_CONF_RPL_CLASSIC=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_ROUTING_RPL_CLASSIC:.c=.o))
+  	CFLAGS += -DROUTING_CONF_RPL_CLASSIC=1
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_ROUTING_RPL_LITE:.c=.o))
-  CFLAGS += -DROUTING_CONF_RPL_LITE=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_ROUTING_RPL_LITE:.c=.o))
+  	CFLAGS += -DROUTING_CONF_RPL_LITE=1
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
-  OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_ROUTING_NULLROUTING:.c=.o))
-  CFLAGS += -DROUTING_CONF_NULLROUTING=1
+  	OBJ += $(addprefix $(BUILD)/,$(SRC_NS_NET_ROUTING_NULLROUTING:.c=.o))
+  	CFLAGS += -DROUTING_CONF_NULLROUTING=1
 endif
 
