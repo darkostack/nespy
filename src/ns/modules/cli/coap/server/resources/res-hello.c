@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "ns/net/app-layer/coap/coap-engine.h"
+#include "ns/net/app-layer/coap/coap.h"
 
 static void res_get_handler(coap_message_t *request,
                             coap_message_t *response,
@@ -8,12 +10,16 @@ static void res_get_handler(coap_message_t *request,
                             uint16_t preferred_size,
                             int32_t *offset);
 
-RESOURCE(res_hello,
-         "title=\"Hello world: ?len=0..\";rt=\"Text\"",
-         res_get_handler,
-         NULL,
-         NULL,
-         NULL);
+static void res_periodic_handler(void);
+
+PERIODIC_RESOURCE(res_hello,
+                  "title=\"Hello world\";obs",
+                  res_get_handler,
+                  NULL,
+                  NULL,
+                  NULL,
+                  1000, // milliseconds resolutions
+                  res_periodic_handler);
 
 static void res_get_handler(coap_message_t *request,
                             coap_message_t *response,
@@ -39,6 +45,11 @@ static void res_get_handler(coap_message_t *request,
     }
 
     coap_set_header_content_format(response, TEXT_PLAIN);
-    coap_set_header_etag(response, (uint8_t *)&length, 1);
+    coap_set_header_max_age(response, res_hello.periodic->period / CLOCK_SECOND);
     coap_set_payload(response, buffer, length);
+}
+
+static void res_periodic_handler(void)
+{
+    coap_notify_observers(&res_hello);
 }

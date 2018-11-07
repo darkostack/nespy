@@ -45,6 +45,8 @@ static uip_ipaddr_t ping_remote_addr;
 static coap_endpoint_t server_ep;
 static char server_ep_buf[64];
 static coap_message_t request[1];
+static coap_observee_t *obs;
+static uip_ipaddr_t coap_ep_ipaddr;
 #endif
 
 PROCESS(cli_ping_process, "Cli-ping process");
@@ -83,6 +85,7 @@ static void command_exit(int argc, char *argv[]);
 #if APP_CONF_WITH_COAP
 static void command_coap_server_start(int argc, char *argv[]);
 static void command_coap_client_ep(int argc, char *argv[]);
+static void command_coap_client_obs(int argc, char *argv[]);
 static void command_coap_client_get(int argc, char *argv[]);
 #endif
 
@@ -102,7 +105,7 @@ static const ns_cli_cmd_t s_commands[] = {
     { "ip-addr", "get node IPv6 address", &command_ipaddr },
     { "ip-nbr", "get node neighbor address", &command_ip_neighbors },
 #if UIP_CONF_IPV6_RPL
-    { "rpl-set-root", "set node as a root (arg: 1/0)", &command_rpl_set_root },
+    { "rpl-set-root", "set node as a root", &command_rpl_set_root },
     { "rpl-local-repair", "trigger rpl local repair", &command_rpl_local_repair },
 #if ROUTING_CONF_RPL_LITE
     { "rpl-refresh-routes", "refresh rpl routes", &command_rpl_refresh_routes },
@@ -114,14 +117,15 @@ static const ns_cli_cmd_t s_commands[] = {
     { "rpl-nbr", "get rpl neighbor", &command_rpl_nbr },
 #endif // ROUTING_CONF_RPL_LITE
     { "routes", "get node routes", &command_routes },
-    { "ping", "ping command (arg: ipaddr[ex:fe80::200:0:0:1] times[ex:100])", &command_ping },
+    { "ping", "IPv6 ping command", &command_ping },
 #if defined(UNIX)
     { "exit", "exit unix program", &command_exit },
 #endif
 #if APP_CONF_WITH_COAP
     { "coap-server-start", "set this node as coap server", &command_coap_server_start },
-    { "coap-client-ep", "set server end-point & start coap client (arg: ipaddr[ex:fe80::200:0:0:2])", &command_coap_client_ep }, // set coap client end-point IPv6 address
-    { "coap-client-get", "send coap GET command (arg: uri[ex:test/hello?len=20)", &command_coap_client_get },
+    { "coap-client-ep", "set server end-point", &command_coap_client_ep }, // set coap client end-point IPv6 address
+    { "coap-client-obs", "set coap server observation", &command_coap_client_obs },
+    { "coap-client-get", "send coap GET command", &command_coap_client_get },
 #endif
 };
 
@@ -502,8 +506,7 @@ static void command_coap_client_ep(int argc, char *argv[])
         return;
     }
     // make sure it's valid IPv6 address
-    uip_ipaddr_t ep_addr;
-    if (uiplib_ipaddrconv(argv[0], &ep_addr) == 0) {
+    if (uiplib_ipaddrconv(argv[0], &coap_ep_ipaddr) == 0) {
         cli_uart_output_format("Invalid IPv6 addr: %s\r\n", argv[0]);
         return;
     }
@@ -517,9 +520,6 @@ static void command_coap_client_ep(int argc, char *argv[])
     coap_endpoint_parse((char *)&server_ep_buf,
                         ns_strlen((char *)&server_ep_buf),
                         &server_ep);
-
-    cli_uart_output_format("Starting coap client\r\n");
-    process_start(&ns_coap_client, NULL);
 }
 
 static void coap_client_message_handler(coap_message_t *response)
@@ -529,6 +529,77 @@ static void coap_client_message_handler(coap_message_t *response)
     printf("|%.*s", len, (char *)msg);
 }
 
+static void coap_obs_notif_callback(coap_observee_t *obs, void *notification,
+                                    coap_notification_flag_t flag)
+{
+    int len = 0;
+    const uint8_t *payload = NULL;
+
+    cli_uart_output_format("Notification handler\r\n");
+    cli_uart_output_format("Observe URI: %s\r\n", obs->url);
+    if (notification) {
+        len = coap_get_payload(notification, &payload);
+    }
+    switch (flag) {
+    case NOTIFICATION_OK:
+        cli_uart_output_format("NOTIFICATION_OK: %*s\r\n", len, (char *)payload);
+        break;
+    case OBSERVE_OK: // server accepted observation request
+        cli_uart_output_format("OBSERVE_OK: %*s\r\n", len, (char *)payload);
+        break;
+    case OBSERVE_NOT_SUPPORTED:
+        cli_uart_output_format("OBSERVE_NOT_SUPPORTED: %*s\r\n", len, (char *)payload);
+        break;
+    case ERROR_RESPONSE_CODE:
+        cli_uart_output_format("ERROR_RESPONSE_CODE: %*s\r\n", len, (char *)payload);
+        obs = NULL;
+        break;
+    case NO_REPLY_FROM_SERVER:
+        cli_uart_output_format("NO_REPLY_FROM_SERVER: "
+                               "removing observe registration with token %x%x\r\n",
+                               obs->token[0], obs->token[1]);
+        obs = NULL;
+        break;
+    }
+}
+
+static void parse_uri_path(char *uri_buf, char *arg)
+{
+    char *uri_query = arg;
+    int i;
+    for (i = 0; i < ns_strlen(arg); i++) {
+        if (*uri_query == '?') {
+            break;
+        }
+        uri_query++;
+    }
+    ns_strncpy(uri_buf, arg, i + 1);
+    if (*uri_query == '?') {
+        // got a query, set to coap header
+        coap_set_header_uri_query(request, uri_query);
+    }
+}
+
+static void command_coap_client_obs(int argc, char *argv[])
+{
+    if (argc == 0) {
+        cli_uart_output_format("Invalid uri-path\r\n");
+        return;
+    }
+    // make sure there is no query on uri-path
+    char *uri = argv[0];
+    for (int i = 0; i < ns_strlen(argv[0]); i++) {
+        if (*uri == '?') {
+            cli_uart_output_format("Can't observe uri-path with query\r\n");
+            return;
+        }
+        uri++;
+    }
+    cli_uart_output_format("Coap observe: %s\r\n", argv[0]);
+    cli_uart_output_format("Starting observation\r\n");
+    obs = coap_obs_request_registration(&server_ep, argv[0], coap_obs_notif_callback, NULL);
+}
+
 static void command_coap_client_get(int argc, char *argv[])
 {
     if (argc == 0) {
@@ -536,25 +607,14 @@ static void command_coap_client_get(int argc, char *argv[])
         return;
     }
     cli_uart_output_format("Coap request: %s", argv[0]);
-    // parse uri path and uri query
-    char *uri_query = argv[0];
-    char uri_path[64];
-    int i;
-    for (i = 0; i < ns_strlen(argv[0]); i++) {
-        if (*uri_query == '?') {
-            break;
-        }
-        uri_query++;
-    }
-    ns_strncpy((char *)&uri_path, argv[0], i + 1);
-    // coap get request
     coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-    // set uri path and uri query
+    char uri_path[64];
+    parse_uri_path((char *)&uri_path, argv[0]);
     coap_set_header_uri_path(request, (char *)&uri_path);
-    if (*uri_query == '?') { // uri query start with this symbol
-        coap_set_header_uri_query(request, uri_query);
-    }
     cli_uart_output_format("\r\n");
+    if (!process_is_running(&ns_coap_client)) {
+        process_start(&ns_coap_client, NULL);
+    }
     process_poll(&ns_coap_client);
 }
 

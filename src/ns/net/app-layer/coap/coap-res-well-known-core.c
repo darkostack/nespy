@@ -103,7 +103,7 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
 
     LOG_DBG("Filter %s = ", filter);
     LOG_DBG_COAP_STRING(value, len);
-    LOG_DBG_("\n");
+    LOG_DBG_("\r\n");
 
     if(strcmp(filter, "href") == 0 && value[0] == '/') {
       ++value;
@@ -137,7 +137,7 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
         end = strchr(attrib, '"');
       }
 
-      LOG_DBG("Filter: res has attrib %s (%s)\n", attrib, value);
+      LOG_DBG("Filter: res has attrib %s (%s)\r\n", attrib, value);
       found = attrib;
       while((found = strstr(found, value)) != NULL) {
         if(found > end) {
@@ -152,16 +152,16 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
       if(found == NULL) {
         continue;
       }
-      LOG_DBG("Filter: res has prefix %s\n", found);
+      LOG_DBG("Filter: res has prefix %s\r\n", found);
       if(lastchar != '*'
          && (found[len] != '"' && found[len] != ' ' && found[len] != '\0')) {
         continue;
       }
-      LOG_DBG("Filter: res has match\n");
+      LOG_DBG("Filter: res has match\r\n");
     }
 #endif
 
-    LOG_DBG("/%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
+    LOG_DBG("/%s (%p)\npos: s%zu, o%ld, b%zu\r\n", resource->url, resource,
             strpos, (long)*offset, bufpos);
 
     if(strpos > 0) {
@@ -179,7 +179,7 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
 
     /* buffer full, but resource not completed yet; or: do not break if resource exactly fills buffer. */
     if(bufpos > preferred_size && strpos - bufpos > *offset) {
-      LOG_DBG("BREAK at %s (%p)\n", resource->url, resource);
+      LOG_DBG("BREAK at %s (%p)\r\n", resource->url, resource);
       break;
     }
   }
@@ -187,22 +187,22 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
   if(bufpos > 0) {
     LOG_DBG("BUF %zu: ", bufpos);
     LOG_DBG_COAP_STRING((char *)buffer, bufpos);
-    LOG_DBG_("\n");
+    LOG_DBG_("\r\n");
 
     coap_set_payload(response, buffer, bufpos);
     coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
   } else if(strpos > 0) {
-    LOG_DBG("well_known_core_handler(): bufpos<=0\n");
+    LOG_DBG("well_known_core_handler(): bufpos<=0\r\n");
 
     coap_set_status_code(response, BAD_OPTION_4_02);
     coap_set_payload(response, "BlockOutOfScope", 15);
   }
 
   if(resource == NULL) {
-    LOG_DBG("DONE\n");
+    LOG_DBG("DONE\r\n");
     *offset = -1;
   } else {
-    LOG_DBG("MORE at %s (%p)\n", resource->url, resource);
+    LOG_DBG("MORE at %s (%p)\r\n", resource->url, resource);
     *offset += preferred_size;
   }
 }

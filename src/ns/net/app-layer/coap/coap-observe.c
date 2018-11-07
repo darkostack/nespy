@@ -80,7 +80,7 @@ add_observer(const coap_endpoint_t *endpoint, const uint8_t *token,
     memcpy(o->token, token, token_len);
     o->last_mid = 0;
 
-    LOG_INFO("Adding observer (%u/%u) for /%s [0x%02X%02X]\n",
+    LOG_INFO("Adding observer (%u/%u) for /%s [0x%02X%02X]\r\n",
              list_length(observers_list) + 1, COAP_MAX_OBSERVERS,
              o->url, o->token[0], o->token[1]);
     list_add(observers_list, o);
@@ -94,7 +94,7 @@ add_observer(const coap_endpoint_t *endpoint, const uint8_t *token,
 void
 coap_remove_observer(coap_observer_t *o)
 {
-  LOG_INFO("Removing observer for /%s [0x%02X%02X]\n", o->url, o->token[0],
+  LOG_INFO("Removing observer for /%s [0x%02X%02X]\r\n", o->url, o->token[0],
            o->token[1]);
 
   memb_free(&observers_memb, o);
@@ -109,7 +109,7 @@ coap_remove_observer_by_client(const coap_endpoint_t *endpoint)
 
   LOG_DBG("Remove check client ");
   LOG_DBG_COAP_EP(endpoint);
-  LOG_DBG_("\n");
+  LOG_DBG_("\r\n");
   for(obs = (coap_observer_t *)list_head(observers_list); obs;
       obs = obs->next) {
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)) {
@@ -129,7 +129,7 @@ coap_remove_observer_by_token(const coap_endpoint_t *endpoint,
 
   for(obs = (coap_observer_t *)list_head(observers_list); obs;
       obs = obs->next) {
-    LOG_DBG("Remove check Token 0x%02X%02X\n", token[0], token[1]);
+    LOG_DBG("Remove check Token 0x%02X%02X\r\n", token[0], token[1]);
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)
        && obs->token_len == token_len
        && memcmp(obs->token, token, token_len) == 0) {
@@ -149,7 +149,7 @@ coap_remove_observer_by_uri(const coap_endpoint_t *endpoint,
 
   for(obs = (coap_observer_t *)list_head(observers_list); obs;
       obs = obs->next) {
-    LOG_DBG("Remove check URL %p\n", uri);
+    LOG_DBG("Remove check URL %p\r\n", uri);
     if((endpoint == NULL
         || (coap_endpoint_cmp(&obs->endpoint, endpoint)))
        && (obs->url == uri || memcmp(obs->url, uri, strlen(obs->url)) == 0)) {
@@ -168,7 +168,7 @@ coap_remove_observer_by_mid(const coap_endpoint_t *endpoint, uint16_t mid)
 
   for(obs = (coap_observer_t *)list_head(observers_list); obs;
       obs = obs->next) {
-    LOG_DBG("Remove check MID %u\n", mid);
+    LOG_DBG("Remove check MID %u\r\n", mid);
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)
        && obs->last_mid == mid) {
       coap_remove_observer(obs);
@@ -214,7 +214,7 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
   /* Ensure url is null terminated because strncpy does not guarantee this */
   url[COAP_OBSERVER_URL_LEN - 1] = '\0';
   /* url now contains the notify URL that needs to match the observer */
-  LOG_INFO("Notification from %s\n", url);
+  LOG_INFO("Notification from %s\r\n", url);
 
   coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
   /* create a "fake" request for the URI */
@@ -245,13 +245,13 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
 
       if((transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint))) {
         if(obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
-          LOG_DBG("           Force Confirmable for\n");
+          LOG_DBG("           Force Confirmable for\r\n");
           notification->type = COAP_TYPE_CON;
         }
 
         LOG_DBG("           Observer ");
         LOG_DBG_COAP_EP(&obs->endpoint);
-        LOG_DBG_("\n");
+        LOG_DBG_("\r\n");
 
         /* update last MID for RST matching */
         obs->last_mid = transaction->mid;
@@ -265,7 +265,7 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
         if(coap_call_handlers(request, notification, transaction->message +
                               COAP_MAX_HEADER_SIZE, COAP_MAX_CHUNK_SIZE,
                               &new_offset) > 0) {
-          LOG_DBG("Notification on new handlers\n");
+          LOG_DBG("Notification on new handlers\r\n");
         } else {
           if(resource != NULL) {
             resource->get_handler(request, notification,
@@ -311,7 +311,7 @@ coap_observe_handler(coap_resource_t *resource, coap_message_t *coap_req,
   const coap_endpoint_t *src_ep;
   coap_observer_t *obs;
 
-  LOG_DBG("CoAP observer handler rsc: %d\n", resource != NULL);
+  LOG_DBG("CoAP observer handler rsc: %d\r\n", resource != NULL);
 
   if(coap_req->code == COAP_GET && coap_res->code < 128) { /* GET request and response without error code */
     if(coap_is_option(coap_req, COAP_OPTION_OBSERVE)) {

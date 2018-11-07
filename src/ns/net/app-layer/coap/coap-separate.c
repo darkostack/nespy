@@ -89,7 +89,7 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
 
   LOG_DBG("Separate ACCEPT: /");
   LOG_DBG_COAP_STRING(coap_req->uri_path, coap_req->uri_path_len);
-  LOG_DBG_(" MID %u\n", coap_req->mid);
+  LOG_DBG_(" MID %u\r\n", coap_req->mid);
   if(t) {
     /* send separate ACK for CON */
     if(coap_req->type == COAP_TYPE_CON) {
@@ -98,7 +98,7 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
 
       ep = coap_get_src_endpoint(coap_req);
       if(ep == NULL) {
-        LOG_ERR("ERROR: no endpoint in request\n");
+        LOG_ERR("ERROR: no endpoint in request\r\n");
       } else {
         /* ACK with empty code (0) */
         coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
@@ -128,7 +128,7 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
     /* signal the engine to skip automatic response and clear transaction by engine */
     coap_status_code = MANUAL_RESPONSE;
   } else {
-    LOG_ERR("ERROR: Response transaction for separate request not found!\n");
+    LOG_ERR("ERROR: Response transaction for separate request not found!\r\n");
     coap_status_code = INTERNAL_SERVER_ERROR_5_00;
   }
 }

@@ -101,19 +101,19 @@ PT_THREAD(coap_blocking_request
                                                               message);
 
       coap_send_transaction(state->transaction);
-      LOG_DBG("Requested #%"PRIu32" (MID %u)\n", state->block_num, request->mid);
+      LOG_DBG("Requested #%"PRIu32" (MID %u)\r\n", state->block_num, request->mid);
 
       PT_YIELD_UNTIL(&blocking_state->pt, ev == PROCESS_EVENT_POLL);
 
       if(!state->response) {
-        LOG_WARN("Server not responding\n");
+        LOG_WARN("Server not responding\r\n");
         state->status = COAP_REQUEST_STATUS_TIMEOUT;
         PT_EXIT(&blocking_state->pt);
       }
 
       coap_get_header_block2(state->response, &state->res_block, &state->more, NULL, NULL);
 
-      LOG_DBG("Received #%"PRIu32"%s (%u bytes)\n", state->res_block, state->more ? "+" : "",
+      LOG_DBG("Received #%"PRIu32"%s (%u bytes)\r\n", state->res_block, state->more ? "+" : "",
               state->response->payload_len);
       if(state->more) {
         state->status = COAP_REQUEST_STATUS_MORE;
@@ -125,12 +125,12 @@ PT_THREAD(coap_blocking_request
         request_callback(state->response);
         ++(state->block_num);
       } else {
-        LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n",
+        LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\r\n",
                  state->res_block, state->block_num);
         ++(state->block_error);
       }
     } else {
-      LOG_WARN("Could not allocate transaction buffer");
+      LOG_WARN("Could not allocate transaction buffer\r\n");
       PT_EXIT(&blocking_state->pt);
     }
   } while(state->more && (state->block_error) < COAP_MAX_ATTEMPTS);

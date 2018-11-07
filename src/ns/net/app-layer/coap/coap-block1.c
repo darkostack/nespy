@@ -101,7 +101,7 @@ coap_block1_handler(coap_message_t *request, coap_message_t *response,
 
   if(coap_is_option(request, COAP_OPTION_BLOCK1)) {
     LOG_DBG("Blockwise: block 1 request: Num: %"PRIu32
-            ", More: %u, Size: %u, Offset: %"PRIu32"\n",
+            ", More: %u, Size: %u, Offset: %"PRIu32"\r\n",
             request->block1_num,
             request->block1_more,
             request->block1_size,

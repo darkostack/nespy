@@ -53,7 +53,7 @@
 /* Log configuration */
 #include "coap-log.h"
 #define LOG_MODULE "coap-timer"
-#define LOG_LEVEL  LOG_LEVEL_NONE
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 PROCESS(coap_timer_process, "coap timer process");
 
@@ -65,7 +65,7 @@ update_timer(void)
 {
   uint64_t remaining;
   remaining = coap_timer_time_to_next_expiration();
-  LOG_DBG("remaining %lu msec\n", (unsigned long)remaining);
+  LOG_DBG("remaining %lu msec\r\n", (unsigned long)remaining);
   if(remaining == 0) {
     /* Run as soon as possible */
     process_poll(&coap_timer_process);
