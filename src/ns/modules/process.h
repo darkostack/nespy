@@ -4,7 +4,6 @@
 #include "ns/contiki.h"
 
 #define NS_THREAD_DEPTH         10
-#define NS_INVALID_THREAD_ID    0xff
 
 #define NS_PROCESS_THREAD(id)                                                 \
 PROCESS_THREAD(thread ## id, ev, data) {                                      \

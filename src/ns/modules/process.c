@@ -155,7 +155,7 @@ STATIC mp_obj_t ns_thread_make_new(const mp_obj_type_t *type,
 
     // get valid thread id and assigned PROCESS_EVENT_INT to this thread event
     ns_thread_id_t thread_id = thread_get_id();
-    if (thread_id == NS_INVALID_THREAD_ID) {
+    if (thread_id < 0) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: thread overflow! max(%d)",
                   NS_THREAD_DEPTH));
@@ -226,7 +226,7 @@ STATIC void ns_thread_print(const mp_print_t *print,
     mp_printf(print, "ns: thread event assigned (0x%x)\n",
               (process_event_t)mp_obj_get_int(self->ev));
     mp_printf(print, "ns: thread is running (%s)\n",
-              process_is_running(ns_process[self->id]) ? "true" : "false");
+              process_is_running(ns_process[self->id]) ? "1" : "0");
     mp_printf(print, "ns: thread queue num (%d)", (int)thread_container.nthread);
 }
 
@@ -288,7 +288,7 @@ static ns_thread_id_t thread_get_id(void)
     }
 
     if (ev > &thread_container.evid[NS_THREAD_DEPTH - 1]) {
-        return NS_INVALID_THREAD_ID;
+        return -1;
     }
 
     // this mean this thread id is occupied and initialized
