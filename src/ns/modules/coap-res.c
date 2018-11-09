@@ -272,6 +272,7 @@ STATIC mp_obj_t ns_coap_resource_set_payload_text(mp_obj_t self_in,
     ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
     const char *text = mp_obj_str_get_str(text_in);
     self->set_payload = text;
+    self->content_format = TEXT_PLAIN;
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -339,6 +340,19 @@ static ns_coap_res_id_t coap_res_get_id(void)
 
 // predefined private functions for coap handlers ------------------------------
 
+static void res_set_payload(mp_obj_t payload,
+                            coap_message_t *request,
+                            coap_message_t *response,
+                            uint8_t *buffer,
+                            uint16_t preferred_size,
+                            int32_t *offset)
+{
+    ns_coap_res_obj_t *res = MP_OBJ_TO_PTR(payload);
+    memcpy(buffer, res->set_payload, strlen(res->set_payload));
+    coap_set_header_content_format(response, res->content_format);
+    coap_set_payload(response, buffer, strlen(res->set_payload));
+}
+
 static void get_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
@@ -351,11 +365,7 @@ static void get_handler0(coap_message_t *request, coap_message_t *response, uint
     }
 
     if (payload != mp_const_none) {
-        res = MP_OBJ_TO_PTR(payload);
-        // TODO: content format
-        memcpy(buffer, res->set_payload, strlen(res->set_payload));
-        coap_set_header_content_format(response, TEXT_PLAIN);
-        coap_set_payload(response, buffer, strlen(res->set_payload));
+        res_set_payload(payload, request, response, buffer, preferred_size, offset);
     }
 }
 
@@ -371,11 +381,7 @@ static void get_handler1(coap_message_t *request, coap_message_t *response, uint
     }
 
     if (payload != mp_const_none) {
-        res = MP_OBJ_TO_PTR(payload);
-        // TODO: content format
-        memcpy(buffer, res->set_payload, strlen(res->set_payload));
-        coap_set_header_content_format(response, TEXT_PLAIN);
-        coap_set_payload(response, buffer, strlen(res->set_payload));
+        res_set_payload(payload, request, response, buffer, preferred_size, offset);
     }
 }
 

@@ -29,6 +29,7 @@ typedef struct _ns_coap_res_obj_t {
     uip_ipaddr_t end_point_ipaddr;
     const char *set_payload;
     const uint8_t *get_payload;
+    coap_content_format_t content_format;
     const char *uri_path;
     bool is_activated;
     bool is_initialized;
