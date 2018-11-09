@@ -7,6 +7,7 @@
 #include "ns/net/app-layer/coap/coap-engine.h"
 #include "ns/net/app-layer/coap/coap-blocking-api.h"
 #include "ns/modules/coap-res.h"
+#include "ns/modules/nstd.h"
 #include <stdio.h>
 
 // Example usage to Coap Resource objects
@@ -28,45 +29,57 @@
 //                                  delete=None,
 //                                  period=0,
 //                                  periodic=None);
-//
-//       res_hello.activate("test/hello")
 
 const mp_obj_type_t ns_coap_resource_type;
 static ns_coap_res_obj_all_t coap_res_obj_all;
+static process_event_t client_get_event;
+static process_event_t client_post_event;
+static process_event_t client_put_event;
+static process_event_t client_delete_event;
+static char client_end_point_buf[64];
 
 void ns_coap_resource_init0(void)
 {
     coap_res_obj_all.remain = COAP_RES_OBJ_ALL_NUM;
     for (int i = 0; i < COAP_RES_OBJ_ALL_NUM; i++) {
-        coap_res_obj_all.res[i] = NULL;
+        coap_res_obj_all.res[i].is_initialized = false;
     }
+    // initialize client process event
+    client_get_event = process_alloc_event();
+    client_post_event = process_alloc_event();
+    client_put_event = process_alloc_event();
+    client_delete_event = process_alloc_event();
 }
 
 static ns_coap_res_id_t coap_res_get_id(void);
 
-// predefined get handler
+// predefined resource handler
 COAP_RES_HANDLER(get_handler0);
 COAP_RES_HANDLER(get_handler1);
 
-// predefined post handler
 COAP_RES_HANDLER(post_handler0);
 COAP_RES_HANDLER(post_handler1);
 
-// predefined put handler
 COAP_RES_HANDLER(put_handler0);
 COAP_RES_HANDLER(put_handler1);
 
-// predefined delete handler
 COAP_RES_HANDLER(delete_handler0);
 COAP_RES_HANDLER(delete_handler1);
 
 // predefined periodic handler
-COAP_RES_PERIODIC_HANDLER(periodic_handler0);
-COAP_RES_PERIODIC_HANDLER(periodic_handler1);
+COAP_RES_PERIODIC_HANDLER(periodic0);
+COAP_RES_PERIODIC_HANDLER(periodic1);
+
+// predefined coap client process
+PROCESS(ns_coap_client_process, "coap client process");
+
+// predefined client message handler
+static void client_msg_handler0(coap_message_t *response);
+static void client_msg_handler1(coap_message_t *response);
 
 static ns_coap_resource_handler_t res_handler[] = {
-    { get_handler0, post_handler0, put_handler0, delete_handler0, &res_periodic_handler0 },
-    { get_handler1, post_handler1, put_handler1, delete_handler1, &res_periodic_handler1 }
+    { get_handler0, post_handler0, put_handler0, delete_handler0, &res_periodic0, client_msg_handler0 },
+    { get_handler1, post_handler1, put_handler1, delete_handler1, &res_periodic1, client_msg_handler1 },
 };
 
 STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
@@ -168,8 +181,11 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
         res_obj->periodic_obj = mp_const_none;
     }
 
+    // set this to none unless this node is set as client
+    res_obj->client_msg_callback_obj = mp_const_none;
+
     // put this object info container
-    coap_res_obj_all.res[res_obj->id] = res_obj;
+    coap_res_obj_all.res[res_obj->id] = *res_obj;
 
     return MP_OBJ_FROM_PTR(res_obj);
 }
@@ -191,20 +207,96 @@ STATIC void ns_coap_resource_print(const mp_print_t *print,
     mp_printf(print, "ns: uri path     : %s\n", self->is_activated ? self->uri_path : "NULL");
 }
 
-// res.activate("test/hello")
-STATIC mp_obj_t ns_coap_resource_activate(mp_obj_t self_in, mp_obj_t uri_path_in)
+// res.server_activate("test/hello") # set this node as a coap server
+STATIC mp_obj_t ns_coap_resource_server_activate(mp_obj_t self_in, mp_obj_t uri_path_in)
 {
     ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self = &coap_res_obj_all.res[self->id];
+
     self->uri_path = mp_obj_str_get_str(uri_path_in);
     self->is_activated = true;
     coap_activate_resource(&self->res, self->uri_path);
     return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_activate_obj, ns_coap_resource_activate);
+// res.client_ep("fe80::200:0:0:2")
+STATIC mp_obj_t ns_coap_resource_client_ep(mp_obj_t self_in, mp_obj_t server_ipaddr_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self = &coap_res_obj_all.res[self->id];
+
+    const char *server_ipaddr = mp_obj_str_get_str(server_ipaddr_in);
+
+    if (uiplib_ipaddrconv(server_ipaddr, &self->end_point_ipaddr) == 0) {
+        printf("ns: invalid end-point IPv6 addr: %s\r\n", server_ipaddr);
+        return mp_const_none;
+    }
+
+    strcat(client_end_point_buf, "coap://[");
+    strcat(client_end_point_buf, server_ipaddr);
+    strcat(client_end_point_buf, "]");
+
+    coap_endpoint_parse((char *)&client_end_point_buf,
+                        ns_strlen((char *)&client_end_point_buf),
+                        &self->end_point);
+
+    return mp_const_none;
+}
+
+// res.client_get("test/hello", callback)
+STATIC mp_obj_t ns_coap_resource_client_get(mp_obj_t self_in,
+                                            mp_obj_t uri_path_in,
+                                            mp_obj_t callback_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self = &coap_res_obj_all.res[self->id];
+
+    const char *uri_path = mp_obj_str_get_str(uri_path_in);
+    self->client_msg_callback_obj = callback_in;
+
+    coap_init_message(self->client_request, COAP_TYPE_CON, COAP_GET, 0);
+    coap_set_header_uri_path(self->client_request, uri_path);
+
+    if (!process_is_running(&ns_coap_client_process)) {
+        process_start(&ns_coap_client_process, NULL);
+    }
+
+    process_post(&ns_coap_client_process, client_get_event, (void *)&self->id);
+    return mp_const_none;
+}
+
+// res.set_payload_text("Hello World!")
+STATIC mp_obj_t ns_coap_resource_set_payload_text(mp_obj_t self_in,
+                                                  mp_obj_t text_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    const char *text = mp_obj_str_get_str(text_in);
+    self->set_payload = text;
+    return MP_OBJ_FROM_PTR(self);
+}
+
+// TODO: res.set_payload_json()
+
+// res.get_payload()
+STATIC mp_obj_t ns_coap_resource_get_payload(mp_obj_t self_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    const char *payload = (const char *)self->get_payload;
+    return mp_obj_new_str(payload, strlen(payload));
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_server_activate_obj, ns_coap_resource_server_activate);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_client_ep_obj, ns_coap_resource_client_ep);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_coap_resource_client_get_obj, ns_coap_resource_client_get);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_text_obj, ns_coap_resource_set_payload_text);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_coap_resource_get_payload_obj, ns_coap_resource_get_payload);
 
 STATIC const mp_rom_map_elem_t ns_coap_resource_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_activate), MP_ROM_PTR(&ns_coap_resource_activate_obj) },
+    { MP_ROM_QSTR(MP_QSTR_server_activate), MP_ROM_PTR(&ns_coap_resource_server_activate_obj) },
+    { MP_ROM_QSTR(MP_QSTR_client_ep), MP_ROM_PTR(&ns_coap_resource_client_ep_obj) },
+    { MP_ROM_QSTR(MP_QSTR_client_get), MP_ROM_PTR(&ns_coap_resource_client_get_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_payload_text), MP_ROM_PTR(&ns_coap_resource_set_payload_text_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_payload), MP_ROM_PTR(&ns_coap_resource_get_payload_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(ns_coap_resource_locals_dict, ns_coap_resource_locals_dict_table);
@@ -221,19 +313,19 @@ const mp_obj_type_t ns_coap_resource_type = {
 
 static ns_coap_res_id_t coap_res_get_id(void)
 {
-    int i;
+    bool is_get_id = false;
     ns_coap_res_id_t id = 0;
 
     int_master_status_t int_status = int_master_read_and_disable();
 
-    for (i= 0; i < COAP_RES_OBJ_ALL_NUM; i++) {
-        if (coap_res_obj_all.res[i] == NULL) {
-            id = i;
+    for (int i= 0; i < COAP_RES_OBJ_ALL_NUM; i++) {
+        if (coap_res_obj_all.res[i].is_initialized == false) {
+            is_get_id = true;
             break;
         }
     }
 
-    if (id == 0 && i == COAP_RES_OBJ_ALL_NUM) {
+    if (!is_get_id) {
         return -1;
     }
 
@@ -250,170 +342,134 @@ static ns_coap_res_id_t coap_res_get_id(void)
 static void get_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[0]->request = request;
-    coap_res_obj_all.res[0]->response = response;
-    coap_res_obj_all.res[0]->buffer = buffer;
-    coap_res_obj_all.res[0]->preferred_size = preferred_size;
-    coap_res_obj_all.res[0]->offset = offset;
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
+    mp_obj_t payload = mp_const_none;
 
-    mp_obj_t callback = coap_res_obj_all.res[0]->get_obj;
+    if (res->get_obj != mp_const_none) {
+        // get the payload
+        payload = mp_call_function_1(res->get_obj, MP_OBJ_FROM_PTR(res));
+    }
 
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[0]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have get method"));
+    if (payload != mp_const_none) {
+        res = MP_OBJ_TO_PTR(payload);
+        // TODO: content format
+        memcpy(buffer, res->set_payload, strlen(res->set_payload));
+        coap_set_header_content_format(response, TEXT_PLAIN);
+        coap_set_payload(response, buffer, strlen(res->set_payload));
     }
 }
 
 static void get_handler1(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[1]->request = request;
-    coap_res_obj_all.res[1]->response = response;
-    coap_res_obj_all.res[1]->buffer = buffer;
-    coap_res_obj_all.res[1]->preferred_size = preferred_size;
-    coap_res_obj_all.res[1]->offset = offset;
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
+    mp_obj_t payload = mp_const_none;
 
-    mp_obj_t callback = coap_res_obj_all.res[1]->get_obj;
+    if (res->get_obj != mp_const_none) {
+        // get the payload
+        payload = mp_call_function_1(res->get_obj, MP_OBJ_FROM_PTR(res));
+    }
 
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[1]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have get method"));
+    if (payload != mp_const_none) {
+        res = MP_OBJ_TO_PTR(payload);
+        // TODO: content format
+        memcpy(buffer, res->set_payload, strlen(res->set_payload));
+        coap_set_header_content_format(response, TEXT_PLAIN);
+        coap_set_payload(response, buffer, strlen(res->set_payload));
     }
 }
 
 static void post_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
-                         uint16_t preferred_size, int32_t *offset)
+                          uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[0]->request = request;
-    coap_res_obj_all.res[0]->response = response;
-    coap_res_obj_all.res[0]->buffer = buffer;
-    coap_res_obj_all.res[0]->preferred_size = preferred_size;
-    coap_res_obj_all.res[0]->offset = offset;
-
-    mp_obj_t callback = coap_res_obj_all.res[0]->post_obj;
-
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[0]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have post method"));
-    }
+    // TODO:
 }
 
 static void post_handler1(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
-                         uint16_t preferred_size, int32_t *offset)
+                          uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[1]->request = request;
-    coap_res_obj_all.res[1]->response = response;
-    coap_res_obj_all.res[1]->buffer = buffer;
-    coap_res_obj_all.res[1]->preferred_size = preferred_size;
-    coap_res_obj_all.res[1]->offset = offset;
-
-    mp_obj_t callback = coap_res_obj_all.res[1]->post_obj;
-
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[1]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have post method"));
-    }
+    // TODO:
 }
 
 static void put_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[0]->request = request;
-    coap_res_obj_all.res[0]->response = response;
-    coap_res_obj_all.res[0]->buffer = buffer;
-    coap_res_obj_all.res[0]->preferred_size = preferred_size;
-    coap_res_obj_all.res[0]->offset = offset;
-
-    mp_obj_t callback = coap_res_obj_all.res[0]->put_obj;
-
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[0]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have put method"));
-    }
+    // TODO:
 }
 
 static void put_handler1(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[1]->request = request;
-    coap_res_obj_all.res[1]->response = response;
-    coap_res_obj_all.res[1]->buffer = buffer;
-    coap_res_obj_all.res[1]->preferred_size = preferred_size;
-    coap_res_obj_all.res[1]->offset = offset;
-
-    mp_obj_t callback = coap_res_obj_all.res[1]->put_obj;
-
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[1]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have put method"));
-    }
+    // TODO:
 }
 
 static void delete_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
-                         uint16_t preferred_size, int32_t *offset)
+                            uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[0]->request = request;
-    coap_res_obj_all.res[0]->response = response;
-    coap_res_obj_all.res[0]->buffer = buffer;
-    coap_res_obj_all.res[0]->preferred_size = preferred_size;
-    coap_res_obj_all.res[0]->offset = offset;
-
-    mp_obj_t callback = coap_res_obj_all.res[0]->delete_obj;
-
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[0]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have delete method"));
-    }
+    // TODO:
 }
 
 static void delete_handler1(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
-                         uint16_t preferred_size, int32_t *offset)
+                            uint16_t preferred_size, int32_t *offset)
 {
-    coap_res_obj_all.res[1]->request = request;
-    coap_res_obj_all.res[1]->response = response;
-    coap_res_obj_all.res[1]->buffer = buffer;
-    coap_res_obj_all.res[1]->preferred_size = preferred_size;
-    coap_res_obj_all.res[1]->offset = offset;
+    // TODO:
+}
 
-    mp_obj_t callback = coap_res_obj_all.res[1]->delete_obj;
-
-    if (callback != mp_const_none) {
-        mp_call_function_1(callback, MP_OBJ_FROM_PTR(coap_res_obj_all.res[1]));
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap resource (%d) don't have delete method"));
+static void periodic0(void)
+{
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
+    if (res->res.periodic->period != 0 && res->res.periodic != NULL) {
+        coap_notify_observers(&res->res);
     }
 }
 
-static void periodic_handler0(void)
+static void periodic1(void)
 {
-    if (coap_res_obj_all.res[0] != NULL) {
-        coap_notify_observers(&coap_res_obj_all.res[0]->res);
-    }
-}
-
-static void periodic_handler1(void)
-{
-    if (coap_res_obj_all.res[1] != NULL) {
-        coap_notify_observers(&coap_res_obj_all.res[1]->res);
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
+    if (res->res.periodic->period != 0 && res->res.periodic != NULL) {
+        coap_notify_observers(&res->res);
     }
 }
 
 // predefined PROCESS_THREAD to handle CoAP message ----------------------------
-// TODO:
+PROCESS_THREAD(ns_coap_client_process, ev, data)
+{
+    static ns_coap_res_id_t data_id;
+    PROCESS_BEGIN();
+    while (1) {
+        PROCESS_WAIT_EVENT();
+        if (ev == client_get_event && data != NULL) {
+            data_id = *(ns_coap_res_id_t *)data;
+            if (data_id >= 0 && data_id < COAP_RES_OBJ_ALL_NUM) {
+                COAP_BLOCKING_REQUEST(&coap_res_obj_all.res[data_id].end_point,
+                                      coap_res_obj_all.res[data_id].client_request,
+                                      res_handler[data_id].client_msg);
+            }
+        }
+    }
+    PROCESS_END();
+}
 
+// predefined client message handler
+static void client_msg_handler0(coap_message_t *response)
+{
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
+    const uint8_t *msg;
+    coap_get_payload(response, &msg);
+    res->get_payload = msg;
+    if (res->client_msg_callback_obj != mp_const_none) {
+        mp_call_function_1(res->client_msg_callback_obj, MP_OBJ_FROM_PTR(res));
+    }
+}
+
+static void client_msg_handler1(coap_message_t *response)
+{
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
+    const uint8_t *msg;
+    coap_get_payload(response, &msg);
+    res->get_payload = msg;
+    if (res->client_msg_callback_obj != mp_const_none) {
+        mp_call_function_1(res->client_msg_callback_obj, MP_OBJ_FROM_PTR(res));
+    }
+}
 #endif // #if APP_CONF_WITH_COAP

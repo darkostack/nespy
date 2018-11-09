@@ -12,6 +12,7 @@
     
 
 typedef int ns_coap_res_id_t;
+typedef void (*ns_coap_client_msg_handler_t)(coap_message_t *response);
 
 typedef struct _ns_coap_res_obj_t {
     mp_obj_base_t base;
@@ -20,20 +21,21 @@ typedef struct _ns_coap_res_obj_t {
     mp_obj_t put_obj;
     mp_obj_t delete_obj;
     mp_obj_t periodic_obj;
+    mp_obj_t client_msg_callback_obj;
     ns_coap_res_id_t id;
     coap_resource_t res;
-    coap_message_t *request;
-    coap_message_t *response;
-    uint8_t *buffer;
-    uint16_t preferred_size;
-    int32_t *offset;
+    coap_message_t client_request[1];
+    coap_endpoint_t end_point;
+    uip_ipaddr_t end_point_ipaddr;
+    const char *set_payload;
+    const uint8_t *get_payload;
     const char *uri_path;
-    const char *query;
     bool is_activated;
+    bool is_initialized;
 } ns_coap_res_obj_t;
 
 typedef struct _ns_coap_res_obj_all_t {
-    ns_coap_res_obj_t *res[COAP_RES_OBJ_ALL_NUM];
+    ns_coap_res_obj_t res[COAP_RES_OBJ_ALL_NUM];
     uint8_t remain;
 } ns_coap_res_obj_all_t;
 
@@ -43,8 +45,11 @@ struct ns_coap_resource_handler_s {
     coap_resource_handler_t put;
     coap_resource_handler_t del;
     coap_periodic_resource_t *periodic;
+    ns_coap_client_msg_handler_t client_msg;
 };
 
 typedef struct ns_coap_resource_handler_s ns_coap_resource_handler_t;
+
+void ns_coap_resource_init0(void);
 
 #endif // NS_MODULES_COAP_RES_H_
