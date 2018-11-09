@@ -276,7 +276,16 @@ STATIC mp_obj_t ns_coap_resource_set_payload_text(mp_obj_t self_in,
     return MP_OBJ_FROM_PTR(self);
 }
 
-// TODO: res.set_payload_json()
+// res.set_payload_json("{'temperature':26}")
+STATIC mp_obj_t ns_coap_resource_set_payload_json(mp_obj_t self_in,
+                                                  mp_obj_t json_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    const char *json = mp_obj_str_get_str(json_in);
+    self->set_payload = json;
+    self->content_format = APPLICATION_JSON;
+    return MP_OBJ_FROM_PTR(self);
+}
 
 // res.get_payload()
 STATIC mp_obj_t ns_coap_resource_get_payload(mp_obj_t self_in)
@@ -290,6 +299,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_server_activate_obj, ns_coap_r
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_client_ep_obj, ns_coap_resource_client_ep);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_coap_resource_client_get_obj, ns_coap_resource_client_get);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_text_obj, ns_coap_resource_set_payload_text);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_json_obj, ns_coap_resource_set_payload_json);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_coap_resource_get_payload_obj, ns_coap_resource_get_payload);
 
 STATIC const mp_rom_map_elem_t ns_coap_resource_locals_dict_table[] = {
@@ -297,6 +307,7 @@ STATIC const mp_rom_map_elem_t ns_coap_resource_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_client_ep), MP_ROM_PTR(&ns_coap_resource_client_ep_obj) },
     { MP_ROM_QSTR(MP_QSTR_client_get), MP_ROM_PTR(&ns_coap_resource_client_get_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_payload_text), MP_ROM_PTR(&ns_coap_resource_set_payload_text_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_payload_json), MP_ROM_PTR(&ns_coap_resource_set_payload_json_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_payload), MP_ROM_PTR(&ns_coap_resource_get_payload_obj) },
 };
 
