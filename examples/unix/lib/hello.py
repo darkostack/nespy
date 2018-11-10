@@ -3,14 +3,15 @@ from lib import process
 
 # coap resource functions
 def get(res):
-    payload = res.set_payload_text("Hello World!")
+    global msg_counter
+    msg_counter += 1
+    data = "Hello World! " + str(msg_counter)
+    payload = res.set_payload_text(data)
     return payload
 
 def client_msg_callback(res):
     message = res.get_payload()
-    global msg_counter
-    msg_counter += 1
-    print("msg", msg_counter, ":", message, "\r")
+    print(message, "\r")
     return;
 
 # hello thread functions
