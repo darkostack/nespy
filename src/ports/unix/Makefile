@@ -181,11 +181,6 @@ NSMOD_SRC_C += $(addprefix ns/modules/,\
     cli/cli.c \
     )
 
-NSMOD_SRC_C += $(addprefix ns/modules/cli/coap/,\
-    server/resources/res-hello.c \
-    server/coap-server.c \
-    )
-
 NSPORT_SRC_C += $(addprefix nsport/,\
     clock.c \
     int-master.c \
