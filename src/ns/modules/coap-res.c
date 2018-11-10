@@ -470,9 +470,8 @@ PROCESS_THREAD(ns_coap_client_process, ev, data)
 }
 
 // predefined client message handler
-static void client_msg_handler0(coap_message_t *response)
+static void client_msg_process(ns_coap_res_obj_t *res, coap_message_t *response)
 {
-    ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
     const uint8_t *msg;
     coap_get_payload(response, &msg);
     res->get_payload = msg;
@@ -481,14 +480,15 @@ static void client_msg_handler0(coap_message_t *response)
     }
 }
 
+static void client_msg_handler0(coap_message_t *response)
+{
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
+    client_msg_process(res, response);
+}
+
 static void client_msg_handler1(coap_message_t *response)
 {
     ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
-    const uint8_t *msg;
-    coap_get_payload(response, &msg);
-    res->get_payload = msg;
-    if (res->client_msg_callback_obj != mp_const_none) {
-        mp_call_function_1(res->client_msg_callback_obj, MP_OBJ_FROM_PTR(res));
-    }
+    client_msg_process(res, response);
 }
 #endif // #if APP_CONF_WITH_COAP
