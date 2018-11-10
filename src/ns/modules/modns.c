@@ -11,6 +11,7 @@ extern const mp_obj_type_t ns_plat_type;
 #if APP_CONF_WITH_COAP
 extern const mp_obj_type_t ns_coap_resource_type;
 #endif
+extern const mp_obj_type_t ns_etimer_type;
 
 STATIC const mp_rom_map_elem_t ns_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_ns) },
@@ -23,6 +24,7 @@ STATIC const mp_rom_map_elem_t ns_module_globals_table[] = {
 #if APP_CONF_WITH_COAP
     { MP_ROM_QSTR(MP_QSTR_CoapResource), MP_ROM_PTR(&ns_coap_resource_type) },
 #endif
+    { MP_ROM_QSTR(MP_QSTR_Etimer), MP_ROM_PTR(&ns_etimer_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(ns_module_globals, ns_module_globals_table);

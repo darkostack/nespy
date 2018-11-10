@@ -170,6 +170,7 @@ LIB_SRC_C += $(addprefix lib/,\
 NSMOD_SRC_C += $(addprefix ns/modules/,\
     clock.c \
     coap-res.c \
+    etimer.c \
     hello.c \
     init.c \
     modns.c \

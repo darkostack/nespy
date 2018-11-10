@@ -89,15 +89,15 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
 {
     if (n_args == 0 && n_kw == 0) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                        "ns: invalid arguments"));
+                  "ns: invalid arguments"));
     }
 
     ns_coap_res_id_t res_id = coap_res_get_id();
 
     if (res_id < 0) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                    "ns: coap periodic resource overflow! max(%d)",
-                    COAP_RES_OBJ_ALL_NUM));
+                  "ns: coap periodic resource overflow! max(%d)",
+                  COAP_RES_OBJ_ALL_NUM));
     }
 
     enum {ARG_attr, ARG_get, ARG_post, ARG_put, ARG_delete, ARG_period, ARG_periodic};
@@ -118,7 +118,7 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
     // check the arguments
     if (args[ARG_attr].u_obj == mp_const_none) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                        "ns: can't find coap resource attr arguments"));
+                  "ns: can't find coap resource attr arguments"));
     } else {
         // make sure at least one method is specified
         if (args[ARG_get].u_obj == mp_const_none &&
@@ -126,7 +126,7 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
             args[ARG_put].u_obj == mp_const_none &&
             args[ARG_delete].u_obj == mp_const_none) {
             nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                            "ns: can't find coap resource method arguments"));
+                      "ns: can't find coap resource method arguments"));
         }
     }
 
@@ -184,7 +184,7 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
     // set this to none unless this node is set as client
     res_obj->client_msg_callback_obj = mp_const_none;
 
-    // put this object info container
+    // put this object into container
     coap_res_obj_all.res[res_obj->id] = *res_obj;
 
     return MP_OBJ_FROM_PTR(res_obj);
@@ -205,6 +205,7 @@ STATIC void ns_coap_resource_print(const mp_print_t *print,
     mp_printf(print, "ns: has delete   : %s\n", self->res.delete_handler != NULL ? "1" : "1");
     mp_printf(print, "ns: is activated : %s\n", self->is_activated ? "1" : "0");
     mp_printf(print, "ns: uri path     : %s\n", self->is_activated ? self->uri_path : "NULL");
+    mp_printf(print, "ns: remain       : %u\n", coap_res_obj_all.remain);
 }
 
 // res.server_activate("test/hello") # set this node as a coap server
@@ -333,6 +334,7 @@ static ns_coap_res_id_t coap_res_get_id(void)
     for (int i= 0; i < COAP_RES_OBJ_ALL_NUM; i++) {
         if (coap_res_obj_all.res[i].is_initialized == false) {
             is_get_id = true;
+            id = i;
             break;
         }
     }

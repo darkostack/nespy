@@ -3,25 +3,27 @@
 
 #include "ns/contiki.h"
 
-#define NS_THREAD_DEPTH         10
+#define THREAD_OBJ_ALL_NUM 10
 
-#define NS_PROCESS_THREAD(id)                                                 \
-PROCESS_THREAD(thread ## id, ev, data) {                                      \
+#define NS_PROCESS_THREAD(n)                                                  \
+PROCESS_THREAD(thread ## n, ev, data) {                                       \
     PROCESS_BEGIN();                                                          \
     while (1) {                                                               \
-        PROCESS_WAIT_EVENT_UNTIL((ev == PROCESS_EVENT_POLL) ||                \
-                                 (ev == PROCESS_EVENT_EXIT));                 \
-        if (ev == PROCESS_EVENT_POLL) {                                       \
-            if ((process_event_t)mp_obj_get_int(thread_container.evid[id]) == \
-                PROCESS_EVENT_INIT) {                                         \
-                ns_thread_obj_t *self = &thread_container.obj[id];            \
-                mp_obj_t cbev = self->ev;                                     \
-                mp_obj_t cbdata = self->data;                                 \
-                mp_call_function_2(self->cb, cbev, cbdata);                   \
+        PROCESS_WAIT_EVENT();                                                 \
+        ns_thread_obj_t *self = &thread_obj_all.thread[n];                    \
+        if (ev != PROCESS_EVENT_EXIT) {                                       \
+            if (self->is_used) {                                              \
+                mp_obj_t event = mp_obj_new_int_from_uint(ev);                \
+                mp_call_function_2(self->cb, event, self->data);              \
+                self->data = mp_const_none;                                   \
             }                                                                 \
-        } else if (ev == PROCESS_EVENT_EXIT) {                                \
-            thread_container.evid[id] = mp_obj_new_int_from_uint(PROCESS_EVENT_NONE); \
-            thread_container.nthread--;                                       \
+        } else {                                                              \
+            self->cb = mp_const_none;                                         \
+            self->id = 0;                                                     \
+            self->data = mp_const_none;                                       \
+            self->is_used = false;                                            \
+            thread_obj_all.thread[n] = *self;                                 \
+            thread_obj_all.remain++;                                          \
             PROCESS_EXIT();                                                   \
         }                                                                     \
     }                                                                         \
@@ -34,15 +36,14 @@ typedef struct _ns_thread_obj_t {
     mp_obj_base_t base;
     mp_obj_t cb;
     ns_thread_id_t id;
-    mp_obj_t ev;
     mp_obj_t data;
+    bool is_used;
 } ns_thread_obj_t;
 
-typedef struct _ns_thread_container_t {
-    ns_thread_obj_t obj[NS_THREAD_DEPTH];
-    mp_obj_t evid[NS_THREAD_DEPTH];
-    uint8_t nthread;
-} ns_thread_container_t;
+typedef struct _ns_thread_obj_all_t {
+    ns_thread_obj_t thread[THREAD_OBJ_ALL_NUM];
+    uint8_t remain;
+} ns_thread_obj_all_t;
 
 typedef struct _ns_process_base_obj_t {
     mp_obj_base_t base;
