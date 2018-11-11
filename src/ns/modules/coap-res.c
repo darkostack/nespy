@@ -396,9 +396,6 @@ static void res_set_payload(mp_obj_t payload,
     ns_coap_res_obj_t *res = MP_OBJ_TO_PTR(payload);
     ns_memcpy(buffer, res->set_payload, ns_strlen(res->set_payload));
     coap_set_header_content_format(response, res->content_format);
-    if (res->res.periodic != NULL) {
-        coap_set_header_max_age(response, res->res.periodic->period / CLOCK_SECOND);
-    }
     coap_set_payload(response, buffer, ns_strlen(res->set_payload));
 }
 
