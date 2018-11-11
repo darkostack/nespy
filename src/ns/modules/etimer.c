@@ -4,6 +4,7 @@
 #include "ns/contiki-net.h"
 #include "ns/sys/int-master.h"
 #include "ns/modules/etimer.h"
+#include <stdio.h>
 
 // Example usage to Etimer (Event Timer) objects
 //
@@ -30,7 +31,7 @@ STATIC mp_obj_t ns_etimer_make_new(const mp_obj_type_t *type,
 
     enum {ARG_period};
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_period,   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_int = 0} },
+        { MP_QSTR_period,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
     };
 
     // parse args
@@ -54,7 +55,8 @@ STATIC mp_obj_t ns_etimer_make_new(const mp_obj_type_t *type,
 STATIC mp_obj_t ns_etimer_start(mp_obj_t self_in)
 {
     ns_etimer_obj_t *self = MP_OBJ_FROM_PTR(self_in);
-    clock_time_t period = (CLOCK_SECOND / 1000) * self->period;
+    uint32_t div = (self->period < 1000) ? (1000 / self->period) : (self->period / 1000);
+    clock_time_t period = CLOCK_SECOND / div;
     etimer_set(&self->timer, period);
     return mp_const_none;
 }
