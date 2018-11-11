@@ -24,7 +24,6 @@ typedef struct _ns_coap_res_obj_t {
     mp_obj_t obs_notif_callback_obj;
     coap_observee_t obs;
     coap_notification_flag_t obs_flag;
-    const uint8_t *obs_payload;
     ns_coap_res_id_t id;
     coap_resource_t res;
     coap_message_t client_request[1];

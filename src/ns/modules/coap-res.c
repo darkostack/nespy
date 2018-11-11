@@ -18,8 +18,7 @@
 //                                   post=None,
 //                                   put=None,
 //                                   delete=None,
-//                                   period=1000,
-//                                   periodic=sensor_periodic)
+//                                   period=1000)
 //
 //      # create non-periodic coap resource
 //      res_hello = ns.CoapResource(attr="title=\"Hello:?len=0..\";rt=\"Test\"",
@@ -27,8 +26,7 @@
 //                                  post=None,
 //                                  put=None,
 //                                  delete=None,
-//                                  period=0,
-//                                  periodic=None);
+//                                  period=0)
 
 const mp_obj_type_t ns_coap_resource_type;
 static ns_coap_res_obj_all_t coap_res_obj_all;
@@ -283,6 +281,22 @@ STATIC mp_obj_t ns_coap_resource_client_get(mp_obj_t self_in,
     return mp_const_none;
 }
 
+// res.client_observe("test/hello", callback)
+STATIC mp_obj_t ns_coap_resource_client_observe(mp_obj_t self_in,
+                                                mp_obj_t uri_path_in,
+                                                mp_obj_t callback_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self = &coap_res_obj_all.res[self->id];
+    char *uri_path = (char *)mp_obj_str_get_str(uri_path_in);
+    self->obs_notif_callback_obj = callback_in;
+    coap_obs_request_registration(&self->end_point,
+                                 uri_path,
+                                 res_handler[self->id].obs_notif,
+                                 NULL);
+    return mp_const_none;
+}
+
 // res.set_payload_text("Hello World!")
 STATIC mp_obj_t ns_coap_resource_set_payload_text(mp_obj_t self_in,
                                                   mp_obj_t text_in)
@@ -310,12 +324,13 @@ STATIC mp_obj_t ns_coap_resource_get_payload(mp_obj_t self_in)
 {
     ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
     const char *payload = (const char *)self->get_payload;
-    return mp_obj_new_str(payload, strlen(payload));
+    return mp_obj_new_str(payload, ns_strlen(payload));
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_server_activate_obj, ns_coap_resource_server_activate);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_client_ep_obj, ns_coap_resource_client_ep);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_coap_resource_client_get_obj, ns_coap_resource_client_get);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_coap_resource_client_observe_obj, ns_coap_resource_client_observe);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_text_obj, ns_coap_resource_set_payload_text);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_json_obj, ns_coap_resource_set_payload_json);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_coap_resource_get_payload_obj, ns_coap_resource_get_payload);
@@ -324,6 +339,7 @@ STATIC const mp_rom_map_elem_t ns_coap_resource_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_server_activate), MP_ROM_PTR(&ns_coap_resource_server_activate_obj) },
     { MP_ROM_QSTR(MP_QSTR_client_ep), MP_ROM_PTR(&ns_coap_resource_client_ep_obj) },
     { MP_ROM_QSTR(MP_QSTR_client_get), MP_ROM_PTR(&ns_coap_resource_client_get_obj) },
+    { MP_ROM_QSTR(MP_QSTR_client_observe), MP_ROM_PTR(&ns_coap_resource_client_observe_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_payload_text), MP_ROM_PTR(&ns_coap_resource_set_payload_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_payload_json), MP_ROM_PTR(&ns_coap_resource_set_payload_json_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_payload), MP_ROM_PTR(&ns_coap_resource_get_payload_obj) },
@@ -378,9 +394,12 @@ static void res_set_payload(mp_obj_t payload,
                             int32_t *offset)
 {
     ns_coap_res_obj_t *res = MP_OBJ_TO_PTR(payload);
-    memcpy(buffer, res->set_payload, strlen(res->set_payload));
+    ns_memcpy(buffer, res->set_payload, ns_strlen(res->set_payload));
     coap_set_header_content_format(response, res->content_format);
-    coap_set_payload(response, buffer, strlen(res->set_payload));
+    if (res->res.periodic != NULL) {
+        coap_set_header_max_age(response, res->res.periodic->period / CLOCK_SECOND);
+    }
+    coap_set_payload(response, buffer, ns_strlen(res->set_payload));
 }
 
 static void get_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
@@ -518,7 +537,7 @@ static void obs_notif_process(ns_coap_res_obj_t *res,
     const uint8_t *payload = NULL;
     if (notification) {
         coap_get_payload(notification, &payload);
-        res->obs_payload = payload;
+        res->get_payload = payload;
     }
     res->obs_flag = flag;
     switch (flag) {
