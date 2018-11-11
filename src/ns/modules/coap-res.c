@@ -37,12 +37,21 @@ static process_event_t client_post_event;
 static process_event_t client_put_event;
 static process_event_t client_delete_event;
 static char client_end_point_buf[64];
+static bool is_coap_resource_init = false;
 
-void ns_coap_resource_init0(void)
+void ns_coap_resource_init(void)
 {
     coap_res_obj_all.remain = COAP_RES_OBJ_ALL_NUM;
     for (int i = 0; i < COAP_RES_OBJ_ALL_NUM; i++) {
-        coap_res_obj_all.res[i].is_initialized = false;
+        ns_coap_res_obj_t *res = &coap_res_obj_all.res[i];
+        res->server_activated = false;
+        res->is_initialized = false;
+        res->get_obj = mp_const_none;
+        res->post_obj = mp_const_none;
+        res->put_obj = mp_const_none;
+        res->delete_obj = mp_const_none;
+        res->client_msg_callback_obj = mp_const_none;
+        res->obs_notif_callback_obj = mp_const_none;
     }
     // initialize client process event
     client_get_event = process_alloc_event();
@@ -70,6 +79,9 @@ COAP_RES_HANDLER(delete_handler1);
 COAP_RES_PERIODIC_HANDLER(periodic0);
 COAP_RES_PERIODIC_HANDLER(periodic1);
 
+static void obs_notif0(coap_observee_t *obs, void *notification, coap_notification_flag_t flag);
+static void obs_notif1(coap_observee_t *obs, void *notification, coap_notification_flag_t flag);
+
 // predefined coap client process
 PROCESS(ns_coap_client_process, "coap client process");
 
@@ -78,8 +90,10 @@ static void client_msg_handler0(coap_message_t *response);
 static void client_msg_handler1(coap_message_t *response);
 
 static ns_coap_resource_handler_t res_handler[] = {
-    { get_handler0, post_handler0, put_handler0, delete_handler0, &res_periodic0, client_msg_handler0 },
-    { get_handler1, post_handler1, put_handler1, delete_handler1, &res_periodic1, client_msg_handler1 },
+    { get_handler0, post_handler0, put_handler0, delete_handler0,
+      &res_periodic0, client_msg_handler0, obs_notif0 },
+    { get_handler1, post_handler1, put_handler1, delete_handler1,
+      &res_periodic1, client_msg_handler1, obs_notif1 },
 };
 
 STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
@@ -92,6 +106,12 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
                   "ns: invalid arguments"));
     }
 
+    // coap first time init function
+    if (!is_coap_resource_init) {
+        ns_coap_resource_init();
+        is_coap_resource_init = true;
+    }
+
     ns_coap_res_id_t res_id = coap_res_get_id();
 
     if (res_id < 0) {
@@ -100,7 +120,7 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
                   COAP_RES_OBJ_ALL_NUM));
     }
 
-    enum {ARG_attr, ARG_get, ARG_post, ARG_put, ARG_delete, ARG_period, ARG_periodic};
+    enum {ARG_attr, ARG_get, ARG_post, ARG_put, ARG_delete, ARG_period};
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_attr,     MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_get,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -108,7 +128,6 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
         { MP_QSTR_put,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_delete,   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_period,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_periodic, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj=mp_const_none} },
     };
 
     // parse args
@@ -171,14 +190,12 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
         res_obj->delete_obj = mp_const_none;
     }
     // check periodic method
-    if (args[ARG_period].u_int != 0 && args[ARG_periodic].u_obj != mp_const_none) {
+    if (args[ARG_period].u_int != 0) {
         // set coap resource periodic
         res_handler[res_obj->id].periodic->period = (uint32_t)args[ARG_period].u_int;
         res_obj->res.periodic = res_handler[res_obj->id].periodic;
-        res_obj->periodic_obj = args[ARG_periodic].u_obj;
     } else {
         res_obj->res.periodic = NULL;
-        res_obj->periodic_obj = mp_const_none;
     }
 
     // set this to none unless this node is set as client
@@ -203,8 +220,8 @@ STATIC void ns_coap_resource_print(const mp_print_t *print,
     mp_printf(print, "ns: has post     : %s\n", self->res.post_handler != NULL ? "1" : "0");
     mp_printf(print, "ns: has put      : %s\n", self->res.put_handler != NULL ? "1" : "0");
     mp_printf(print, "ns: has delete   : %s\n", self->res.delete_handler != NULL ? "1" : "1");
-    mp_printf(print, "ns: is activated : %s\n", self->is_activated ? "1" : "0");
-    mp_printf(print, "ns: uri path     : %s\n", self->is_activated ? self->uri_path : "NULL");
+    mp_printf(print, "ns: as server    : %s\n", self->server_activated ? "1" : "0");
+    mp_printf(print, "ns: server uri   : %s\n", self->server_activated ? self->uri_path : "NULL");
     mp_printf(print, "ns: remain       : %u\n", coap_res_obj_all.remain);
 }
 
@@ -215,7 +232,7 @@ STATIC mp_obj_t ns_coap_resource_server_activate(mp_obj_t self_in, mp_obj_t uri_
     self = &coap_res_obj_all.res[self->id];
 
     self->uri_path = mp_obj_str_get_str(uri_path_in);
-    self->is_activated = true;
+    self->server_activated = true;
     coap_activate_resource(&self->res, self->uri_path);
     return mp_const_none;
 }
@@ -490,5 +507,53 @@ static void client_msg_handler1(coap_message_t *response)
 {
     ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
     client_msg_process(res, response);
+}
+
+static void obs_notif_process(ns_coap_res_obj_t *res,
+                              coap_observee_t *obs,
+                              void *notification,
+                              coap_notification_flag_t flag)
+{
+    int len = 0;
+    const uint8_t *payload = NULL;
+    if (notification) {
+        coap_get_payload(notification, &payload);
+        res->obs_payload = payload;
+    }
+    res->obs_flag = flag;
+    switch (flag) {
+    case NOTIFICATION_OK:
+    case OBSERVE_OK:
+        if (res->obs_notif_callback_obj != mp_const_none) {
+            mp_call_function_1(res->obs_notif_callback_obj, MP_OBJ_FROM_PTR(res));
+        }
+        break;
+    case OBSERVE_NOT_SUPPORTED:
+        printf("ns: OBSERVE_NOT_SUPPORTED: %*s\r\n", len, (char *)payload);
+        obs = NULL;
+        break;
+    case ERROR_RESPONSE_CODE:
+        printf("ns: ERROR_RESPONSE_CODE: %*s\r\n", len, (char *)payload);
+        obs = NULL;
+        break;
+    case NO_REPLY_FROM_SERVER:
+        printf("ns: NO_REPLY_FROM_SERVER: "
+               "removing observe registration with token %x%x\r\n",
+               obs->token[0], obs->token[1]);
+        obs = NULL;
+        break;
+    }
+}
+
+static void obs_notif0(coap_observee_t *obs, void *notification, coap_notification_flag_t flag)
+{
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
+    obs_notif_process(res, obs, notification, flag);
+}
+
+static void obs_notif1(coap_observee_t *obs, void *notification, coap_notification_flag_t flag)
+{
+    ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
+    obs_notif_process(res, obs, notification, flag);
 }
 #endif // #if APP_CONF_WITH_COAP

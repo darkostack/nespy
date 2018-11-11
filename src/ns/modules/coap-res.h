@@ -20,8 +20,11 @@ typedef struct _ns_coap_res_obj_t {
     mp_obj_t post_obj;
     mp_obj_t put_obj;
     mp_obj_t delete_obj;
-    mp_obj_t periodic_obj;
     mp_obj_t client_msg_callback_obj;
+    mp_obj_t obs_notif_callback_obj;
+    coap_observee_t obs;
+    coap_notification_flag_t obs_flag;
+    const uint8_t *obs_payload;
     ns_coap_res_id_t id;
     coap_resource_t res;
     coap_message_t client_request[1];
@@ -31,7 +34,7 @@ typedef struct _ns_coap_res_obj_t {
     const uint8_t *get_payload;
     coap_content_format_t content_format;
     const char *uri_path;
-    bool is_activated;
+    bool server_activated;
     bool is_initialized;
 } ns_coap_res_obj_t;
 
@@ -47,10 +50,9 @@ struct ns_coap_resource_handler_s {
     coap_resource_handler_t del;
     coap_periodic_resource_t *periodic;
     ns_coap_client_msg_handler_t client_msg;
+    notification_callback_t obs_notif;
 };
 
 typedef struct ns_coap_resource_handler_s ns_coap_resource_handler_t;
-
-void ns_coap_resource_init0(void);
 
 #endif // NS_MODULES_COAP_RES_H_

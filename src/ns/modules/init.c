@@ -155,7 +155,6 @@ STATIC mp_obj_t ns_init_coap(mp_obj_t self_in)
 {
 #if APP_CONF_WITH_COAP
     coap_engine_init();
-    ns_coap_resource_init0();
 #else
     nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                 "ns: coap application feature disabled"));
