@@ -14,6 +14,14 @@ def client_msg_callback(res):
     print(get_msg, "\r")
     return;
 
+def periodic_callback(res):
+    global periodic_counter
+    periodic_counter += 1
+    print("periodic_callback:", periodic_counter, "\r")
+    if periodic_counter % 4 == 0:
+        res.notify_observers()
+    return;
+
 def thread_begin():
     resource.client_ep("fd00::200:0:0:2")
     resource.client_observe("res/hello", client_msg_callback)
@@ -25,9 +33,13 @@ def thread_process(ev, data):
     return;
 
 msg_counter = 0
+periodic_counter = 0
 
 # create periodic coap resource object
-resource = ns.CoapResource(attr="title=\"Periodic\";obs", get=get, period=500)
+resource = ns.CoapResource(attr="title=\"Periodic\";obs",
+                           get=get,
+                           period=500,
+                           callback=periodic_callback)
 
 # create event object for hello thread boot up sequence
 event_begin = process.ns.alloc_event()

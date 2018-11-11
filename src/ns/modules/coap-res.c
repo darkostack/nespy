@@ -50,11 +50,12 @@ void ns_coap_resource_init(void)
         res->delete_obj = mp_const_none;
         res->client_msg_callback_obj = mp_const_none;
         res->obs_notif_callback_obj = mp_const_none;
+        res->periodic_callback_obj = mp_const_none;
     }
-    // initialize client process event
-    client_get_event = process_alloc_event();
-    client_post_event = process_alloc_event();
-    client_put_event = process_alloc_event();
+    // initialize coap resource event
+    client_get_event    = process_alloc_event();
+    client_post_event   = process_alloc_event();
+    client_put_event    = process_alloc_event();
     client_delete_event = process_alloc_event();
 }
 
@@ -118,7 +119,7 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
                   COAP_RES_OBJ_ALL_NUM));
     }
 
-    enum {ARG_attr, ARG_get, ARG_post, ARG_put, ARG_delete, ARG_period};
+    enum {ARG_attr, ARG_get, ARG_post, ARG_put, ARG_delete, ARG_period, ARG_callback};
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_attr,     MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_get,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -126,6 +127,7 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
         { MP_QSTR_put,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_delete,   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_period,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_callback, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
     };
 
     // parse args
@@ -192,6 +194,12 @@ STATIC mp_obj_t ns_coap_resource_make_new(const mp_obj_type_t *type,
         // set coap resource periodic
         res_handler[res_obj->id].periodic->period = (uint32_t)args[ARG_period].u_int;
         res_obj->res.periodic = res_handler[res_obj->id].periodic;
+        if (args[ARG_callback].u_obj == mp_const_none) {
+            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                      "ns: periodic coap resource callback can't be empty"));
+        } else {
+            res_obj->periodic_callback_obj = args[ARG_callback].u_obj;
+        }
     } else {
         res_obj->res.periodic = NULL;
     }
@@ -327,6 +335,14 @@ STATIC mp_obj_t ns_coap_resource_get_payload(mp_obj_t self_in)
     return mp_obj_new_str(payload, ns_strlen(payload));
 }
 
+// res.notify_observers()
+STATIC mp_obj_t ns_coap_notify_observers(mp_obj_t self_in)
+{
+    ns_coap_res_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    coap_notify_observers(&self->res);
+    return mp_const_none;
+}
+
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_server_activate_obj, ns_coap_resource_server_activate);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_client_ep_obj, ns_coap_resource_client_ep);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_coap_resource_client_get_obj, ns_coap_resource_client_get);
@@ -334,6 +350,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(ns_coap_resource_client_observe_obj, ns_coap_re
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_text_obj, ns_coap_resource_set_payload_text);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_coap_resource_set_payload_json_obj, ns_coap_resource_set_payload_json);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_coap_resource_get_payload_obj, ns_coap_resource_get_payload);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_coap_notify_observers_obj, ns_coap_notify_observers);
 
 STATIC const mp_rom_map_elem_t ns_coap_resource_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_server_activate), MP_ROM_PTR(&ns_coap_resource_server_activate_obj) },
@@ -343,6 +360,7 @@ STATIC const mp_rom_map_elem_t ns_coap_resource_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_set_payload_text), MP_ROM_PTR(&ns_coap_resource_set_payload_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_payload_json), MP_ROM_PTR(&ns_coap_resource_set_payload_json_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_payload), MP_ROM_PTR(&ns_coap_resource_get_payload_obj) },
+    { MP_ROM_QSTR(MP_QSTR_notify_observers), MP_ROM_PTR(&ns_coap_notify_observers_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(ns_coap_resource_locals_dict, ns_coap_resource_locals_dict_table);
@@ -470,16 +488,16 @@ static void delete_handler1(coap_message_t *request, coap_message_t *response, u
 static void periodic0(void)
 {
     ns_coap_res_obj_t *res = &coap_res_obj_all.res[0];
-    if (res->res.periodic->period != 0 && res->res.periodic != NULL) {
-        coap_notify_observers(&res->res);
+    if (res->periodic_callback_obj != mp_const_none) {
+        mp_call_function_1(res->periodic_callback_obj, MP_OBJ_FROM_PTR(res));
     }
 }
 
 static void periodic1(void)
 {
     ns_coap_res_obj_t *res = &coap_res_obj_all.res[1];
-    if (res->res.periodic->period != 0 && res->res.periodic != NULL) {
-        coap_notify_observers(&res->res);
+    if (res->periodic_callback_obj != mp_const_none) {
+        mp_call_function_1(res->periodic_callback_obj, MP_OBJ_FROM_PTR(res));
     }
 }
 
