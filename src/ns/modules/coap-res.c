@@ -412,9 +412,9 @@ static void res_set_payload(mp_obj_t payload,
                             int32_t *offset)
 {
     ns_coap_res_obj_t *res = MP_OBJ_TO_PTR(payload);
-    ns_memcpy(buffer, res->set_payload, ns_strlen(res->set_payload));
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "%s", res->set_payload);
     coap_set_header_content_format(response, res->content_format);
-    coap_set_payload(response, buffer, ns_strlen(res->set_payload));
+    coap_set_payload(response, (uint8_t *)buffer, ns_strlen((char *)buffer));
 }
 
 static void get_handler0(coap_message_t *request, coap_message_t *response, uint8_t *buffer,

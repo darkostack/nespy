@@ -17,7 +17,7 @@ def client_msg_callback(res):
 def periodic_callback(res):
     global periodic_counter
     periodic_counter += 1
-    print("periodic_callback:", periodic_counter, "\r")
+    print("periodic callback:", periodic_counter, "\r")
     if periodic_counter % 4 == 0:
         res.notify_observers()
     return;

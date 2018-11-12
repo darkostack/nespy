@@ -231,9 +231,6 @@ coap_handle_notification(const coap_endpoint_t *endpoint,
     simple_reply(COAP_TYPE_RST, endpoint, notification);
     return;
   }
-  if(notification->type == COAP_TYPE_CON) {
-    simple_reply(COAP_TYPE_ACK, endpoint, notification);
-  }
   if(obs->notification_callback != NULL) {
     flag = classify_notification(notification, 0);
     /* TODO: the following mechanism for discarding duplicates is too trivial */
@@ -247,6 +244,10 @@ coap_handle_notification(const coap_endpoint_t *endpoint,
       obs->last_observe = observe;
     }
     obs->notification_callback(obs, notification, flag);
+  }
+  if(notification->type == COAP_TYPE_CON) {
+    LOG_DBG("Notification type confimable, simple reply ACK\r\n");
+    simple_reply(COAP_TYPE_ACK, endpoint, notification);
   }
 }
 /*----------------------------------------------------------------------------*/
