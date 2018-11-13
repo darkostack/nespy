@@ -2,6 +2,7 @@ from lib import ns
 from lib import hello
 
 def callback():
+    # network is ready, initialize coap resources
     hello.thread.post(hello.event_begin, None)
     return;
 

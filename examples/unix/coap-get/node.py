@@ -2,7 +2,7 @@ from lib import ns
 from lib import hello
 
 def callback():
-    # initialize coap resource servers
+    # network is ready, initialize coap resource servers
     hello.resource.server_activate("res/hello")
 
 def main():
