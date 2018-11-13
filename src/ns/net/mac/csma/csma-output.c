@@ -165,8 +165,8 @@ backoff_period(void)
 #endif /* CONTIKI_TARGET_COOJA */
 }
 /*---------------------------------------------------------------------------*/
-#if !defined(UNIX)
-void send_one_packet(void *ptr)
+static void
+send_one_packet(void *ptr)
 {
   int ret;
 
@@ -256,9 +256,6 @@ void send_one_packet(void *ptr)
 
   packet_sent(ptr, ret, 1);
 }
-#else
-extern void send_one_packet(void *ptr);
-#endif
 
 /*---------------------------------------------------------------------------*/
 static void

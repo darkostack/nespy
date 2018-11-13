@@ -37,7 +37,6 @@ radio_value_t radio_rx_mode;
 static uint8_t radio_channel;
 static bool radio_on = false;
 static bool radio_tx_broadcast = false;
-static uint32_t radio_tx_dsn;
 static int8_t radio_rx_pkt_counter = 0;
 static int8_t radio_txpower;
 static uint8_t radio_tx_len;
@@ -45,7 +44,7 @@ static uint8_t radio_rx_len;
 static uint16_t radio_port;
 static bool radio_is_ack_received = false;
 static radio_state_t radio_state = RADIO_STATE_DISABLED;
-static bool ack_wait = false;
+static bool radio_ack_wait = false;
 static uint32_t ack_timeout;
 static uint8_t radio_rx_buf[UNIX_RADIO_BUFFER_SIZE];
 static uint8_t radio_tx_buf[UNIX_RADIO_BUFFER_SIZE];
@@ -134,8 +133,18 @@ static int unix_prepare(const void *data, unsigned short len)
 
 static int unix_transmit(unsigned short len)
 {
-    if (radio_tx_len != len) return RADIO_TX_ERR;
+    // check radio tx len
+    if (radio_tx_len != len) {
+        LOG_ERR("transmit length mismatch\r\n");
+        return RADIO_TX_ERR;
+    }
 
+    if (radio_tx_len < CSMA_ACK_LEN) {
+        LOG_ERR("invalid transmit length, min (%d)\r\n", CSMA_ACK_LEN);
+        return RADIO_TX_ERR;
+    }
+
+    // check channel statuc if CCA mode was set and we are not send an ack
     if ((radio_tx_mode & RADIO_TX_MODE_SEND_ON_CCA) && (radio_tx_len > CSMA_ACK_LEN)) {
         if (!unix_channel_clear()) {
             LOG_WARN("transmit collision\r\n");
@@ -145,11 +154,18 @@ static int unix_transmit(unsigned short len)
 
     radio_state = RADIO_STATE_TRANSMIT;
 
-    // wait until send ack is finished
-    if (radio_tx_len == CSMA_ACK_LEN) {
-        while (radio_state == RADIO_STATE_TRANSMIT) {
-            unix_process_update();
-        }
+    if (radio_tx_len > CSMA_ACK_LEN) {
+        radio_tx_broadcast = packetbuf_holds_broadcast() == 1 ? true: false;
+    }
+
+    // wait until transmit process is finished
+    while (radio_state == RADIO_STATE_TRANSMIT) {
+        unix_process_update();
+    }
+
+    // reset transmit broadcast flag
+    if (radio_tx_broadcast) {
+        radio_tx_broadcast = false;
     }
 
     return RADIO_TX_OK;
@@ -166,13 +182,16 @@ static int unix_read(void *buf, unsigned short size)
     int ret;
     ns_memcpy((void *)buf, (uint8_t *)&radio_rx_buf, MIN(size, radio_rx_len));
     ret = radio_rx_len;
+    if (radio_rx_len == CSMA_ACK_LEN) {
+        radio_is_ack_received = false;
+    }
     radio_rx_len = 0;
     return ret;
 }
 
 static int unix_channel_clear(void)
 {
-    return (ack_wait || (radio_state == RADIO_STATE_TRANSMIT)) ? 0 : 1;
+    return (radio_ack_wait || (radio_state == RADIO_STATE_TRANSMIT)) ? 0 : 1;
 }
 
 static int unix_receiving_packet(void)
@@ -182,7 +201,7 @@ static int unix_receiving_packet(void)
 
 static int unix_pending_packet(void)
 {
-    return (radio_rx_pkt_counter != 0) ? 1 : 0;
+    return (radio_rx_pkt_counter != 0 || radio_is_ack_received) ? 1 : 0;
 }
 
 static int unix_on(void)
@@ -241,13 +260,13 @@ static void unix_radio_init(void)
 
 void unix_radio_update_fd_set(fd_set *read_fd_set, fd_set *write_fd_set, int *max_fd)
 {
-    if (read_fd_set != NULL && (radio_state != RADIO_STATE_TRANSMIT || ack_wait)) {
+    if (read_fd_set != NULL && (radio_state != RADIO_STATE_TRANSMIT || radio_ack_wait)) {
         FD_SET(sock_fd, read_fd_set);
         if (max_fd != NULL && *max_fd < sock_fd) {
             *max_fd = sock_fd;
         }
     }
-    if (write_fd_set != NULL && radio_state == RADIO_STATE_TRANSMIT && !ack_wait) {
+    if (write_fd_set != NULL && radio_state == RADIO_STATE_TRANSMIT && !radio_ack_wait) {
         FD_SET(sock_fd, write_fd_set);
         if (max_fd != NULL && *max_fd < sock_fd) {
             *max_fd = sock_fd;
@@ -265,28 +284,22 @@ void unix_radio_process(void)
     }
 
     // check for ack
-    if ((radio_rx_len == CSMA_ACK_LEN) && ack_wait) {
-        uint8_t ack_buf[CSMA_ACK_LEN];
-        unix_read(ack_buf, CSMA_ACK_LEN);
-        if (ack_buf[2] == radio_tx_dsn) {
-            // we received an ack!
-            radio_is_ack_received = true;
-            LOG_DBG("received ack\r\n");
-        }
+    if ((radio_rx_len == CSMA_ACK_LEN) && radio_ack_wait) {
+        radio_is_ack_received = true;
     }
 
     // transmit done and acked 
-    if (radio_is_ack_received && ack_wait && (radio_state == RADIO_STATE_TRANSMIT) && 
+    if (radio_is_ack_received && radio_ack_wait && (radio_state == RADIO_STATE_TRANSMIT) && 
         (ack_timeout >= RTIMER_NOW())) {
-        ack_wait = false;
+        radio_ack_wait = false;
         radio_state = RADIO_STATE_RECEIVE;
         LOG_DBG("transmit done, acked\r\n");
     }
 
     // transmit done but noack
-    if (!radio_is_ack_received && ack_wait && (radio_state == RADIO_STATE_TRANSMIT) &&
+    if (!radio_is_ack_received && radio_ack_wait && (radio_state == RADIO_STATE_TRANSMIT) &&
         (ack_timeout < RTIMER_NOW())) {
-        ack_wait = false;
+        radio_ack_wait = false;
         radio_state = RADIO_STATE_RECEIVE;
         LOG_WARN("transmit done, noack -- timeout: %d, now: %d\r\n", ack_timeout, (int)RTIMER_NOW());
     }
@@ -297,7 +310,7 @@ void unix_radio_process(void)
         process_poll(&unix_radio_thread);
     }
 
-    if (radio_state == RADIO_STATE_TRANSMIT && !ack_wait) {
+    if (radio_state == RADIO_STATE_TRANSMIT && !radio_ack_wait) {
         unix_radio_transmit((uint8_t *)&radio_tx_buf, radio_tx_len);
         if (radio_tx_len > CSMA_ACK_LEN) {
             if (radio_tx_broadcast) {
@@ -305,7 +318,7 @@ void unix_radio_process(void)
                 LOG_DBG("transmit %d -- broadcast\r\n", radio_tx_len);
             } else {
                 // not broadcast packet and need an ack
-                ack_wait = true;
+                radio_ack_wait = true;
                 ack_timeout = RTIMER_NOW() + ACK_WAIT_TIME;
                 LOG_DBG("transmit %d -- !broadcast\r\n", radio_tx_len);
             }
@@ -349,72 +362,6 @@ static void unix_radio_transmit(uint8_t *buf, uint8_t len)
             exit(EXIT_FAILURE);
         }
     }
-}
-
-static const char *mac_result_to_str(int res)
-{
-    switch (res) {
-    case MAC_TX_OK:
-        return "mac tx ok";
-    case MAC_TX_COLLISION:
-        return "mac tx collision";
-    case MAC_TX_NOACK:
-        return "mac tx noack";
-    case MAC_TX_ERR:
-        return "mac tx error";
-    default:
-        return "unknown";
-    }
-}
-
-void send_one_packet(void *ptr)
-{
-    int ret;
-    if (radio_state != RADIO_STATE_TRANSMIT && !ack_wait) {
-        packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
-        packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
-        if (NETSTACK_FRAMER.create() < 0) {
-            // failed to allocate space for headers
-            ret = MAC_TX_ERR_FATAL;
-        } else {
-            radio_tx_dsn = ((uint8_t *)packetbuf_hdrptr())[2] & 0xff;
-            unix_prepare(packetbuf_hdrptr(), packetbuf_totlen());
-            radio_tx_broadcast = packetbuf_holds_broadcast() == 1 ? true: false;
-            if (unix_receiving_packet() ||
-                (!radio_tx_broadcast && unix_pending_packet())) {
-                ret = MAC_TX_COLLISION;
-            } else {
-                switch (unix_transmit(packetbuf_totlen())) {
-                case RADIO_TX_OK:
-                    while (radio_state == RADIO_STATE_TRANSMIT) {
-                        unix_process_update();
-                    }
-                    if (!radio_tx_broadcast) {
-                        if (radio_is_ack_received) {
-                            radio_is_ack_received = false;
-                            ret = MAC_TX_OK;
-                        } else {
-                            ret = MAC_TX_NOACK;
-                        }
-                    } else {
-                        ret = MAC_TX_OK;
-                    }
-                    break;
-                case RADIO_TX_COLLISION:
-                    ret = MAC_TX_COLLISION;
-                    break;
-                default:
-                    ret = MAC_TX_ERR;
-                }
-            }
-        }
-    } else {
-        ret = MAC_TX_COLLISION;
-    }
-
-    LOG_DBG("send one packet: %s\r\n", mac_result_to_str(ret));
-
-    packet_sent(ptr, ret, 1);
 }
 
 uint16_t unix_radio_get_port(void)
