@@ -3,15 +3,15 @@
 #include "ns/lib/py/nstd.h"
 #include "ns/lib/py/obj-platform.h"
 
-static char s_rx_buffer[const_rx_buf_size];
-static uint16_t s_rx_length;
-static char s_tx_buffer[const_tx_buf_size];
-static uint16_t s_tx_head;
-static uint16_t s_tx_length;
-static uint16_t s_send_length;
+static char cli_rx_buffer[const_rx_buf_size];
+static uint16_t cli_rx_length;
+static char cli_tx_buffer[const_tx_buf_size];
+static uint16_t cli_tx_head;
+static uint16_t cli_tx_length;
+static uint16_t cli_send_length;
 
-static const char s_command_prompt[] = {'>', '>', '>', ' '};
-static const char s_erase_string[] = {'\b', ' ', '\b'};
+static const char cli_command_prompt[] = {'>', '>', '>', ' '};
+static const char cli_erase_str[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
 
 static void process_command(void);
@@ -58,12 +58,12 @@ void cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
         case '\r':
         case '\n':
             output(CRNL, sizeof(CRNL));
-            if (s_rx_length > 0) {
-                s_rx_buffer[s_rx_length] = '\0';
+            if (cli_rx_length > 0) {
+                cli_rx_buffer[cli_rx_length] = '\0';
                 process_command();
             }
 
-            output(s_command_prompt, sizeof(s_command_prompt));
+            output(cli_command_prompt, sizeof(cli_command_prompt));
             break;
 #if defined(UNIX)
         case 0x04: // ASCII for CTRL-D
@@ -72,15 +72,15 @@ void cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
 #endif
         case '\b':
         case 127:
-            if (s_rx_length > 0) {
-                output(s_erase_string, sizeof(s_erase_string));
-                s_rx_buffer[--s_rx_length] = '\0';
+            if (cli_rx_length > 0) {
+                output(cli_erase_str, sizeof(cli_erase_str));
+                cli_rx_buffer[--cli_rx_length] = '\0';
             }
             break;
         default:
-            if (s_rx_length < const_rx_buf_size) {
+            if (cli_rx_length < const_rx_buf_size) {
                 output((const char *)buf, 1);
-                s_rx_buffer[s_rx_length++] = (char)*buf;
+                cli_rx_buffer[cli_rx_length++] = (char)*buf;
             }
             break;
         }
@@ -89,25 +89,25 @@ void cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
 
 void cli_uart_send_done_task(void)
 {
-    s_tx_head = (s_tx_head + s_send_length) % const_tx_buf_size;
-    s_tx_length -= s_send_length;
-    s_send_length = 0;
+    cli_tx_head = (cli_tx_head + cli_send_length) % const_tx_buf_size;
+    cli_tx_length -= cli_send_length;
+    cli_send_length = 0;
 
     send();
 }
 
 static void process_command(void)
 {
-    if (s_rx_buffer[s_rx_length - 1] == '\n') {
-        s_rx_buffer[--s_rx_length] = '\0';
+    if (cli_rx_buffer[cli_rx_length - 1] == '\n') {
+        cli_rx_buffer[--cli_rx_length] = '\0';
     }
-    if (s_rx_buffer[s_rx_length - 1] == '\r') {
-        s_rx_buffer[--s_rx_length] = '\0';
+    if (cli_rx_buffer[cli_rx_length - 1] == '\r') {
+        cli_rx_buffer[--cli_rx_length] = '\0';
     }
 
-    cli_process_line(s_rx_buffer, s_rx_length);
+    cli_process_line(cli_rx_buffer, cli_rx_length);
 
-    s_rx_length = 0;
+    cli_rx_length = 0;
 }
 
 static void output_format(const char *fmt, va_list ap)
@@ -119,15 +119,15 @@ static void output_format(const char *fmt, va_list ap)
 
 static int output(const char *buf, uint16_t buf_len)
 {
-    uint16_t remaining = const_tx_buf_size - s_tx_length;
+    uint16_t remaining = const_tx_buf_size - cli_tx_length;
     uint16_t tail;
     if (buf_len > remaining) {
         buf_len = remaining;
     }
     for (int i = 0; i < buf_len; i++) {
-        tail = (s_tx_head + s_tx_length) % const_tx_buf_size;
-        s_tx_buffer[tail] = *buf++;
-        s_tx_length++;
+        tail = (cli_tx_head + cli_tx_length) % const_tx_buf_size;
+        cli_tx_buffer[tail] = *buf++;
+        cli_tx_length++;
     }
 
     send();
@@ -137,15 +137,15 @@ static int output(const char *buf, uint16_t buf_len)
 
 static void send(void)
 {
-    if (s_send_length != 0) {
+    if (cli_send_length != 0) {
         return;
     }
-    if (s_tx_length > const_tx_buf_size - s_tx_head) {
-        s_send_length = const_tx_buf_size - s_tx_head;
+    if (cli_tx_length > const_tx_buf_size - cli_tx_head) {
+        cli_send_length = const_tx_buf_size - cli_tx_head;
     } else {
-        s_send_length = s_tx_length;
+        cli_send_length = cli_tx_length;
     }
-    if (s_send_length > 0) {
-        platform_uart_send((uint8_t *)&s_tx_buffer[s_tx_head], s_send_length);
+    if (cli_send_length > 0) {
+        platform_uart_send((uint8_t *)&cli_tx_buffer[cli_tx_head], cli_send_length);
     }
 }
