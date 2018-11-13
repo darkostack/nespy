@@ -12,13 +12,13 @@ def get(res):
 def client_msg_callback(res):
     get_msg = res.get_payload()
     print(get_msg, "\r")
-    return;
+    return
 
 # hello thread functions
 def thread_begin():
     resource.client_ep("fd00::200:0:0:2")
     timer.start()
-    return;
+    return
 
 def thread_process(ev, data):
     if ev == event_begin:
@@ -27,7 +27,7 @@ def thread_process(ev, data):
         if (timer.expired()):
             resource.client_get("res/hello", client_msg_callback)
             timer.reset()
-    return;
+    return
 
 msg_counter = 0
 
