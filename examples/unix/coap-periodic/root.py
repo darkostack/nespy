@@ -17,7 +17,7 @@ def main():
     # enable uart command line interface
     ns.init.cli()
 
-    # enable coap application
+    # enable coap engine
     ns.init.coap()
 
     # set this node as a root with "fd00::" prefix

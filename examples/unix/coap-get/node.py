@@ -16,7 +16,7 @@ def main():
     # enable uart command line interface
     ns.init.cli()
 
-    # enable coap application
+    # enable coap engine
     ns.init.coap()
 
     # start the network and get notification when network is ready
