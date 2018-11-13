@@ -21,9 +21,9 @@
 #include "net/routing/rpl-classic/rpl.h"
 #endif
 
-#include "ns/modules/cli/cli.h"
-#include "ns/modules/cli/cli-uart.h"
-#include "ns/modules/nstd.h"
+#include "ns/services/cli/cli.h"
+#include "ns/services/cli/cli-uart.h"
+#include "ns/lib/py/nstd.h"
 
 #include "genhdr/mpversion.h"
 #include <string.h>

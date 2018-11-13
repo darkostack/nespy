@@ -1,6 +1,6 @@
 #include "ns/contiki.h"
-#include "ns/modules/nstd.h"
-#include "ns/modules/platform.h"
+#include "ns/lib/py/nstd.h"
+#include "ns/lib/py/obj-platform.h"
 #include "port_unix.h"
 #include <assert.h>
 #include <errno.h>

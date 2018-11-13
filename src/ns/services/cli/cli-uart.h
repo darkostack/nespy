@@ -1,5 +1,5 @@
-#ifndef NS_MODULES_CLI_UART_H_
-#define NS_MODULES_CLI_UART_H_
+#ifndef NS_SERVICES_CLI_CLI_UART_H_
+#define NS_SERVICES_CLI_CLI_UART_H_
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -17,4 +17,4 @@ void cli_uart_output_format(const char *format, ...);
 void cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len);
 void cli_uart_send_done_task(void);
 
-#endif // NS_MODULES_CLI_UART_H_
+#endif // NS_SERVICES_CLI_CLI_UART_H_

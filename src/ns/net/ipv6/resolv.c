@@ -67,7 +67,7 @@
 #include "net/ipv6/uip-udp-packet.h"
 #include "net/ipv6/uip-nameserver.h"
 #include "lib/random.h"
-#include "ns/modules/nstd.h"
+#include "ns/lib/py/nstd.h"
 
 #ifndef DEBUG
 #define DEBUG CONTIKI_TARGET_COOJA

@@ -166,20 +166,23 @@ LIB_SRC_C += $(addprefix lib/,\
 	oofatfs/option/unicode.c \
 	)
 
-# ns modules
-NSMOD_SRC_C += $(addprefix ns/modules/,\
-    clock.c \
-    coap-res.c \
-    etimer.c \
-    hello.c \
-    init.c \
-    modns.c \
+# Nespy source files
+NSLIBPY_SRC_C += $(addprefix ns/lib/py/,\
+    mod-ns.c \
     nstd.c \
-    process.c \
-    platform.c \
-    cli/cli-uart.c \
-    cli/cli.c \
+	obj-clock.c \
+	obj-coap.c \
+	obj-etimer.c \
+	obj-hello.c \
+	obj-init.c \
+	obj-platform.c \
+	obj-process.c \
     )
+
+NSSERVICES_SRC_C += $(addprefix ns/services/,\
+	cli/cli.c \
+	cli/cli-uart.c \
+	)
 
 NSPORT_SRC_C += $(addprefix nsport/,\
     clock.c \
@@ -200,14 +203,15 @@ CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 OBJ = $(PY_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(LIB_SRC_C:.c=.o))
-OBJ += $(addprefix $(BUILD)/, $(NSMOD_SRC_C:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(NSLIBPY_SRC_C:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(NSSERVICES_SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(NSPORT_SRC_C:.c=.o))
 
 # include ns networking core makefile
 include ../../ns/ns.mk
 
 # List of sources for qstr extraction
-SRC_QSTR += $(SRC_C) $(LIB_SRC_C) $(NSMOD_SRC_C)
+SRC_QSTR += $(SRC_C) $(LIB_SRC_C) $(NSLIBPY_SRC_C)
 # Append any auto-generated sources that are needed by sources listed in
 # SRC_QSTR
 SRC_QSTR_AUTO_DEPS +=

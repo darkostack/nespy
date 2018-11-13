@@ -1,7 +1,7 @@
-#include "ns/modules/cli/cli.h"
-#include "ns/modules/cli/cli-uart.h"
-#include "ns/modules/nstd.h"
-#include "ns/modules/platform.h"
+#include "ns/services/cli/cli.h"
+#include "ns/services/cli/cli-uart.h"
+#include "ns/lib/py/nstd.h"
+#include "ns/lib/py/obj-platform.h"
 
 static char s_rx_buffer[const_rx_buf_size];
 static uint16_t s_rx_length;

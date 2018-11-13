@@ -3,7 +3,7 @@
 #include "ns/sys/stimer.h"
 #include "ns/sys/timer.h"
 #include "ns/sys/rtimer.h"
-#include "ns/modules/nstd.h"
+#include "ns/lib/py/nstd.h"
 #include <stdio.h>
 
 PROCESS(timer_test_process, "timer test process");

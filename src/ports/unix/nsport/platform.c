@@ -2,8 +2,6 @@
 #include "ns/sys/platform.h"
 #include "ns/sys/node-id.h"
 #include "ns/lib/random.h"
-#include "ns/modules/cli/cli-uart.h"
-#include "ns/modules/nstd.h"
 
 void platform_init_stage_one(void)
 {

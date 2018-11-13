@@ -1,5 +1,5 @@
-#ifndef NS_MODULES_PROCESS_H_
-#define NS_MODULES_PROCESS_H_
+#ifndef NS_LIB_PY_OBJ_PROCESS_H_
+#define NS_LIB_PY_OBJ_PROCESS_H_
 
 #include "ns/contiki.h"
 
@@ -49,4 +49,4 @@ typedef struct _ns_process_base_obj_t {
     mp_obj_base_t base;
 } ns_process_base_obj_t;
 
-#endif // NS_MODULES_PROCESS_H_
+#endif // NS_LIB_PY_OBJ_PROCESS_H_

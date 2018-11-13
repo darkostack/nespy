@@ -6,8 +6,8 @@
 #include "ns/sys/int-master.h"
 #include "ns/net/app-layer/coap/coap-engine.h"
 #include "ns/net/app-layer/coap/coap-blocking-api.h"
-#include "ns/modules/coap-res.h"
-#include "ns/modules/nstd.h"
+#include "ns/lib/py/obj-coap.h"
+#include "ns/lib/py/nstd.h"
 #include <stdio.h>
 
 // Example usage to Coap Resource objects

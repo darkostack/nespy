@@ -1,5 +1,5 @@
-#ifndef NS_MODULES_ETIMER_H_
-#define NS_MODULES_ETIMER_H_
+#ifndef NS_LIB_PY_OBJ_ETIMER_H_
+#define NS_LIB_PY_OBJ_ETIMER_H_
 
 #define ETIMER_OBJ_ALL_NUM 2
 
@@ -9,4 +9,4 @@ typedef struct _ns_etimer_obj_t {
     clock_time_t period;
 } ns_etimer_obj_t;
 
-#endif // NS_MODULES_ETIMER_H_
+#endif // NS_LIB_PY_OBJ_ETIMER_H_

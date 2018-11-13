@@ -5,7 +5,7 @@
 #include "ns/net/queuebuf.h"
 #include "ns/net/netstack.h"
 #include "ns/net/mac/csma/csma.h"
-#include "ns/modules/nstd.h"
+#include "ns/lib/py/nstd.h"
 #include "port_unix.h"
 #include <stdbool.h>
 

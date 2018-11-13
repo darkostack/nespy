@@ -1,5 +1,5 @@
-#ifndef NS_MODULES_COAP_RES_H_
-#define NS_MODULES_COAP_RES_H_
+#ifndef NS_LIB_PY_OBJ_COAP_H_
+#define NS_LIB_PY_OBJ_COAP_H_
 
 #define COAP_RES_OBJ_ALL_NUM 2
 
@@ -55,4 +55,4 @@ struct ns_coap_resource_handler_s {
 
 typedef struct ns_coap_resource_handler_s ns_coap_resource_handler_t;
 
-#endif // NS_MODULES_COAP_RES_H_
+#endif // NS_LIB_PY_OBJ_COAP_H_

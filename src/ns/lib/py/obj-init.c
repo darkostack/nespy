@@ -11,9 +11,8 @@
 #include "ns/services/rpl-border-router/rpl-border-router.h"
 #include "ns/net/mac/framer/framer-802154.h"
 #include "ns/services/tsch-cs/tsch-cs.h"
-#include "ns/modules/cli/cli.h"
-#include "ns/modules/cli/cli-uart.h"
-#include "ns/modules/coap-res.h"
+#include "ns/services/cli/cli.h"
+#include "ns/services/cli/cli-uart.h"
 
 #include <stdint.h>
 #include <stdio.h>

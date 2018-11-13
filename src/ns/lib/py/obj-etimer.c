@@ -3,7 +3,7 @@
 #include "ns/contiki.h"
 #include "ns/contiki-net.h"
 #include "ns/sys/int-master.h"
-#include "ns/modules/etimer.h"
+#include "ns/lib/py/obj-etimer.h"
 #include <stdio.h>
 
 // Example usage to Etimer (Event Timer) objects

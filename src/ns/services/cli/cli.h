@@ -1,5 +1,5 @@
-#ifndef NS_MODULES_CLI_H_
-#define NS_MODULES_CLI_H_
+#ifndef NS_SERVICES_CLI_CLI_H_
+#define NS_SERVICES_CLI_CLI_H_
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -20,4 +20,4 @@ int cli_parse_unsigned_long(char *str, unsigned long *ul);
 void cli_output_bytes(const uint8_t *bytes, uint8_t len);
 void cli_commands_init(void);
 
-#endif // NS_MODULES_CLI_H_
+#endif // NS_SERVICES_CLI_CLI_H_

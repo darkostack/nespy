@@ -1,5 +1,5 @@
-#ifndef NS_MODULES_NSTD_H_
-#define NS_MODULES_NSTD_H_
+#ifndef NS_LIB_PY_NSTD_H_
+#define NS_LIB_PY_NSTD_H_
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -17,5 +17,5 @@ int ns_strncasecmp(const char *s1, const char *s2, size_t n);
 int ns_strcasecmp(const char *s1, const char *s2);
 void ns_log(const char *format, ...);
 
-#endif // NS_MODULES_NSTD_H_
+#endif // NS_LIB_PY_NSTD_H_
 

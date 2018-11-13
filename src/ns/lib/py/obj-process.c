@@ -1,7 +1,7 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "ns/sys/int-master.h"
-#include "ns/modules/process.h"
+#include "ns/lib/py/obj-process.h"
 #include <stdio.h>
 
 // Example usage to Process & Thread objects
