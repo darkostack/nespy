@@ -6,14 +6,14 @@
 
 // Example usage to Process & Thread objects
 //
-//      process = ns.Process()           # only create once!
+//      process = nespy.Process()        # only create once!
 //      process.run()                    # run the internal network stack process
 //      process.autostart()              # run autostart processes
 //      event = process.alloc_event()    # allocate new event in process
 //      print(process)                   # to print the process list and number of events waiting
 //
 //      # callback function example
-//      test = ns.Thread(callback=cb)
+//      test = nespy.Thread(callback=cb)
 //      test.start()                     # start `test` process thread
 //      test.is_running()                # use to check `test` thread is running or not
 //      test.post(event, data)           # post event with data to `test` process thread

@@ -13,20 +13,20 @@
 // Example usage to Coap Resource objects
 //
 //      # create periodic coap resource
-//      res_sensor = ns.CoapResource(attr="title=\"Sensor periodic\";obs",
-//                                   get=sensor_get,
-//                                   post=None,
-//                                   put=None,
-//                                   delete=None,
-//                                   period=1000)
+//      res_sensor = nespy.CoapResource(attr="title=\"Sensor periodic\";obs",
+//                                      get=sensor_get,
+//                                      post=None,
+//                                      put=None,
+//                                      delete=None,
+//                                      period=1000)
 //
 //      # create non-periodic coap resource
-//      res_hello = ns.CoapResource(attr="title=\"Hello:?len=0..\";rt=\"Test\"",
-//                                  get=hello_get,
-//                                  post=None,
-//                                  put=None,
-//                                  delete=None,
-//                                  period=0)
+//      res_hello = nespy.CoapResource(attr="title=\"Hello World\"",
+//                                     get=hello_get,
+//                                     post=None,
+//                                     put=None,
+//                                     delete=None,
+//                                     period=0)
 
 const mp_obj_type_t ns_coap_resource_type;
 static ns_coap_res_obj_all_t coap_res_obj_all;

@@ -168,7 +168,7 @@ LIB_SRC_C += $(addprefix lib/,\
 
 # Nespy source files
 NSLIBPY_SRC_C += $(addprefix ns/lib/py/,\
-    mod-ns.c \
+    mod-nespy.c \
     nstd.c \
 	obj-clock.c \
 	obj-coap.c \

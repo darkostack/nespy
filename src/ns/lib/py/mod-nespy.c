@@ -29,7 +29,8 @@ STATIC const mp_rom_map_elem_t ns_module_globals_table[] = {
 
 STATIC MP_DEFINE_CONST_DICT(ns_module_globals, ns_module_globals_table);
 
-const mp_obj_module_t ns_module = {
+// Nespy module imported to MicroPython (see mpconfigport.h)
+const mp_obj_module_t mp_module_nespy = {
     .base = { &mp_type_module },
     .globals = (mp_obj_dict_t *)&ns_module_globals,
 };

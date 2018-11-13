@@ -184,7 +184,7 @@ extern const struct _mp_obj_module_t mp_module_termios;
 extern const struct _mp_obj_module_t mp_module_socket;
 extern const struct _mp_obj_module_t mp_module_ffi;
 extern const struct _mp_obj_module_t mp_module_jni;
-extern const struct _mp_obj_module_t ns_module;
+extern const struct _mp_obj_module_t mp_module_nespy;
 
 #if MICROPY_PY_UOS_VFS
 #define MICROPY_PY_UOS_DEF { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_uos_vfs) },
@@ -223,7 +223,7 @@ extern const struct _mp_obj_module_t ns_module;
 #endif
 
 #if MICROPY_PY_NETWORK_STACK
-#define NETSTACK_MODULE { MP_ROM_QSTR(MP_QSTR_ns), MP_ROM_PTR(&ns_module) },
+#define NETSTACK_MODULE { MP_ROM_QSTR(MP_QSTR_nespy), MP_ROM_PTR(&mp_module_nespy) },
 #else
 #define NETSTACK_MODULE
 #endif

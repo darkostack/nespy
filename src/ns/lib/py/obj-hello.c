@@ -3,9 +3,9 @@
 
 // Example usage to Hello objects
 //
-//      hello = ns.Hello()  # create hello obj
-//      hello.add("World")  # add another string next to hello
-//      print(hello)        # print hello obj
+//      hello = nespy.Hello()  # create hello obj
+//      hello.add("World")     # add another string next to hello
+//      print(hello)           # print hello obj
 
 const mp_obj_type_t ns_hello_type;
 

@@ -19,11 +19,11 @@
 
 // Example usage to Init objects
 //
-//      init = ns.Init()
+//      init = nespy.Init()
 //
 //      # mandatory init
 //      init.node_id(2)
-//      init.netstack()
+//      init.protocol()
 //      init.platform()             # init platform stage three
 //
 //      # optional init
@@ -34,10 +34,10 @@
 //      init.tsch_cs_adaptions()
 //
 //      # set a callback when node is connected to network
-//      init.network_up(callback)
+//      init.network(callback)
 //
 //      # set this node as root device
-//      init.set_root("fd00::")
+//      init.root("fd00::")
 
 const mp_obj_type_t ns_init_type;
 static uip_ds6_addr_t *lladdr;
@@ -45,7 +45,7 @@ static uip_ds6_addr_t *lladdr;
 typedef struct _ns_init_obj_t {
     mp_obj_base_t base;
     mp_obj_t netup_callback_obj;
-    bool is_set_root;
+    bool is_root;
 } ns_init_obj_t;
 
 static bool is_init_obj_created = false;
@@ -55,7 +55,7 @@ static ns_init_obj_t *init_obj_ptr;
 extern uint16_t unix_radio_get_port(void);
 #endif
 
-PROCESS(network_up_monitor_process, "Network up monitor");
+PROCESS(network_monitor_process, "Network up monitor");
 
 // init = ns.Init() # init object constructor
 STATIC mp_obj_t ns_init_make_new(const mp_obj_type_t *type,
@@ -76,7 +76,7 @@ STATIC mp_obj_t ns_init_make_new(const mp_obj_type_t *type,
     memset(init, 0, sizeof(*init));
     init->base.type = &ns_init_type;
     init->netup_callback_obj = mp_const_none;
-    init->is_set_root = false;
+    init->is_root = false;
 
     init_obj_ptr = init; // store init object pointer
 
@@ -94,8 +94,8 @@ STATIC mp_obj_t ns_init_node_id(mp_obj_t self_in, mp_obj_t id_in)
     return mp_const_none;
 }
 
-// init.netstack()
-STATIC mp_obj_t ns_init_netstack(mp_obj_t self_in)
+// init.protocol()
+STATIC mp_obj_t ns_init_protocol(mp_obj_t self_in)
 {
     platform_init_stage_one(); // boot up related init
     clock_init();
@@ -170,13 +170,13 @@ STATIC mp_obj_t ns_init_tsch_cs_adaptions(mp_obj_t self_in)
     return mp_const_none;
 }
 
-// init.network_up(callback)
-STATIC mp_obj_t ns_init_network_up(mp_obj_t self_in, mp_obj_t callback_in)
+// init.network(callback)
+STATIC mp_obj_t ns_init_network(mp_obj_t self_in, mp_obj_t callback_in)
 {
     ns_init_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->netup_callback_obj = callback_in;
-    if (!process_is_running(&network_up_monitor_process)) {
-        process_start(&network_up_monitor_process, NULL);
+    if (!process_is_running(&network_monitor_process)) {
+        process_start(&network_monitor_process, NULL);
     }
     return mp_const_none;
 }
@@ -193,7 +193,7 @@ static int network_is_up(void)
     return 0;
 }
 
-PROCESS_THREAD(network_up_monitor_process, ev, data)
+PROCESS_THREAD(network_monitor_process, ev, data)
 {
     static struct etimer net_monitor_etimer;
     PROCESS_BEGIN();
@@ -212,8 +212,8 @@ PROCESS_THREAD(network_up_monitor_process, ev, data)
     PROCESS_END();
 }
 
-// init.set_root("fd00::") # set root with prefix
-STATIC mp_obj_t ns_init_set_root(mp_obj_t self_in, mp_obj_t prefix_in)
+// init.root("fd00::") # set root with prefix
+STATIC mp_obj_t ns_init_root(mp_obj_t self_in, mp_obj_t prefix_in)
 {
     static uip_ipaddr_t prefix;
     ns_init_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -225,7 +225,7 @@ STATIC mp_obj_t ns_init_set_root(mp_obj_t self_in, mp_obj_t prefix_in)
     }
     NETSTACK_ROUTING.root_set_prefix(&prefix, NULL);
     NETSTACK_ROUTING.root_start();
-    self->is_set_root = true;
+    self->is_root = true;
     return mp_const_none;
 }
 
@@ -237,7 +237,7 @@ STATIC void ns_init_print(const mp_print_t *print,
     ns_init_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     mp_printf(print, "ns: --- Nespy network stack ---\r\n");
-    if (self->is_set_root) {
+    if (self->is_root) {
         mp_printf(print, "ns: ROOT DEVICE\r\n");
     }
     mp_printf(print, "ns: Routing: %s\r\n", NETSTACK_ROUTING.name);
@@ -279,27 +279,27 @@ STATIC void ns_init_print(const mp_print_t *print,
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_node_id_obj, ns_init_node_id);
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_netstack_obj, ns_init_netstack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_protocol_obj, ns_init_protocol);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_platform_obj, ns_init_platform);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_stack_check_obj, ns_init_stack_check);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_rpl_border_router_obj, ns_init_rpl_border_router);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_cli_obj, ns_init_cli);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_coap_obj, ns_init_coap);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ns_init_tsch_cs_adaptions_obj, ns_init_tsch_cs_adaptions);
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_network_up_obj, ns_init_network_up);
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_set_root_obj, ns_init_set_root);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_network_obj, ns_init_network);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(ns_init_root_obj, ns_init_root);
 
 STATIC const mp_rom_map_elem_t ns_init_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_node_id), MP_ROM_PTR(&ns_init_node_id_obj) },
-    { MP_ROM_QSTR(MP_QSTR_netstack), MP_ROM_PTR(&ns_init_netstack_obj) },
+    { MP_ROM_QSTR(MP_QSTR_protocol), MP_ROM_PTR(&ns_init_protocol_obj) },
     { MP_ROM_QSTR(MP_QSTR_platform), MP_ROM_PTR(&ns_init_platform_obj) },
     { MP_ROM_QSTR(MP_QSTR_stack_check), MP_ROM_PTR(&ns_init_stack_check_obj) },
     { MP_ROM_QSTR(MP_QSTR_rpl_border_router), MP_ROM_PTR(&ns_init_rpl_border_router_obj) },
     { MP_ROM_QSTR(MP_QSTR_cli), MP_ROM_PTR(&ns_init_cli_obj) },
     { MP_ROM_QSTR(MP_QSTR_coap), MP_ROM_PTR(&ns_init_coap_obj) },
     { MP_ROM_QSTR(MP_QSTR_tsch_cs_adaptions), MP_ROM_PTR(&ns_init_tsch_cs_adaptions_obj) },
-    { MP_ROM_QSTR(MP_QSTR_network_up), MP_ROM_PTR(&ns_init_network_up_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_root), MP_ROM_PTR(&ns_init_set_root_obj) },
+    { MP_ROM_QSTR(MP_QSTR_network), MP_ROM_PTR(&ns_init_network_obj) },
+    { MP_ROM_QSTR(MP_QSTR_root), MP_ROM_PTR(&ns_init_root_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(ns_init_locals_dict, ns_init_locals_dict_table);

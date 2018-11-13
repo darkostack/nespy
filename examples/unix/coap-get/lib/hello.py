@@ -1,5 +1,5 @@
-import ns
-from lib import process
+import nespy
+from lib import ns
 
 # coap resource functions
 def get(res):
@@ -32,13 +32,13 @@ def thread_process(ev, data):
 msg_counter = 0
 
 # create coap resource object
-resource = ns.CoapResource(attr="title=\"Hello World!\"", get=get)
+resource = nespy.CoapResource(attr="title=\"Hello World!\"", get=get)
 
 # create event object for hello thread boot up sequence
-event_begin = process.ns.alloc_event()
+event_begin = ns.process.alloc_event()
 
 # create event timer object with 500ms period
-timer = ns.Etimer(period=500)
+timer = nespy.Etimer(period=500)
 
 # create hello thread object
-thread = ns.Thread(callback=thread_process)
+thread = nespy.Thread(callback=thread_process)

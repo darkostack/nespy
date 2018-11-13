@@ -3,7 +3,7 @@
 
 // Example usage to Platform objects
 //
-//      platform = ns.Platform()
+//      platform = nespy.Platform()
 //      platform.process_update() # use to update low level driver process
 
 const mp_obj_type_t ns_plat_type;

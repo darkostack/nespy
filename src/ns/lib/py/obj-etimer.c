@@ -9,7 +9,7 @@
 // Example usage to Etimer (Event Timer) objects
 //
 //      # set timer object with 1000 ms period
-//      timer = ns.Etimer(period=1000)
+//      timer = nespy.Etimer(period=1000)
 //
 //      timer.start()    # start the timer
 //      timer.expired()  # get timer is expired status

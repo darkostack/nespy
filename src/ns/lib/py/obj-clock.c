@@ -4,7 +4,7 @@
 
 // Example usage to Clock objects
 //
-//      clock = ns.Clock()
+//      clock = nespy.Clock()
 //      print(clock.get())  # use to get netstack clock time
 
 const mp_obj_type_t ns_clock_type;
