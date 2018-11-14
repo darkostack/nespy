@@ -65,6 +65,7 @@ int curr_log_level_coap = LOG_CONF_LEVEL_COAP;
 int curr_log_level_lwm2m = LOG_CONF_LEVEL_LWM2M;
 int curr_log_level_main = LOG_CONF_LEVEL_MAIN;
 int curr_log_level_radio = LOG_CONF_LEVEL_RADIO;
+int curr_log_level_6lbr = LOG_CONF_LEVEL_6LBR;
 
 struct log_module all_modules[] = {
   {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
@@ -79,8 +80,27 @@ struct log_module all_modules[] = {
   {"lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M},
   {"main", &curr_log_level_main, LOG_CONF_LEVEL_MAIN},
   {"radio", &curr_log_level_radio, LOG_CONF_LEVEL_RADIO},
+  {"6lbr", &curr_log_level_6lbr, LOG_CONF_LEVEL_6LBR},
   {NULL, NULL, 0},
 };
+
+void
+log_4addr(const uip_ip4addr_t *addr)
+{
+    LOG_OUTPUT("%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
+}
+
+void
+log_ethaddr(uip_eth_addr const *addr)
+{
+    LOG_OUTPUT("%02x:%02x:%02x:%02x:%02x:%02x",
+               addr->addr[0],
+               addr->addr[1],
+               addr->addr[2],
+               addr->addr[3],
+               addr->addr[4],
+               addr->addr[5]);
+}
 
 #if NETSTACK_CONF_WITH_IPV6
 

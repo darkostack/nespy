@@ -150,6 +150,10 @@
 #define LOG_CONF_LEVEL_RADIO                       LOG_LEVEL_NONE
 #endif
 
+#ifndef LOG_CONF_LEVEL_6LBR
+#define LOG_CONF_LEVEL_6LBR                        LOG_LEVEL_NONE
+#endif
+
 #endif /* __LOG_CONF_H__ */
 
 /** @} */

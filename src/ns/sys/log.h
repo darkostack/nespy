@@ -85,6 +85,7 @@ extern int curr_log_level_coap;
 extern int curr_log_level_lwm2m;
 extern int curr_log_level_main;
 extern int curr_log_level_radio;
+extern int curr_log_level_6lbr;
 
 extern struct log_module all_modules[];
 
@@ -100,6 +101,7 @@ extern struct log_module all_modules[];
 #define LOG_LEVEL_LWM2M                       MIN((LOG_CONF_LEVEL_LWM2M), curr_log_level_lwm2m)
 #define LOG_LEVEL_MAIN                        MIN((LOG_CONF_LEVEL_MAIN), curr_log_level_main)
 #define LOG_LEVEL_RADIO                       MIN((LOG_CONF_LEVEL_RADIO), curr_log_level_radio)
+#define LOG_LEVEL_6LBR                        MIN((LOG_CONF_LEVEL_6LBR), curr_log_level_6lbr)
 
 /* Main log function */
 
@@ -146,6 +148,20 @@ extern struct log_module all_modules[];
                            } \
                          } while (0)
 
+/* IPv4 address */
+#define LOG_4ADDR(level, ipaddr) do { \
+                           if(level <= (LOG_LEVEL)) { \
+                             log_4addr(ipaddr); \
+                           } \
+                         } while (0) 
+
+/* Ethernet address */
+#define LOG_ETHADDR(level, ethaddr) do { \
+                              if(level <= (LOG_LEVEL)) { \
+                                log_ethaddr(ethaddr); \
+                              } \
+                           } while (0)
+
 /* More compact versions of LOG macros */
 #define LOG_PRINT(...)         LOG(1, 0, "PRI", __VA_ARGS__)
 #define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
@@ -171,6 +187,18 @@ extern struct log_module all_modules[];
 #define LOG_INFO_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
+#define LOG_PRINT_4ADDR(...)   LOG_4ADDR(0, __VA_ARGS__)
+#define LOG_ERR_4ADDR(...)     LOG_4ADDR(LOG_LEVEL_ERR, __VA_ARGS__)
+#define LOG_WARN_4ADDR(...)    LOG_4ADDR(LOG_LEVEL_WARN, __VA_ARGS__)
+#define LOG_INFO_4ADDR(...)    LOG_4ADDR(LOG_LEVEL_INFO, __VA_ARGS__)
+#define LOG_DBG_4ADDR(...)     LOG_4ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
+
+#define LOG_PRINT_ETHADDR(...) LOG_ETHADDR(0, __VA_ARGS__)
+#define LOG_ERR_ETHADDR(...)   LOG_ETHADDR(LOG_LEVEL_ERR, __VA_ARGS__)
+#define LOG_WARN_ETHADDR(...)  LOG_ETHADDR(LOG_LEVEL_WARN, __VA_ARGS__)
+#define LOG_INFO_ETHADDR(...)  LOG_ETHADDR(LOG_LEVEL_INFO, __VA_ARGS__)
+#define LOG_DBG_ETHADDR(...)   LOG_ETHADDR(LOG_LEVEL_DBG, __VA_ARGS__)
+
 /* For checking log level.
    As this builds on curr_log_level variables, this should not be used
    in pre-processor macros. Use in a C 'if' statement instead, e.g.:
@@ -181,6 +209,9 @@ extern struct log_module all_modules[];
 #define LOG_WARN_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_WARN)
 #define LOG_INFO_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_INFO)
 #define LOG_DBG_ENABLED        ((LOG_LEVEL) >= LOG_LEVEL_DBG)
+
+void log_4addr(const uip_ip4addr_t *ipaddr);
+void log_ethaddr(uip_eth_addr const *addr);
 
 #if NETSTACK_CONF_WITH_IPV6
 
