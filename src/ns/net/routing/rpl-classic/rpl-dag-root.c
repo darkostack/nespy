@@ -74,7 +74,7 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
       if(uip_ds6_if.addr_list[i].isused &&
          (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
         LOG_DBG_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-        LOG_DBG_("\n");
+        LOG_DBG_("\r\n");
       }
     }
   }
@@ -131,14 +131,14 @@ rpl_dag_root_start(void)
 
       uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
       rpl_set_prefix(dag, &prefix, 64);
-      LOG_INFO("root_set_prefix: created a new RPL dag\n");
+      LOG_INFO("root_set_prefix: created a new RPL dag\r\n");
       return 0;
     } else {
-      LOG_ERR("root_set_prefix: failed to create a new RPL DAG\n");
+      LOG_ERR("root_set_prefix: failed to create a new RPL DAG\r\n");
       return -1;
     }
   } else {
-    LOG_ERR("root_set_prefix_dag: failed to create a new RPL DAG, no preferred IP address found\n");
+    LOG_ERR("root_set_prefix_dag: failed to create a new RPL DAG, no preferred IP address found\r\n");
     return -2;
   }
 }

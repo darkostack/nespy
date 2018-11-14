@@ -156,7 +156,7 @@ update_nbr(void)
     } else if(is_used > 1) {
       LOG_DBG("nbr-policy: *** neighbor is both child and candidate parent: ");
       LOG_DBG_LLADDR(lladdr);
-      LOG_DBG_("\n");
+      LOG_DBG_("\r\n");
     }
 
     nbr = nbr_table_next(ds6_neighbors, nbr);
@@ -165,7 +165,7 @@ update_nbr(void)
   /* how many more IP neighbors can be have? */
   num_free = NBR_TABLE_MAX_NEIGHBORS - num_used;
 
-  LOG_DBG("nbr-policy: free: %d, children: %d, parents: %d routes: %d\n",
+  LOG_DBG("nbr-policy: free: %d, children: %d, parents: %d routes: %d\r\n",
 	 num_free, num_children, num_parents, uip_ds6_route_num_routes());
 }
 /*---------------------------------------------------------------------------*/
@@ -179,7 +179,7 @@ find_removable_dis(uip_ipaddr_t *from)
   if(num_free > 0) {
     /* there are free entries (e.g. unsused by RPL and ND6) but since it is
        used by other modules we can not pick these entries for removal. */
-    LOG_DBG("nbr-policy: num-free > 0 = %d - Other for RPL/ND6 unused NBR entry exists.\n",
+    LOG_DBG("nbr-policy: num-free > 0 = %d - Other for RPL/ND6 unused NBR entry exists.\r\n",
            num_free);
   }
   if(num_children < MAX_CHILDREN) {
@@ -197,20 +197,20 @@ find_removable_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 
   instance = rpl_get_instance(dio->instance_id);
   if(instance == NULL || instance->current_dag == NULL) {
-    LOG_WARN("nbr-policy: did not find instance id: %d\n", dio->instance_id);
+    LOG_WARN("nbr-policy: did not find instance id: %d\r\n", dio->instance_id);
     return NULL;
   }
 
   /* Add the new neighbor only if it is better than the worst parent. */
   if(dio->rank + instance->min_hoprankinc < worst_rank - instance->min_hoprankinc / 2) {
     /* Found *great* neighbor - add! */
-    LOG_DBG("nbr-policy: DIO rank %u, worst_rank %u -- add to cache\n",
+    LOG_DBG("nbr-policy: DIO rank %u, worst_rank %u -- add to cache\r\n",
            dio->rank, worst_rank);
 
     return worst_rank_nbr;
   }
 
-  LOG_DBG("nbr-policy: DIO rank %u, worst_rank %u -- do not add to cache\n",
+  LOG_DBG("nbr-policy: DIO rank %u, worst_rank %u -- do not add to cache\r\n",
          dio->rank, worst_rank);
   return NULL;
 }
@@ -231,7 +231,7 @@ find_removable_dao(uip_ipaddr_t *from, rpl_instance_t *instance)
   /* Check if this DAO sender is not yet neighbor and there is already too
      many children. */
   if(num_children >= max) {
-    LOG_ERR("nbr-policy: can not add another child - already at max.\n");
+    LOG_ERR("nbr-policy: can not add another child - already at max.\r\n");
     return NULL;
   }
   /* remove the worst ranked nbr */

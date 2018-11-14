@@ -134,7 +134,7 @@ new_dio_interval(rpl_instance_t *instance)
   /* keep some stats */
   instance->dio_totint++;
   instance->dio_totrecv += instance->dio_counter;
-  LOG_ANNOTATE("#A rank=%u.%u(%u),stats=%d %d %d %d,color=%s\n",
+  LOG_ANNOTATE("#A rank=%u.%u(%u),stats=%d %d %d %d,color=%s\r\n",
 	   DAG_RANK(instance->current_dag->rank, instance),
            (10 * (instance->current_dag->rank % instance->min_hoprankinc)) / instance->min_hoprankinc,
            instance->current_dag->version,
@@ -147,7 +147,7 @@ new_dio_interval(rpl_instance_t *instance)
   instance->dio_counter = 0;
 
   /* schedule the timer */
-  LOG_INFO("Scheduling DIO timer %lu ticks in future (Interval)\n", ticks);
+  LOG_INFO("Scheduling DIO timer %lu ticks in future (Interval)\r\n", ticks);
   ctimer_set(&instance->dio_timer, ticks, &handle_dio_timer, instance);
 
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
@@ -162,7 +162,7 @@ handle_dio_timer(void *ptr)
 
   instance = (rpl_instance_t *)ptr;
 
-  LOG_DBG("DIO Timer triggered\n");
+  LOG_DBG("DIO Timer triggered\r\n");
   if(!dio_send_ok) {
     if(uip_ds6_get_link_local(ADDR_PREFERRED) != NULL) {
       dio_send_ok = 1;
@@ -181,18 +181,18 @@ handle_dio_timer(void *ptr)
 #endif /* RPL_CONF_STATS */
       dio_output(instance, NULL);
     } else {
-      LOG_DBG("Suppressing DIO transmission (%d >= %d)\n",
+      LOG_DBG("Suppressing DIO transmission (%d >= %d)\r\n",
              instance->dio_counter, instance->dio_redundancy);
     }
     instance->dio_send = 0;
-    LOG_DBG("Scheduling DIO timer %lu ticks in future (sent)\n",
+    LOG_DBG("Scheduling DIO timer %lu ticks in future (sent)\r\n",
            instance->dio_next_delay);
     ctimer_set(&instance->dio_timer, instance->dio_next_delay, handle_dio_timer, instance);
   } else {
     /* check if we need to double interval */
     if(instance->dio_intcurrent < instance->dio_intmin + instance->dio_intdoubl) {
       instance->dio_intcurrent++;
-      LOG_DBG("DIO Timer interval doubled %d\n", instance->dio_intcurrent);
+      LOG_DBG("DIO Timer interval doubled %d\r\n", instance->dio_intcurrent);
     }
     new_dio_interval(instance);
   }
@@ -246,7 +246,7 @@ set_dao_lifetime_timer(rpl_instance_t *instance)
       CLOCK_SECOND / 2;
     /* make the time for the re registration be betwen 1/2 - 3/4 of lifetime */
     expiration_time = expiration_time + (random_rand() % (expiration_time / 2));
-    LOG_DBG("Scheduling DAO lifetime timer %u ticks in the future\n",
+    LOG_DBG("Scheduling DAO lifetime timer %u ticks in the future\r\n",
            (unsigned)expiration_time);
     ctimer_set(&instance->dao_lifetime_timer, expiration_time,
                handle_dao_timer, instance);
@@ -265,14 +265,14 @@ handle_dao_timer(void *ptr)
   instance = (rpl_instance_t *)ptr;
 
   if(!dio_send_ok && uip_ds6_get_link_local(ADDR_PREFERRED) == NULL) {
-    LOG_INFO("Postpone DAO transmission\n");
+    LOG_INFO("Postpone DAO transmission\r\n");
     ctimer_set(&instance->dao_timer, CLOCK_SECOND, handle_dao_timer, instance);
     return;
   }
 
   /* Send the DAO to the DAO parent set -- the preferred parent in our case. */
   if(instance->current_dag->preferred_parent != NULL) {
-    LOG_INFO("handle_dao_timer - sending DAO\n");
+    LOG_INFO("handle_dao_timer - sending DAO\r\n");
     /* Set the route lifetime to the default value. */
     dao_output(instance->current_dag->preferred_parent, instance->default_lifetime);
 
@@ -301,7 +301,7 @@ handle_dao_timer(void *ptr)
     }
 #endif
   } else {
-    LOG_INFO("No suitable DAO parent\n");
+    LOG_INFO("No suitable DAO parent\r\n");
   }
 
   ctimer_stop(&instance->dao_timer);
@@ -323,7 +323,7 @@ schedule_dao(rpl_instance_t *instance, clock_time_t latency)
   expiration_time = etimer_expiration_time(&instance->dao_timer.etimer);
 
   if(!etimer_expired(&instance->dao_timer.etimer)) {
-    LOG_DBG("DAO timer already scheduled\n");
+    LOG_DBG("DAO timer already scheduled\r\n");
   } else {
     if(latency != 0) {
       expiration_time = latency / 2 +
@@ -331,7 +331,7 @@ schedule_dao(rpl_instance_t *instance, clock_time_t latency)
     } else {
       expiration_time = 0;
     }
-    LOG_DBG("Scheduling DAO timer %u ticks in the future\n",
+    LOG_DBG("Scheduling DAO timer %u ticks in the future\r\n",
            (unsigned)expiration_time);
     ctimer_set(&instance->dao_timer, expiration_time,
                handle_dao_timer, instance);
@@ -480,7 +480,7 @@ handle_probing_timer(void *ptr)
   if(target_ipaddr != NULL) {
     const struct link_stats *stats = rpl_get_parent_link_stats(probing_target);
     (void)stats;
-    LOG_INFO("probing %u %s last tx %u min ago\n",
+    LOG_INFO("probing %u %s last tx %u min ago\r\n",
         rpl_get_parent_lladdr(probing_target)->u8[7],
         instance->urgent_probing_target != NULL ? "(urgent)" : "",
         probing_target != NULL ?

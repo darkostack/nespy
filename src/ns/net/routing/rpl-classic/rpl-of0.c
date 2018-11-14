@@ -89,7 +89,7 @@
 static void
 reset(rpl_dag_t *dag)
 {
-  LOG_INFO("Reset OF0\n");
+  LOG_INFO("Reset OF0\r\n");
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_DAO_ACK
@@ -100,7 +100,7 @@ dao_ack_callback(rpl_parent_t *p, int status)
     return;
   }
   /* here we need to handle failed DAO's and other stuff */
-  LOG_DBG("OF0 - DAO ACK received with status: %d\n", status);
+  LOG_DBG("OF0 - DAO ACK received with status: %d\r\n", status);
   if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
     /* punish the ETX as if this was 10 packets lost */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);

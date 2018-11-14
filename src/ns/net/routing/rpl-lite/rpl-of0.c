@@ -87,7 +87,7 @@
 static void
 reset(void)
 {
-  LOG_INFO("reset OF0\n");
+  LOG_INFO("reset OF0\r\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t

@@ -57,17 +57,17 @@ rpl_dag_root_print_links(const char *str)
     if(uip_sr_num_nodes() > 0) {
       uip_sr_node_t *link;
       /* Our routing links */
-      LOG_INFO("links: %u routing links in total (%s)\n", uip_sr_num_nodes(), str);
+      LOG_INFO("links: %u routing links in total (%s)\r\n", uip_sr_num_nodes(), str);
       link = uip_sr_node_head();
       while(link != NULL) {
         char buf[100];
         uip_sr_link_snprint(buf, sizeof(buf), link);
-        LOG_INFO("links: %s\n", buf);
+        LOG_INFO("links: %s\r\n", buf);
         link = uip_sr_node_next(link);
       }
-      LOG_INFO("links: end of list\n");
+      LOG_INFO("links: end of list\r\n");
     } else {
-      LOG_INFO("No routing links\n");
+      LOG_INFO("No routing links\r\n");
     }
   }
 }
@@ -94,14 +94,14 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 
   uip_ds6_addr_add(&root_ipaddr, 0, ADDR_AUTOCONF);
 
-  LOG_INFO("IPv6 addresses:\n");
+  LOG_INFO("IPv6 addresses:\r\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       LOG_INFO("-- ");
       LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      LOG_INFO_("\n");
+      LOG_INFO_("\r\n");
     }
   }
 }
@@ -143,10 +143,10 @@ rpl_dag_root_start(void)
       (uip_ipaddr_t *)rpl_get_global_address(), 64, UIP_ND6_RA_FLAG_AUTONOMOUS);
     rpl_dag_update_state();
 
-    LOG_INFO("created a new RPL DAG\n");
+    LOG_INFO("created a new RPL DAG\r\n");
     return 0;
   } else {
-    LOG_ERR("failed to create a new RPL DAG\n");
+    LOG_ERR("failed to create a new RPL DAG\r\n");
     return -1;
   }
 }

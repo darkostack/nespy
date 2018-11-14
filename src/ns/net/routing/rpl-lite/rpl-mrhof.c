@@ -107,7 +107,7 @@
 static void
 reset(void)
 {
-  LOG_INFO("reset MRHOF\n");
+  LOG_INFO("reset MRHOF\r\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
@@ -249,7 +249,7 @@ update_metric_container(void)
   uint8_t type;
 
   if(!curr_instance.used) {
-    LOG_WARN("cannot update the metric container when not joined\n");
+    LOG_WARN("cannot update the metric container when not joined\r\n");
     return;
   }
 
@@ -284,7 +284,7 @@ update_metric_container(void)
       curr_instance.mc.obj.energy.energy_est = path_cost >> 8;
       break;
     default:
-      LOG_WARN("MRHOF, non-supported MC %u\n", curr_instance.mc.type);
+      LOG_WARN("MRHOF, non-supported MC %u\r\n", curr_instance.mc.type);
       break;
   }
 }

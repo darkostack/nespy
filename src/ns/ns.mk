@@ -4,6 +4,7 @@ INC += -I$(TOP)/ns
 INC += -I$(TOP)/ns/net
 INC += -I$(TOP)/ns/net/ipv6
 INC += -I$(TOP)/ns/services
+INC += -I$(TOP)/ns/lib
 
 SRC_NS_SYS += $(addprefix ns/sys/,\
     autostart.c \
@@ -313,7 +314,7 @@ MAKE_ROUTING_RPL_LITE = 2
 
 # Default routing protocol: RPL for IPv6, None otherwise
 ifeq ($(MAKE_NET),MAKE_NET_IPV6)
-MAKE_ROUTING ?= MAKE_ROUTING_RPL_LITE
+MAKE_ROUTING ?= MAKE_ROUTING_RPL_CLASSIC
 else
 MAKE_ROUTING ?= MAKE_ROUTING_NULLROUTING
 endif

@@ -183,14 +183,20 @@ STATIC mp_obj_t ns_init_network(mp_obj_t self_in, mp_obj_t callback_in)
 
 static int network_is_up(void)
 {
+    int ret = 0;
 #if UIP_CONF_IPV6_RPL
     uip_ds6_defrt_t *default_route;
     default_route = uip_ds6_defrt_lookup(uip_ds6_defrt_choose());
     if (default_route != NULL || uip_sr_num_nodes() > 0) {
-        return 1;
+        ret = 1;
     }
 #endif
-    return 0;
+#if (UIP_MAX_ROUTES != 0)
+    if (uip_ds6_route_num_routes() > 0) {
+        ret = 1;
+    }
+#endif
+    return ret;
 }
 
 PROCESS_THREAD(network_monitor_process, ev, data)

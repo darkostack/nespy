@@ -149,7 +149,7 @@ rpl_neighbor_print_list(const char *str)
 
     LOG_INFO("nbr: own state, addr ");
     LOG_INFO_6ADDR(rpl_get_global_address());
-    LOG_INFO_(", DAG state: %s, MOP %u OCP %u rank %u max-rank %u, dioint %u, nbr count %u (%s)\n",
+    LOG_INFO_(", DAG state: %s, MOP %u OCP %u rank %u max-rank %u, dioint %u, nbr count %u (%s)\r\n",
         rpl_dag_state_to_str(curr_instance.dag.state),
         curr_instance.mop, curr_instance.of->ocp, curr_rank,
         max_acceptable_rank(),
@@ -157,10 +157,10 @@ rpl_neighbor_print_list(const char *str)
     while(nbr != NULL) {
       char buf[120];
       rpl_neighbor_snprint(buf, sizeof(buf), nbr);
-      LOG_INFO("nbr: %s\n", buf);
+      LOG_INFO("nbr: %s\r\n", buf);
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }
-    LOG_INFO("nbr: end of list\n");
+    LOG_INFO("nbr: end of list\r\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -297,7 +297,7 @@ rpl_neighbor_set_preferred_parent(rpl_nbr_t *nbr)
     LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
     LOG_INFO_(" -> ");
     LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
-    LOG_INFO_("\n");
+    LOG_INFO_("\r\n");
 
 #ifdef RPL_CALLBACK_PARENT_SWITCH
     RPL_CALLBACK_PARENT_SWITCH(curr_instance.dag.preferred_parent, nbr);
@@ -323,7 +323,7 @@ rpl_neighbor_remove_all(void)
 {
   rpl_nbr_t *nbr;
 
-  LOG_INFO("removing all neighbors\n");
+  LOG_INFO("removing all neighbors\r\n");
 
   nbr = nbr_table_head(rpl_neighbors);
   while(nbr != NULL) {
@@ -411,7 +411,7 @@ rpl_neighbor_select_best(void)
       if(curr_instance.dag.urgent_probing_target == NULL) {
         LOG_INFO("best parent is not fresh, schedule urgent probing to ");
         LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(best));
-        LOG_INFO_("\n");
+        LOG_INFO_("\r\n");
         curr_instance.dag.urgent_probing_target = best;
         rpl_schedule_probing_now();
       }

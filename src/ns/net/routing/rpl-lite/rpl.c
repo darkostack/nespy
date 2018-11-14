@@ -108,7 +108,7 @@ rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
       Updating from here is unsafe; postpone */
       LOG_INFO("packet sent to ");
       LOG_INFO_LLADDR(addr);
-      LOG_INFO_(", status %u, tx %u, new link metric %u\n", status, numtx, rpl_neighbor_get_link_metric(nbr));
+      LOG_INFO_(", status %u, tx %u, new link metric %u\r\n", status, numtx, rpl_neighbor_get_link_metric(nbr));
       rpl_timers_schedule_state_update();
     }
   }
@@ -144,7 +144,7 @@ rpl_reset_prefix(rpl_prefix_t *last_prefix)
   if(rep != NULL) {
     LOG_INFO("removing global IP address ");
     LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO_("\n");
+    LOG_INFO_("\r\n");
     uip_ds6_addr_rm(rep);
   }
   curr_instance.dag.prefix_info.length = 0;
@@ -156,7 +156,7 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   uip_ipaddr_t ipaddr;
 
   if(addr == NULL || len == 0 || len > 128 || !(flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
-    LOG_WARN("prefix not included, not-supported or invalid\n");
+    LOG_WARN("prefix not included, not-supported or invalid\r\n");
     return 0;
   }
 
@@ -172,7 +172,7 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   if(uip_ds6_addr_lookup(&ipaddr) == NULL) {
     LOG_INFO("adding global IP address ");
     LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO_("\n");
+    LOG_INFO_("\r\n");
     uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
   }
   return 1;
@@ -191,7 +191,7 @@ rpl_set_prefix(rpl_prefix_t *prefix)
 static void
 init(void)
 {
-  LOG_INFO("initializing\n");
+  LOG_INFO("initializing\r\n");
 
   /* Initialize multicast address and register it */
   uip_create_linklocal_rplnodes_mcast(&rpl_multicast_addr);

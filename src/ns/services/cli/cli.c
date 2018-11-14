@@ -71,9 +71,11 @@ static void command_exit(int argc, char *argv[]);
 static void cli_output_6addr(const uip_ipaddr_t *ipaddr);
 static void cli_output_lladdr(const linkaddr_t *lladdr);
 static const char * ds6_nbr_state_to_str(uint8_t state);
+#if ROUTING_CONF_RPL_LITE
 static const char * rpl_state_to_str(enum rpl_dag_state state);
 static const char *rpl_mop_to_str(int mop);
 static const char *rpl_ocp_to_str(int ocp);
+#endif
 static void echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen);
 
 static const ns_cli_cmd_t s_commands[] = {

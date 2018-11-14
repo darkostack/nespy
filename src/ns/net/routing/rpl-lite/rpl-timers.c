@@ -149,7 +149,7 @@ void
 rpl_timers_dio_reset(const char *str)
 {
   if(rpl_dag_ready_to_advertise()) {
-    LOG_INFO("reset DIO timer (%s)\n", str);
+    LOG_INFO("reset DIO timer (%s)\r\n", str);
     if(!rpl_get_leaf_only()) {
         curr_instance.dag.dio_counter = 0;
         curr_instance.dag.dio_intcurrent = curr_instance.dio_intmin;
@@ -176,7 +176,7 @@ handle_dio_timer(void *ptr)
         if((count++ % RPL_TRICKLE_REFRESH_DAO_ROUTES) == 0) {
           /* Request new DAO to refresh route. */
           RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
-          LOG_INFO("trigger DAO updates with a DTSN increment (%u)\n", curr_instance.dtsn_out);
+          LOG_INFO("trigger DAO updates with a DTSN increment (%u)\r\n", curr_instance.dtsn_out);
         }
       }
 #endif /* RPL_TRICKLE_REFRESH_DAO_ROUTES */
@@ -427,7 +427,7 @@ handle_probing_timer(void *ptr)
     (void)stats;
     LOG_INFO("probing ");
     LOG_INFO_6ADDR(target_ipaddr);
-    LOG_INFO_(" %s last tx %u min ago\n",
+    LOG_INFO_(" %s last tx %u min ago\r\n",
         curr_instance.dag.urgent_probing_target != NULL ? "(urgent)" : "",
         stats != NULL ?
         (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
@@ -436,7 +436,7 @@ handle_probing_timer(void *ptr)
     RPL_PROBING_SEND_FUNC(target_ipaddr);
     /* urgent_probing_target will be NULLed in the packet_sent callback */
   } else {
-    LOG_INFO("no neighbor needs probing\n");
+    LOG_INFO("no neighbor needs probing\r\n");
   }
 
   /* Schedule next probing */

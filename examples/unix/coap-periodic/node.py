@@ -4,6 +4,7 @@ from lib import hello
 def callback():
     # network is ready, initialize coap resources
     hello.resource.server_activate("res/hello")
+    return
 
 def main():
     ns.init.node_id(2)
