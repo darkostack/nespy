@@ -1,0 +1,6 @@
+[submodule "third_party/border-router/6lbr"]
+	path = third_party/border-router/6lbr
+	url = https://github.com/cetic/6lbr.git
+[submodule "third_party/border-router/contiki-ng"]
+	path = third_party/border-router/contiki-ng
+	url = https://github.com/cetic/contiki-ng.git
