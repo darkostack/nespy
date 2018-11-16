@@ -155,9 +155,6 @@
 #define MICROPY_ERROR_PRINTER       (&mp_stderr_print)
 #define MICROPY_PY_STR_BYTES_CMP_WARN (1)
 
-// Definet to 1 to use network stack
-#define MICROPY_PY_NETWORK_STACK (1)
-
 extern const struct _mp_print_t mp_stderr_print;
 
 // Define to 1 to use undertested inefficient GC helper implementation
@@ -184,7 +181,6 @@ extern const struct _mp_obj_module_t mp_module_termios;
 extern const struct _mp_obj_module_t mp_module_socket;
 extern const struct _mp_obj_module_t mp_module_ffi;
 extern const struct _mp_obj_module_t mp_module_jni;
-extern const struct _mp_obj_module_t mp_module_nespy;
 
 #if MICROPY_PY_UOS_VFS
 #define MICROPY_PY_UOS_DEF { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_uos_vfs) },
@@ -222,12 +218,6 @@ extern const struct _mp_obj_module_t mp_module_nespy;
 #define MICROPY_PY_USELECT_DEF
 #endif
 
-#if MICROPY_PY_NETWORK_STACK
-#define NETSTACK_MODULE { MP_ROM_QSTR(MP_QSTR_nespy), MP_ROM_PTR(&mp_module_nespy) },
-#else
-#define NETSTACK_MODULE
-#endif
-
 #define MICROPY_PORT_BUILTIN_MODULES \
     MICROPY_PY_FFI_DEF \
     MICROPY_PY_JNI_DEF \
@@ -237,7 +227,6 @@ extern const struct _mp_obj_module_t mp_module_nespy;
     MICROPY_PY_UOS_DEF \
     MICROPY_PY_USELECT_DEF \
     MICROPY_PY_TERMIOS_DEF \
-    NETSTACK_MODULE \
 
 // type definitions for the specific machine
 
