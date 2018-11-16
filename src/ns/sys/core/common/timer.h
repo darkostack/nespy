@@ -1,7 +1,7 @@
 #ifndef NS_CORE_COMMON_TIMER_H_
 #define NS_CORE_COMMON_TIMER_H_
 
-#include "ns/core/common/instance.h"
+#include "ns/sys/core/common/instance.h"
 
 enum {
     timer_max_dt = (1UL << 31) - 1,

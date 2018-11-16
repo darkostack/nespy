@@ -7,7 +7,7 @@
 #ifdef NS_PROJECT_CORE_CONFIG_FILE
 #include NS_PROJECT_CORE_CONFIG_FILE
 #endif
-#include "ns/core/core-default-config.h"
+#include "ns/sys/core/core-default-config.h"
 #undef NS_CORE_CONFIG_H_IN
 
 #endif // NS_CORE_CONFIG_H_

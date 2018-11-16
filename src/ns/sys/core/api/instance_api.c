@@ -1,5 +1,5 @@
 #include "ns/include/instance.h"
-#include "ns/core/common/instance.h"
+#include "ns/sys/core/common/instance.h"
 
 ns_instance_t ns_instance_init(void)
 {

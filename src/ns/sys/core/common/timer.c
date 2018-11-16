@@ -1,4 +1,5 @@
-#include "ns/core/common/timer.h"
+#include "ns/include/platform/alarm.h"
+#include "ns/sys/core/common/timer.h"
 
 timer_scheduler_t timer_scheduler_obj;
 
@@ -139,16 +140,24 @@ static void alarm_set(instance_t *instance)
 
 static void alarm_start_at(uint32_t t0, uint32_t dt)
 {
-    // TODO: plat_alarm_start_at(t0, dt);
+    ns_plat_alarm_start_at(t0, dt);
 }
 
 static void alarm_stop(void)
 {
-    // TODO: plat_alarm_stop();
+    ns_plat_alarm_stop();
 }
 
 static uint32_t alarm_get_now(void)
 {
-    // TODO: return plat_alarm_get_now();
-    return 0;
+    return ns_plat_alarm_get_now();
+}
+
+void ns_plat_alarm_fired(ns_instance_t instance)
+{
+    instance_t *inst = (instance_t *)instance;
+    if (inst->is_initialized == false) goto exit;
+    timer_process(inst);
+exit:
+    return;
 }

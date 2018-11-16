@@ -6,10 +6,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "ns/core/core-config.h"
-#include "ns/core/common/typedef.h"
-#include "ns/core/common/timer.h"
+#include "ns/sys/core/core-config.h"
+#include "ns/sys/core/common/typedef.h"
+#include "ns/sys/core/common/timer.h"
 
 struct _instance {
     bool is_initialized;

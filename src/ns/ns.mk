@@ -1,6 +1,6 @@
 # Network stack core makefile
 
-SRC_NS_CORE += $(addprefix ns/core/,\
+SRC_NS_CORE += $(addprefix ns/sys/core/,\
     common/instance.c \
     common/timer.c \
     api/instance_api.c \

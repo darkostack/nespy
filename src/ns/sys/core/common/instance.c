@@ -1,4 +1,4 @@
-#include "ns/core/common/instance.h"
+#include "ns/sys/core/common/instance.h"
 
 instance_t instance_obj;
 extern timer_scheduler_t timer_scheduler_obj;

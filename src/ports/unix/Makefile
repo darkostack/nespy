@@ -165,8 +165,12 @@ LIB_SRC_C += $(addprefix lib/,\
 	oofatfs/option/unicode.c \
 	)
 
-# ns py objects implementations
-LIB_SRC_C += $(addprefix ns/py/,\
+# Nespy support
+LIB_SRC_C += $(addprefix ns-platform/,\
+    alarm.c \
+    )
+
+LIB_SRC_C += $(addprefix ns/sys/py/,\
     mod-nespy.c \
     obj-instance.c \
     )

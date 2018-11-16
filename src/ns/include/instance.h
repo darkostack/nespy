@@ -2,6 +2,7 @@
 #define NS_INSTANCE_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef void *ns_instance_t;
 
