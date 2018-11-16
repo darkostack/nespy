@@ -165,9 +165,18 @@ LIB_SRC_C += $(addprefix lib/,\
 	oofatfs/option/unicode.c \
 	)
 
+# ns py objects implementations
+LIB_SRC_C += $(addprefix ns/py/,\
+    mod-nespy.c \
+    obj-instance.c \
+    )
+
 OBJ = $(PY_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(LIB_SRC_C:.c=.o))
+
+# Include ns networking core makefile
+include ../../ns/ns.mk
 
 # List of sources for qstr extraction
 SRC_QSTR += $(SRC_C) $(LIB_SRC_C)
