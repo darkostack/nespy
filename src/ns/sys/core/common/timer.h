@@ -7,7 +7,7 @@ enum {
     timer_max_dt = (1UL << 31) - 1,
 };
 
-typedef void (*timer_handler_t)(void);
+typedef void (*timer_handler_t)(timer_t *timer);
 
 struct _timer {
     timer_handler_t handler;

@@ -74,7 +74,7 @@ void timer_process(instance_t *instance)
     if (timer) {
         if (!is_strictly_before(alarm_get_now(), timer->firetime)) {
             timer_remove(instance, timer);
-            timer->handler();
+            timer->handler(timer);
         } else {
             alarm_set(instance);
         }
