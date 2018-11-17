@@ -168,6 +168,9 @@ LIB_SRC_C += $(addprefix lib/,\
 # Nespy support
 LIB_SRC_C += $(addprefix ns-platform/,\
     alarm.c \
+    system.c \
+    random.c \
+    uart.c \
     )
 
 LIB_SRC_C += $(addprefix ns/sys/py/,\

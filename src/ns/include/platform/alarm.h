@@ -1,5 +1,5 @@
-#ifndef NS_ALARM_H_
-#define NS_ALARM_H_
+#ifndef NS_PLATFORM_ALARM_H_
+#define NS_PLATFORM_ALARM_H_
 
 #include "ns/include/instance.h"
 
@@ -8,4 +8,4 @@ void ns_plat_alarm_stop(void);
 uint32_t ns_plat_alarm_get_now(void);
 extern void ns_plat_alarm_fired(ns_instance_t instance);
 
-#endif // NS_ALARM_H_
+#endif // NS_PLATFORM_ALARM_H_

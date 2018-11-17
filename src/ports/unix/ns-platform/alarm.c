@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "ns/include/platform/alarm.h"
-#include "platform-unix.h"
+#include "ns-platform/platform-unix.h"
 
 #define MS_PER_S 1000
 #define US_PER_MS 1000
@@ -20,7 +20,7 @@ void plat_alarm_init(void)
     gettimeofday(&start, NULL);
 }
 
-uint64_t plat_get_now(void)
+uint64_t plat_alarm_get_now(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -30,7 +30,7 @@ uint64_t plat_get_now(void)
 
 uint32_t ns_plat_alarm_get_now(void)
 {
-    return (uint32_t)(plat_get_now() / US_PER_MS);
+    return (uint32_t)(plat_alarm_get_now() / US_PER_MS);
 }
 
 void ns_plat_alarm_start_at(uint32_t t0, uint32_t dt)
