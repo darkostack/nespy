@@ -1,18 +1,13 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
-#include "ns/include/instance.h"
+#include "ns/sys/py/obj-instance.h"
 
 // ---- Instance objects
-// instance = nespy.Instance()  # create and initialize instance object
-// instance.is_initialized()    # check init status
+// instance = nespy.Instance() # create and initialize instance object
+// instance.is_initialized()   # check init status
 
 const mp_obj_type_t py_instance_type;
 static bool instance_obj_is_created = false;
-
-typedef struct _py_instance_obj_t {
-    mp_obj_base_t base;
-    ns_instance_t instance; // instance pointer
-} py_instance_obj_t;
 
 STATIC mp_obj_t py_instance_make_new(const mp_obj_type_t *type,
                                      size_t n_args,

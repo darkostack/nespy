@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "ns-platform/platform-unix.h"
 #include "ns/include/platform/alarm.h"
-#include "ns/include/system.h"
+#include "ns/include/platform/system.h"
 
 uint32_t node_id = 1;
 
@@ -18,7 +18,7 @@ static void handle_signal(int signal)
     terminate = true;
 }
 
-void ns_sys_init(uint32_t id)
+void ns_plat_sys_init(uint32_t id)
 {
     signal(SIGTERM, &handle_signal);
     signal(SIGHUP, &handle_signal);
@@ -35,7 +35,7 @@ void ns_sys_init(uint32_t id)
     plat_random_init();
 }
 
-void ns_sys_process_drivers(ns_instance_t instance)
+void ns_plat_sys_process_drivers(ns_instance_t instance)
 {
     fd_set read_fds;
     fd_set write_fds;

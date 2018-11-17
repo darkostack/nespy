@@ -176,6 +176,7 @@ LIB_SRC_C += $(addprefix ns-platform/,\
 LIB_SRC_C += $(addprefix ns/sys/py/,\
     mod-nespy.c \
     obj-instance.c \
+    obj-platform.c \
     )
 
 OBJ = $(PY_O)
