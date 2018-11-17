@@ -5,7 +5,6 @@ instance = nespy.Instance()
 
 def main():
     platform.system_init()
-
     while True:
         platform.process_drivers(instance)
 
