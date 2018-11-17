@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "ns-platform/platform-unix.h"
 #include "ns/include/platform/alarm.h"
+#include "ns/include/system.h"
 
 uint32_t node_id = 1;
 

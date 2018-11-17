@@ -4,7 +4,7 @@
 #include "ns/sys/core/common/instance.h"
 
 enum {
-    timer_max_dt = (1UL << 31) - 1,
+    TIMER_MAX_DT = (1UL << 31) - 1,
 };
 
 typedef void (*timer_handler_t)(timer_t *timer);
@@ -20,8 +20,6 @@ struct _timer_scheduler {
     timer_t *head;
 };
 
-void timer_add(instance_t *instance, timer_t *timer);
-void timer_remove(instance_t *instance,  timer_t *timer);
-void timer_process(instance_t *instance);
+void timer_start(instance_t *instance, timer_t *timer, uint32_t t0, uint32_t dt);
 
 #endif // NS_CORE_COMMON_TIMER_H_

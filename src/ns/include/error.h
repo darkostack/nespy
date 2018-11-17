@@ -1,8 +1,7 @@
 #ifndef NS_ERROR_H_
 #define NS_ERROR_H_
 
-typedef enum _ns_error
-{
+typedef enum _ns_error {
     NS_ERROR_NONE = 0,
     NS_ERROR_FAILED = 1,
     NS_ERROR_DROP = 2,

@@ -96,3 +96,11 @@ int ns_strcasecmp(const char *s1, const char *s2)
 {
   return ns_strcmp(s1, s2);
 }
+
+void ns_assert(int expression)
+{
+    if (!expression) {
+        printf("ns: ASSERT FAILED\r\n");
+        while(1);
+    }
+}

@@ -1,4 +1,5 @@
 #include "ns/include/platform/alarm.h"
+#include "ns/include/nstd.h"
 #include "ns/sys/core/common/timer.h"
 
 timer_scheduler_t timer_scheduler_obj;
@@ -10,7 +11,18 @@ static void alarm_start_at(uint32_t t0, uint32_t dt);
 static void alarm_stop(void);
 static uint32_t alarm_get_now(void);
 
-void timer_add(instance_t *instance, timer_t *timer)
+static void timer_add(instance_t *instance, timer_t *timer);
+static void timer_remove(instance_t *instance,  timer_t *timer);
+static void timer_process(instance_t *instance);
+
+void timer_start(instance_t *instance, timer_t *timer, uint32_t t0, uint32_t dt)
+{
+    ns_assert(dt <= TIMER_MAX_DT);
+    timer->firetime = t0 + dt;
+    timer_add(instance, timer);
+}
+
+static void timer_add(instance_t *instance, timer_t *timer)
 {
     timer_remove(instance, timer);
 
@@ -44,7 +56,7 @@ void timer_add(instance_t *instance, timer_t *timer)
     }
 }
 
-void timer_remove(instance_t *instance, timer_t *timer)
+static void timer_remove(instance_t *instance, timer_t *timer)
 {
     if (timer->next == timer) goto exit;
 
@@ -68,7 +80,7 @@ exit:
     return;
 }
 
-void timer_process(instance_t *instance)
+static void timer_process(instance_t *instance)
 {
     timer_t *timer = instance->timer_sched->head;
     if (timer) {
@@ -118,7 +130,7 @@ static bool does_fire_before(timer_t *head, timer_t *timer, uint32_t now)
     } else {
         // Both timers are before `now` or both are after `now`.
         // Either way the difference is guaranteed to be less
-        // than `timer_max_dt` so we can safely compare the fire times directly.
+        // than `TIMER_MAX_DT` so we can safely compare the fire times directly.
         retval = is_strictly_before(head->firetime, timer->firetime);
     }
 
