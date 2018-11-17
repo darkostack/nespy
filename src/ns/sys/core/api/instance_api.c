@@ -1,9 +1,14 @@
 #include "ns/include/instance.h"
 #include "ns/sys/core/common/instance.h"
+#include "ns/sys/cli/cli-uart.h"
+#include "ns/sys/cli/cli.h"
 
 ns_instance_t ns_instance_init(void)
 {
-    return (ns_instance_t)instance_init();
+    ns_instance_t instance = (ns_instance_t)instance_init();
+    cli_uart_init();
+    cli_commands_init();
+    return instance;
 }
 
 ns_instance_t ns_instance_get(void)

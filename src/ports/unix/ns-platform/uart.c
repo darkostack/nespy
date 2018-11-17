@@ -211,7 +211,7 @@ void plat_uart_process(void)
                 perror("read");
                 exit(EXIT_FAILURE);
             }
-            // TODO: ns_plat_uart_received(receive_buffer, (uint16_t)rval);
+            ns_plat_uart_received(receive_buffer, (uint16_t)rval);
         }
         if ((write_length > 0) && (pollfd[1].revents & POLLOUT)) {
             rval = write(out_fd, write_buffer, write_length);
@@ -222,7 +222,7 @@ void plat_uart_process(void)
             write_buffer += (uint16_t)rval;
             write_length -= (uint16_t)rval;
             if (write_length == 0) {
-                // TODO: ns_plat_uart_send_done();
+                ns_plat_uart_send_done();
             }
         }
     }
