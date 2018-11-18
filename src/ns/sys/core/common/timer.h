@@ -11,7 +11,6 @@ typedef void (*timer_handler_t)(timer_t *timer);
 
 struct _timer {
     timer_handler_t handler;
-    uint32_t max_dt;
     uint32_t firetime;
     timer_t *next;
 };

@@ -177,6 +177,7 @@ LIB_SRC_C += $(addprefix ns/sys/py/,\
     mod-nespy.c \
     obj-instance.c \
     obj-platform.c \
+    obj-timer.c \
     )
 
 OBJ = $(PY_O)

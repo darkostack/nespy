@@ -2,6 +2,7 @@
 #include "py/runtime.h"
 #include "ns/sys/py/obj-instance.h"
 #include "ns/include/platform/system.h"
+#include "ns/sys/core/common/typedef.h"
 
 // ---- Platform objects
 // platform = nespy.Platform(id=1)    # create platform object with it's ID

@@ -5,7 +5,7 @@
 timer_scheduler_t timer_scheduler_obj;
 
 static bool is_strictly_before(uint32_t time_a, uint32_t time_b);
-static bool does_fire_before(timer_t *head, timer_t *timer, uint32_t now);
+static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now);
 static void alarm_set(instance_t *inst);
 static void alarm_start_at(uint32_t t0, uint32_t dt);
 static void alarm_stop(void);
@@ -29,20 +29,22 @@ static void timer_add(instance_t *instance, timer_t *timer)
     timer_t *head = instance->timer_sched->head;
 
     if (head == NULL) {
-        head = timer;
+        // update timer scheduler head
+        instance->timer_sched->head = timer;
         timer->next = NULL;
         alarm_set(instance);
     } else {
         timer_t *prev = NULL;
         timer_t *cur;
         for (cur = head; cur; cur = cur->next) {
-            if (does_fire_before(head, cur, alarm_get_now())) {
+            if (does_fire_before(timer, cur, alarm_get_now())) {
                 if (prev) {
                     timer->next = cur;
                     prev->next = timer;
                 } else {
                     timer->next = head;
-                    head = timer;
+                    // update timer scheduler head
+                    instance->timer_sched->head = timer;
                     alarm_set(instance);
                 }
                 break;
@@ -63,7 +65,8 @@ static void timer_remove(instance_t *instance, timer_t *timer)
     timer_t *head = instance->timer_sched->head;
 
     if (head == timer) {
-        head = timer->next;
+        // update timer scheduler head
+        instance->timer_sched->head = timer->next;
         alarm_set(instance);
     } else {
         for (timer_t *cur = head; cur; cur = cur->next) {
@@ -115,13 +118,13 @@ static bool is_strictly_before(uint32_t time_a, uint32_t time_b)
     return ((diff & (1UL << 31)) != 0);
 }
 
-static bool does_fire_before(timer_t *head, timer_t *timer, uint32_t now)
+static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
 {
     bool retval;
-    bool is_before_now = is_strictly_before(head->firetime, now);
+    bool is_before_now = is_strictly_before(timer->firetime, now);
 
     // Check if one timer is before `now` and the other one is not.
-    if (is_strictly_before(timer->firetime, now) != is_before_now) {
+    if (is_strictly_before(cur->firetime, now) != is_before_now) {
         // One timer is before `now` and the other one is not,
         // so if this timer's fire time is before `now` then
         // the second fire time would be after `now` and
@@ -131,7 +134,7 @@ static bool does_fire_before(timer_t *head, timer_t *timer, uint32_t now)
         // Both timers are before `now` or both are after `now`.
         // Either way the difference is guaranteed to be less
         // than `TIMER_MAX_DT` so we can safely compare the fire times directly.
-        retval = is_strictly_before(head->firetime, timer->firetime);
+        retval = is_strictly_before(timer->firetime, cur->firetime);
     }
 
     return retval;
@@ -140,7 +143,6 @@ static bool does_fire_before(timer_t *head, timer_t *timer, uint32_t now)
 static void alarm_set(instance_t *instance)
 {
     timer_t *head = instance->timer_sched->head;
-
     if (head == NULL) {
         alarm_stop();
     } else {
