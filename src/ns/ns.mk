@@ -3,8 +3,10 @@
 SRC_NS_CORE += $(addprefix ns/sys/core/,\
     common/instance.c \
     common/timer.c \
+    common/tasklet.c \
     api/instance_api.c \
     api/nstd_api.c \
+    api/tasklet_api.c \
     )
 
 SRC_NS_CLI += $(addprefix ns/sys/cli/,\
