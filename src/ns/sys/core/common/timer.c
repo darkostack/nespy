@@ -25,9 +25,7 @@ void timer_start(instance_t *instance, timer_t *timer, uint32_t t0, uint32_t dt)
 static void timer_add(instance_t *instance, timer_t *timer)
 {
     timer_remove(instance, timer);
-
     timer_t *head = instance->timer_sched->head;
-
     if (head == NULL) {
         // update timer scheduler head
         instance->timer_sched->head = timer;
@@ -60,10 +58,8 @@ static void timer_add(instance_t *instance, timer_t *timer)
 
 static void timer_remove(instance_t *instance, timer_t *timer)
 {
-    if (timer->next == timer) goto exit;
-
+    VERIFY_OR_EXIT(timer->next != timer);
     timer_t *head = instance->timer_sched->head;
-
     if (head == timer) {
         // update timer scheduler head
         instance->timer_sched->head = timer->next;
@@ -76,9 +72,7 @@ static void timer_remove(instance_t *instance, timer_t *timer)
             }
         }
     }
-
     timer->next = timer;
-
 exit:
     return;
 }
@@ -170,7 +164,7 @@ static uint32_t alarm_get_now(void)
 void ns_plat_alarm_fired(ns_instance_t instance)
 {
     instance_t *inst = (instance_t *)instance;
-    if (inst->is_initialized == false) goto exit;
+    VERIFY_OR_EXIT(instance_is_initialized(inst));
     timer_process(inst);
 exit:
     return;

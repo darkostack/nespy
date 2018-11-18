@@ -129,9 +129,7 @@ static void py_timer_list_add(py_timer_obj_t *timer_obj)
 
 static void py_timer_list_remove(py_timer_obj_t *timer_obj)
 {
-    if (timer_obj->next == timer_obj) {
-        goto exit;
-    }
+    VERIFY_OR_EXIT(timer_obj->next != timer_obj);
     py_timer_obj_t *head = py_timer_list.head;
     if (head == timer_obj) {
         // update timer list head

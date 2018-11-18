@@ -30,16 +30,13 @@ uint32_t ns_plat_random_get(void)
 ns_error_t ns_plat_random_get_true(uint8_t *output, uint16_t output_length)
 {
     ns_error_t error = NS_ERROR_NONE;
-
     if (!(output && output_length)) {
         error = NS_ERROR_INVALID_ARGS;
         goto exit;
     }
-
     for (uint16_t len = 0; len < output_length; len++) {
         output[len] = (uint8_t)ns_plat_random_get();
     }
-
 exit:
     return error;
 }

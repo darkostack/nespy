@@ -124,9 +124,7 @@ static void py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj)
 
 static void py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj)
 {
-    if (tasklet_obj->next == tasklet_obj) {
-        goto exit;
-    }
+    VERIFY_OR_EXIT(tasklet_obj->next != tasklet_obj);
     py_tasklet_obj_t *head = py_tasklet_list.head;
     if (head == tasklet_obj) {
         // update tasklet list head

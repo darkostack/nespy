@@ -9,10 +9,8 @@ ns_error_t tasklet_post(instance_t *instance, tasklet_t *tasklet)
 {
     ns_error_t error = NS_ERROR_NONE;
     tasklet_t *tail = instance->tasklet_sched->tail;
-    if (tail == tasklet && tasklet->next != NULL) {
-        error = NS_ERROR_ALREADY;
-        goto exit;
-    }
+    VERIFY_OR_EXIT(tail != tasklet && tasklet->next == NULL,
+                   error = NS_ERROR_ALREADY);
     if (tail == NULL) {
         instance->tasklet_sched->head = tasklet; 
         instance->tasklet_sched->tail = tasklet;

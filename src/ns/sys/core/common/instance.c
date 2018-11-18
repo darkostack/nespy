@@ -7,7 +7,7 @@ extern tasklet_scheduler_t tasklet_scheduler_obj;
 instance_t *instance_init(void)
 {
     instance_t *inst = &instance_obj;
-    if (inst->is_initialized) goto exit;
+    VERIFY_OR_EXIT(inst->is_initialized == false);
     // Timer
     inst->timer_sched = &timer_scheduler_obj;
     inst->timer_sched->head = NULL;
