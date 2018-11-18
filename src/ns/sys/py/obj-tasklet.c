@@ -18,7 +18,7 @@ typedef struct _py_tasklet_list py_tasklet_list_obj_t;
 
 struct _py_tasklet_obj {
     mp_obj_base_t base;
-    mp_obj_t task;
+    mp_obj_t callback;
     instance_t *instance;
     tasklet_t tasklet;
     py_tasklet_obj_t *next;
@@ -40,7 +40,7 @@ static void tasklet_handler(tasklet_t *tasklet)
     for (cur = head; cur; cur = cur->next) {
         if ((tasklet_t *)&cur->tasklet == tasklet) {
             py_tasklet_list_remove(cur);
-            mp_call_function_0(cur->task);
+            mp_call_function_0(cur->callback);
             break;
         }
     }
@@ -55,16 +55,16 @@ STATIC mp_obj_t py_tasklet_make_new(const mp_obj_type_t *type,
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: invalid number of argument!"));
     }
-    enum { ARG_inst, ARG_task };
+    enum { ARG_inst, ARG_cb };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_inst, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_task, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_cb, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
     };
     // parse args
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
     // make sure we got instance and task argument
-    if (args[ARG_inst].u_obj == mp_const_none || args[ARG_task].u_obj == mp_const_none) {
+    if (args[ARG_inst].u_obj == mp_const_none || args[ARG_cb].u_obj == mp_const_none) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: please specify instance and task argument"));
     }
@@ -72,7 +72,7 @@ STATIC mp_obj_t py_tasklet_make_new(const mp_obj_type_t *type,
     py_tasklet_obj_t *tasklet = m_new_obj(py_tasklet_obj_t);
     py_instance_obj_t *inst = MP_OBJ_TO_PTR(args[ARG_inst].u_obj);
     tasklet->base.type = &py_tasklet_type;
-    tasklet->task = args[ARG_task].u_obj;
+    tasklet->callback = args[ARG_cb].u_obj;
     tasklet->instance = (instance_t *)inst->instance;
     tasklet->tasklet.handler = tasklet_handler;
     return MP_OBJ_FROM_PTR(tasklet);

@@ -1,7 +1,7 @@
 import nespy
 
-platform = nespy.Platform(id=1)
 instance = nespy.Instance()
+platform = nespy.Platform(inst=instance, id=1)
 
 def callback1():
     print("timer1 expired\r")
@@ -22,7 +22,7 @@ def main():
     timer2.start(500)
     timer3.start(1000)
     while True:
-        platform.process_drivers(instance)
+        platform.process_drivers()
 
 if __name__ == "__main__":
     main()
