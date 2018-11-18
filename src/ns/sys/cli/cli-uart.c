@@ -109,7 +109,7 @@ static void process_command(void)
 
 static void output_format(const char *fmt, va_list ap)
 {
-    char buf[CLI_UART_CLI_MAX_LEN];
+    char buf[CLI_UART_CLI_MAX_LINE_LEN];
     vsnprintf(buf, sizeof(buf), fmt, ap);
     output(buf, (uint16_t)ns_strlen(buf));
 }

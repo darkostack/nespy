@@ -3,11 +3,12 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include "ns/sys/core/core-config.h"
 
 enum {
-    CLI_UART_RX_BUF_SIZE = 512,
-    CLI_UART_TX_BUF_SIZE = 1024,
-    CLI_UART_CLI_MAX_LEN = 128,
+    CLI_UART_RX_BUF_SIZE = NS_CONFIG_CLI_RX_BUFFER_SIZE,
+    CLI_UART_TX_BUF_SIZE = NS_CONFIG_CLI_TX_BUFFER_SIZE,
+    CLI_UART_CLI_MAX_LINE_LEN = NS_CONFIG_CLI_MAX_LINE_LEN,
 };
 
 void cli_uart_init(void);

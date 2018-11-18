@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include "ns/sys/core/core-config.h"
 
 enum {
     CLI_MAX_ARGS = 32,
