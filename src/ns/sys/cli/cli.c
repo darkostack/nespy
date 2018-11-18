@@ -1,13 +1,16 @@
 #include "ns/sys/cli/cli.h"
 #include "ns/sys/cli/cli-uart.h"
 #include "ns/include/nstd.h"
+#include "genhdr/mpversion.h"
 #include <string.h>
 
 // commands
 static void command_help(int argc, char *argv[]);
+static void command_version(int argc, char *argv[]);
 
 static const cli_cmd_t commands[] = {
     { "help", "shows list of available commands", &command_help },
+    { "version", "shows software version", &command_version },
 };
 
 static void command_help(int argc, char *argv[])
@@ -17,6 +20,13 @@ static void command_help(int argc, char *argv[])
     for (unsigned int i = 0; i < (sizeof(commands) / sizeof(commands[0])); i++) {
         cli_uart_output_format("%-20s %s\r\n", commands[i].name, commands[i].desc);
     }
+}
+
+static void command_version(int argc, char *argv[])
+{
+    cli_uart_output_format("Nespy %s : build-date %s\r\n",
+                           MICROPY_GIT_TAG,
+                           MICROPY_BUILD_DATE);
 }
 
 // cli helper function
