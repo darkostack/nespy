@@ -5,8 +5,11 @@
 #include "ns/sys/core/common/timer.h"
 
 // ---- Timer objects
-// timer = nespy.Timer(inst=instance, cb=callback) # create timer object with it's callback and instance
-// timer.start(100)                                # create timer with 100ms interval
+// # create timer object with it's callback and instance
+// timer = nespy.Timer(inst=instance, cb=callback)
+// ----
+// # create timer with 100ms interval
+// timer.start(100)
 
 const mp_obj_type_t py_timer_type;
 
@@ -49,9 +52,9 @@ STATIC mp_obj_t py_timer_make_new(const mp_obj_type_t *type,
                                   size_t n_kw,
                                   const mp_obj_t *all_args)
 {
-    if (n_args == 0 && n_kw == 0) {
+    if (n_args == 0 && n_kw != 2) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                  "ns: invalid argument!"));
+                  "ns: invalid number of argument!"));
     }
     enum { ARG_inst, ARG_cb };
     static const mp_arg_t allowed_args[] = {
@@ -62,7 +65,7 @@ STATIC mp_obj_t py_timer_make_new(const mp_obj_type_t *type,
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
     // make sure we got instance and callback argument
-    if (args[ARG_inst].u_obj == mp_const_none && args[ARG_cb].u_obj == mp_const_none) {
+    if (args[ARG_inst].u_obj == mp_const_none || args[ARG_cb].u_obj == mp_const_none) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: please specify instance and callback argument"));
     }

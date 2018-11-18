@@ -3,8 +3,11 @@
 #include "ns/sys/py/obj-instance.h"
 
 // ---- Instance objects
-// instance = nespy.Instance() # create and initialize instance object
-// instance.is_initialized()   # check init status
+// # create and initialize instance object
+// instance = nespy.Instance()
+// ----
+// # check init status
+// instance.is_initialized()
 
 const mp_obj_type_t py_instance_type;
 static bool instance_obj_is_created = false;

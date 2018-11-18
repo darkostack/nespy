@@ -178,6 +178,7 @@ LIB_SRC_C += $(addprefix ns/sys/py/,\
     obj-instance.c \
     obj-platform.c \
     obj-timer.c \
+    obj-tasklet.c \
     )
 
 OBJ = $(PY_O)
