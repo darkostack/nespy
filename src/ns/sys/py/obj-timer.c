@@ -6,7 +6,7 @@
 
 // ---- Timer objects
 // # create timer object with it's callback and instance
-// timer = nespy.Timer(inst=instance, cb=callback)
+// timer = nespy.Timer(inst=instance, cb=timer_cb)
 // ----
 // # create timer with 100ms interval
 // timer.start(100)

@@ -5,11 +5,11 @@
 #include "ns/sys/core/common/tasklet.h"
 
 // ---- Tasklet objects
-// # create tasklet object with it's task function
-// tasklet = nespy.Tasklet(inst=instance, task=callback)
+// # create tasklet object with it's task function callback
+// task = nespy.Tasklet(inst=instance, cb=task_cb)
 // ----
 // # post the task to the tasklet queue
-// tasklet.post()
+// task.post()
 
 const mp_obj_type_t py_tasklet_type;
 
