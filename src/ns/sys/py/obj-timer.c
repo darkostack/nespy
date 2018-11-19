@@ -19,7 +19,7 @@ typedef struct _py_timer_list py_timer_list_obj_t;
 struct _py_timer_obj {
     mp_obj_base_t base;
     mp_obj_t callback;
-    instance_t *instance;
+    ns_instance_t *instance;
     timer_t timer;
     uint32_t interval;
     py_timer_obj_t *next;
@@ -74,7 +74,7 @@ STATIC mp_obj_t py_timer_make_new(const mp_obj_type_t *type,
     py_instance_obj_t *inst = MP_OBJ_TO_PTR(args[ARG_inst].u_obj);
     tim->base.type = &py_timer_type;
     tim->callback = args[ARG_cb].u_obj;
-    tim->instance = (instance_t *)inst->instance;
+    tim->instance = inst->instance;
     tim->interval = 0;
     tim->timer.handler = timer_handler;
     return MP_OBJ_FROM_PTR(tim);
@@ -88,7 +88,7 @@ STATIC mp_obj_t py_timer_start(mp_obj_t self_in,
     uint32_t now = ns_plat_alarm_get_now();
     // add this timer to the list & start
     py_timer_list_add(self);
-    timer_start(self->instance, (timer_t *)&self->timer, now, self->interval);
+    timer_start((void*)self->instance, (timer_t *)&self->timer, now, self->interval);
     return mp_const_none;
 }
 

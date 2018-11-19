@@ -1,8 +1,9 @@
 #ifndef NS_CORE_COMMON_TASKLET_H_
 #define NS_CORE_COMMON_TASKLET_H_
 
-#include "ns/sys/core/common/instance.h"
+#include "ns/include/error.h"
 
+typedef struct _tasklet tasklet_t;
 typedef void (*tasklet_handler_t)(tasklet_t *taklet);
 
 struct _tasklet {
@@ -10,13 +11,13 @@ struct _tasklet {
     tasklet_t *next;
 };
 
-struct _tasklet_scheduler {
+typedef struct _tasklet_scheduler {
     tasklet_t *head;
     tasklet_t *tail;
-};
+} tasklet_scheduler_t;
 
-ns_error_t tasklet_post(instance_t *instance, tasklet_t *tasklet);
-bool tasklet_are_pending(instance_t *instance);
-void tasklet_process_queued_task(instance_t *instance);
+ns_error_t tasklet_post(void *instance, tasklet_t *tasklet);
+bool tasklet_are_pending(void *instance);
+void tasklet_process_queued_task(void *instance);
 
 #endif // NS_CORE_COMMON_TASKLET_H_

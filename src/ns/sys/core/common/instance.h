@@ -9,9 +9,10 @@
 #include "ns/include/error.h"
 #include "ns/sys/core/core-config.h"
 #include "ns/sys/core/common/code_utils.h"
-#include "ns/sys/core/common/typedef.h"
 #include "ns/sys/core/common/timer.h"
 #include "ns/sys/core/common/tasklet.h"
+
+typedef struct _instance instance_t;
 
 struct _instance {
     bool is_initialized;

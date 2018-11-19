@@ -1,5 +1,5 @@
 #include "ns/include/tasklet.h"
-#include "ns/sys/core/common/tasklet.h"
+#include "ns/sys/core/common/instance.h"
 
 void ns_tasklet_process(ns_instance_t instance)
 {

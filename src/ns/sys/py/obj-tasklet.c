@@ -19,7 +19,7 @@ typedef struct _py_tasklet_list py_tasklet_list_obj_t;
 struct _py_tasklet_obj {
     mp_obj_base_t base;
     mp_obj_t callback;
-    instance_t *instance;
+    ns_instance_t *instance;
     tasklet_t tasklet;
     py_tasklet_obj_t *next;
 };
@@ -73,7 +73,7 @@ STATIC mp_obj_t py_tasklet_make_new(const mp_obj_type_t *type,
     py_instance_obj_t *inst = MP_OBJ_TO_PTR(args[ARG_inst].u_obj);
     tasklet->base.type = &py_tasklet_type;
     tasklet->callback = args[ARG_cb].u_obj;
-    tasklet->instance = (instance_t *)inst->instance;
+    tasklet->instance = inst->instance;
     tasklet->tasklet.handler = tasklet_handler;
     return MP_OBJ_FROM_PTR(tasklet);
 }
