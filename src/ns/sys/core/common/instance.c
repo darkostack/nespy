@@ -1,21 +1,17 @@
 #include "ns/sys/core/common/instance.h"
 
-instance_t instance_obj;
-extern timer_scheduler_t timer_scheduler_obj;
-extern tasklet_scheduler_t tasklet_scheduler_obj;
+static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
 
 instance_t *instance_init(void)
 {
-    instance_t *inst = &instance_obj;
+    instance_t *inst = instance_get();
     VERIFY_OR_EXIT(inst->is_initialized == false);
-    // Timer
-    inst->timer_sched = &timer_scheduler_obj;
-    inst->timer_sched->head = NULL;
-    // Tasklet
-    inst->tasklet_sched = &tasklet_scheduler_obj;
-    inst->tasklet_sched->head = NULL;
-    inst->tasklet_sched->tail = NULL;
-    // Initialized status 
+    // --- Timer
+    inst->timer_sched.head = NULL;
+    // --- Tasklet
+    inst->tasklet_sched.head = NULL;
+    inst->tasklet_sched.tail = NULL;
+
     inst->is_initialized = true;
 exit:
     return inst;
@@ -23,7 +19,8 @@ exit:
 
 instance_t *instance_get(void)
 {
-    return (instance_t *)&instance_obj;
+    void *inst = &instance_raw;
+    return (instance_t *)inst;
 }
 
 bool instance_is_initialized(instance_t *instance)

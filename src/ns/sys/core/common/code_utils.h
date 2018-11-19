@@ -3,6 +3,9 @@
 
 #define NS_ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
 
+#define NS_DEFINE_ALIGNED_VAR(name, size, align_type) \
+    align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
+
 #define SUCCESS_OR_EXIT(status) \
     do {                        \
         if ((status) != 0) {    \

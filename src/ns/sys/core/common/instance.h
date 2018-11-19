@@ -16,8 +16,8 @@ typedef struct _instance instance_t;
 
 struct _instance {
     bool is_initialized;
-    timer_scheduler_t *timer_sched;
-    tasklet_scheduler_t *tasklet_sched;
+    timer_scheduler_t timer_sched;
+    tasklet_scheduler_t tasklet_sched;
 };
 
 instance_t *instance_init(void);

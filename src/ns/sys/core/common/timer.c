@@ -2,8 +2,6 @@
 #include "ns/include/platform/alarm.h"
 #include "ns/sys/core/common/instance.h"
 
-timer_scheduler_t timer_scheduler_obj;
-
 static bool is_strictly_before(uint32_t time_a, uint32_t time_b);
 static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now);
 static void alarm_set(void *instance);
@@ -26,10 +24,10 @@ static void timer_add(void *instance, timer_t *timer)
 {
     timer_remove(instance, timer);
     instance_t *inst = (instance_t *)instance;
-    timer_t *head = inst->timer_sched->head;
+    timer_t *head = inst->timer_sched.head;
     if (head == NULL) {
         // update timer scheduler head
-        inst->timer_sched->head = timer;
+        inst->timer_sched.head = timer;
         timer->next = NULL;
         alarm_set(inst);
     } else {
@@ -43,7 +41,7 @@ static void timer_add(void *instance, timer_t *timer)
                 } else {
                     timer->next = head;
                     // update timer scheduler head
-                    inst->timer_sched->head = timer;
+                    inst->timer_sched.head = timer;
                     alarm_set(inst);
                 }
                 break;
@@ -61,10 +59,10 @@ static void timer_remove(void *instance, timer_t *timer)
 {
     VERIFY_OR_EXIT(timer->next != timer);
     instance_t *inst = (instance_t *)instance;
-    timer_t *head = inst->timer_sched->head;
+    timer_t *head = inst->timer_sched.head;
     if (head == timer) {
         // update timer scheduler head
-        inst->timer_sched->head = timer->next;
+        inst->timer_sched.head = timer->next;
         alarm_set(inst);
     } else {
         for (timer_t *cur = head; cur; cur = cur->next) {
@@ -82,7 +80,7 @@ exit:
 static void timer_process(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
-    timer_t *timer = inst->timer_sched->head;
+    timer_t *timer = inst->timer_sched.head;
     if (timer) {
         if (!is_strictly_before(alarm_get_now(), timer->firetime)) {
             timer_remove(inst, timer);
@@ -140,7 +138,7 @@ static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
 static void alarm_set(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
-    timer_t *head = inst->timer_sched->head;
+    timer_t *head = inst->timer_sched.head;
     if (head == NULL) {
         alarm_stop();
     } else {
