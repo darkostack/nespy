@@ -5,14 +5,14 @@
 
 // --- message pool functions
 static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority);
+static ns_error_t msg_set_length(message_t *message, uint16_t length);
+static uint16_t msg_get_length(message_t *message);
 
 // --- private functions
-static ns_error_t msg_set_length(instance_t *instance, buffer_t *message, uint16_t length);
 static uint16_t msg_get_free_buffer_count(instance_t *instance);
 static ns_error_t msg_reclaim_buffers(instance_t *instance, int num_buffers, uint8_t priority);
 static buffer_t *msg_new_buffer(instance_t *instance, uint8_t priority);
 static uint16_t msg_get_reserved_len(buffer_t *message);
-static uint16_t msg_get_length(buffer_t *message);
 static uint8_t msg_get_priority(buffer_t *message);
 static ns_error_t msg_resize(instance_t *instance, buffer_t *message, uint16_t length);
 static void msg_free_buffers(instance_t *instance, buffer_t *buffer);
@@ -32,39 +32,40 @@ void message_pool_make_new(void *instance)
     inst->message_pool.new = msg_pool_new;
 }
 
+// --- message pool functions
 static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
-
-    instance_t *inst = instance_get();
+    instance_t *instance = instance_get();
     buffer_t *message = NULL;
 
-    VERIFY_OR_EXIT((message = msg_new_buffer(inst, priority)) != NULL);
+    VERIFY_OR_EXIT((message = msg_new_buffer(instance, priority)) != NULL);
 
     memset(message, 0, sizeof(*message));
-    message->buffer.head.info.message_pool = (message_pool_t *)&inst->message_pool;
+    message->buffer.head.info.message_pool = (message_pool_t *)&instance->message_pool;
     message->buffer.head.info.type = type;
     message->buffer.head.info.reserved = reserved;
     // TODO: message set priority!
-    VERIFY_OR_EXIT((error = msg_set_length(inst, message, 0)) == NS_ERROR_NONE);
+    VERIFY_OR_EXIT((error = msg_set_length((message_t *)message, 0)) == NS_ERROR_NONE);
 
-    printf("free buffers: %u\r\n", inst->message_pool.num_free_buffers);
+    printf("free buffers: %u\r\n", instance->message_pool.num_free_buffers);
 
 exit:
     if (error != NS_ERROR_NONE) {
-        msg_free_buffers(inst, message);
+        msg_free_buffers(instance, message);
         message = NULL;
     }
     return (message_t *)message;
 }
 
-// --- private functions
-static ns_error_t msg_set_length(instance_t *instance, buffer_t *message, uint16_t length)
+static ns_error_t msg_set_length(message_t *message, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
+    instance_t *instance = instance_get();
+    buffer_t *msg = (buffer_t *)message;
 
-    uint16_t total_len_request = msg_get_reserved_len(message) + length;
-    uint16_t total_len_current = msg_get_reserved_len(message) + msg_get_length(message);
+    uint16_t total_len_request = msg_get_reserved_len(msg) + length;
+    uint16_t total_len_current = msg_get_reserved_len(msg) + msg_get_length((void *)msg);
     int bufs = 0;
 
     if (total_len_request > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
@@ -75,14 +76,22 @@ static ns_error_t msg_set_length(instance_t *instance, buffer_t *message, uint16
         bufs -= (((total_len_current - MESSAGE_HEAD_BUFFER_DATA_SIZE) - 1) / MESSAGE_BUFFER_DATA_SIZE) + 1;
     }
 
-    VERIFY_OR_EXIT((error = msg_reclaim_buffers(instance, bufs, msg_get_priority(message))) == NS_ERROR_NONE);
-    VERIFY_OR_EXIT((error = msg_resize(instance, message, total_len_request)) == NS_ERROR_NONE);
+    VERIFY_OR_EXIT((error = msg_reclaim_buffers(instance, bufs, msg_get_priority(msg))) == NS_ERROR_NONE);
+    VERIFY_OR_EXIT((error = msg_resize(instance, msg, total_len_request)) == NS_ERROR_NONE);
 
-    message->buffer.head.info.length = length;
+    msg->buffer.head.info.length = length;
+
 exit:
     return error;
 }
 
+static uint16_t msg_get_length(message_t *message)
+{
+    buffer_t *msg = (buffer_t *)message;
+    return msg->buffer.head.info.length;
+}
+
+// --- private functions
 static uint16_t msg_get_free_buffer_count(instance_t *instance)
 {
     return instance->message_pool.num_free_buffers;
@@ -115,11 +124,6 @@ exit:
 static uint16_t msg_get_reserved_len(buffer_t *message)
 {
     return message->buffer.head.info.reserved;
-}
-
-static uint16_t msg_get_length(buffer_t *message)
-{
-    return message->buffer.head.info.length;
 }
 
 static uint8_t msg_get_priority(buffer_t *message)

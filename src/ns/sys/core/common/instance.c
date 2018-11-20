@@ -27,6 +27,10 @@ instance_t *instance_init(void)
     inst->get_tasklet_scheduler = get_tasklet_scheduler;
     inst->get_message_pool = get_message_pool;
 
+    // --- TODO: message test
+    message_t *message = inst->get_message_pool().new(0, 0, 0);
+    (void)message;
+
     inst->is_initialized = true;
 exit:
     return inst;

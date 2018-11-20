@@ -48,8 +48,13 @@ struct _message_pool {
     uint16_t num_free_buffers;
     buffer_t buffers[MESSAGE_NUM_BUFFERS];
     buffer_t *free_buffers;
-    // message pool driver
+    // --- message pool functions
     message_t (* new)(uint8_t type, uint16_t reserved, uint8_t priority);
+    ns_error_t (* set_length)(message_t *message, uint16_t length);
+    uint16_t (* get_length)(message_t *message);
+    // TODO: uint16_t (* write)
+    // TODO: uint16_t (* read)
+    // TODO: void (* free)(void);
 };
 
 void message_pool_make_new(void *instance);
