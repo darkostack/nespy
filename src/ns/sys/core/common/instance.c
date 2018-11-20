@@ -3,8 +3,9 @@
 static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
 
 // --- instance get functions
-static timer_scheduler_t get_timer_sched(void);
-static tasklet_scheduler_t get_tasklet_sched(void);
+static timer_scheduler_t get_timer_scheduler(void);
+static tasklet_scheduler_t get_tasklet_scheduler(void);
+static message_pool_t get_message_pool(void);
 
 instance_t *instance_init(void)
 {
@@ -22,8 +23,9 @@ instance_t *instance_init(void)
     message_pool_make_new(inst);
 
     // --- Instance get functions
-    inst->get_timer_scheduler = get_timer_sched;
-    inst->get_tasklet_scheduler = get_tasklet_sched;
+    inst->get_timer_scheduler = get_timer_scheduler;
+    inst->get_tasklet_scheduler = get_tasklet_scheduler;
+    inst->get_message_pool = get_message_pool;
 
     inst->is_initialized = true;
 exit:
@@ -37,14 +39,20 @@ instance_t *instance_get(void)
 }
 
 // --- instance get functions
-static timer_scheduler_t get_timer_sched(void)
+static timer_scheduler_t get_timer_scheduler(void)
 {
     instance_t *inst = instance_get();
     return inst->timer_sched;
 }
 
-static tasklet_scheduler_t get_tasklet_sched(void)
+static tasklet_scheduler_t get_tasklet_scheduler(void)
 {
     instance_t *inst = instance_get();
     return inst->tasklet_sched;
+}
+
+static message_pool_t get_message_pool(void)
+{
+    instance_t *inst = instance_get();
+    return inst->message_pool;
 }

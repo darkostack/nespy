@@ -23,6 +23,7 @@ struct _instance {
     // --- instance objects
     timer_scheduler_t (*get_timer_scheduler)(void);
     tasklet_scheduler_t (*get_tasklet_scheduler)(void);
+    message_pool_t (*get_message_pool)(void);
 };
 
 instance_t *instance_init(void);
