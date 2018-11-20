@@ -1,6 +1,7 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "ns/sys/py/obj-instance.h"
+#include "ns/sys/core/common/instance.h"
 #include "ns/include/platform/alarm.h"
 #include "ns/sys/core/common/timer.h"
 
@@ -88,7 +89,8 @@ STATIC mp_obj_t py_timer_start(mp_obj_t self_in,
     uint32_t now = ns_plat_alarm_get_now();
     // add this timer to the list & start
     py_timer_list_add(self);
-    timer_start((void*)self->instance, (timer_t *)&self->timer, now, self->interval);
+    instance_t *inst = (instance_t *)self->instance;
+    inst->get_timer_scheduler().start(inst, (timer_t *)&self->timer, now, self->interval);
     return mp_const_none;
 }
 

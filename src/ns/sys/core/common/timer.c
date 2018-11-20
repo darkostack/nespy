@@ -9,11 +9,20 @@ static void alarm_start_at(uint32_t t0, uint32_t dt);
 static void alarm_stop(void);
 static uint32_t alarm_get_now(void);
 
+static void timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt);
 static void timer_add(void *instance, timer_t *timer);
 static void timer_remove(void *instance,  timer_t *timer);
 static void timer_process(void *instance);
 
-void timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt)
+void timer_scheduler_make_new(void *instance)
+{
+    instance_t *inst = (instance_t *)instance;
+    inst->timer_sched.head = NULL;
+    // assign timer scheduler driver
+    inst->timer_sched.start = timer_start;
+}
+
+static void timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt)
 {
     ns_assert(dt <= TIMER_MAX_DT);
     timer->firetime = t0 + dt;
@@ -165,9 +174,9 @@ static uint32_t alarm_get_now(void)
 
 void ns_plat_alarm_fired(ns_instance_t instance)
 {
-    void *inst = (void *)instance;
-    VERIFY_OR_EXIT(instance_is_initialized(inst));
-    timer_process(inst);
+    instance_t *inst = (instance_t *)instance;
+    VERIFY_OR_EXIT(inst->is_initialized);
+    timer_process(instance);
 exit:
     return;
 }

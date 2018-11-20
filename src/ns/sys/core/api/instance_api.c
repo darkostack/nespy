@@ -18,5 +18,6 @@ ns_instance_t ns_instance_get(void)
 
 bool ns_instance_is_initialized(ns_instance_t instance)
 {
-    return instance_is_initialized((instance_t *)instance);
+    instance_t *inst = (instance_t *)instance;
+    return inst->is_initialized;
 }
