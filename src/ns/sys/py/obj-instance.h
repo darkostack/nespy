@@ -3,6 +3,7 @@
 
 #include "ns/include/instance.h"
 #include "ns/sys/core/common/code_utils.h"
+#include "ns/sys/core/common/instance.h"
 
 typedef struct _py_instance_obj_t {
     mp_obj_base_t base;

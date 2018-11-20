@@ -6,8 +6,11 @@
 ns_instance_t ns_instance_init(void)
 {
     ns_instance_t instance = (ns_instance_t)instance_init();
+
+    // --- initialize nespy module
     cli_uart_init();
     cli_commands_init();
+
     return instance;
 }
 

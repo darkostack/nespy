@@ -2,43 +2,45 @@
 #include "ns/include/platform/alarm.h"
 #include "ns/sys/core/common/instance.h"
 
+// --- timer scheduler functions
+static void timer_start(timer_t *timer, uint32_t t0, uint32_t dt);
+
+// --- private functions
+static void timer_add(instance_t *instance, timer_t *timer);
+static void timer_remove(instance_t *instance,  timer_t *timer);
+static void timer_process(instance_t *instance);
 static bool is_strictly_before(uint32_t time_a, uint32_t time_b);
 static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now);
-static void alarm_set(void *instance);
+static void alarm_set(instance_t *instance);
 static void alarm_start_at(uint32_t t0, uint32_t dt);
 static void alarm_stop(void);
 static uint32_t alarm_get_now(void);
-
-static void timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt);
-static void timer_add(void *instance, timer_t *timer);
-static void timer_remove(void *instance,  timer_t *timer);
-static void timer_process(void *instance);
 
 void timer_scheduler_make_new(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
     inst->timer_sched.head = NULL;
-    // assign timer scheduler driver
+    // timer scheduler functions
     inst->timer_sched.start = timer_start;
 }
 
-static void timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt)
+static void timer_start(timer_t *timer, uint32_t t0, uint32_t dt)
 {
+    instance_t *inst = instance_get();
     ns_assert(dt <= TIMER_MAX_DT);
     timer->firetime = t0 + dt;
-    timer_add((instance_t *)instance, timer);
+    timer_add(inst, timer);
 }
 
-static void timer_add(void *instance, timer_t *timer)
+static void timer_add(instance_t *instance, timer_t *timer)
 {
     timer_remove(instance, timer);
-    instance_t *inst = (instance_t *)instance;
-    timer_t *head = inst->timer_sched.head;
+    timer_t *head = instance->timer_sched.head;
     if (head == NULL) {
         // update timer scheduler head
-        inst->timer_sched.head = timer;
+        instance->timer_sched.head = timer;
         timer->next = NULL;
-        alarm_set(inst);
+        alarm_set(instance);
     } else {
         timer_t *prev = NULL;
         timer_t *cur;
@@ -50,8 +52,8 @@ static void timer_add(void *instance, timer_t *timer)
                 } else {
                     timer->next = head;
                     // update timer scheduler head
-                    inst->timer_sched.head = timer;
-                    alarm_set(inst);
+                    instance->timer_sched.head = timer;
+                    alarm_set(instance);
                 }
                 break;
             }
@@ -64,15 +66,14 @@ static void timer_add(void *instance, timer_t *timer)
     }
 }
 
-static void timer_remove(void *instance, timer_t *timer)
+static void timer_remove(instance_t *instance, timer_t *timer)
 {
     VERIFY_OR_EXIT(timer->next != timer);
-    instance_t *inst = (instance_t *)instance;
-    timer_t *head = inst->timer_sched.head;
+    timer_t *head = instance->timer_sched.head;
     if (head == timer) {
         // update timer scheduler head
-        inst->timer_sched.head = timer->next;
-        alarm_set(inst);
+        instance->timer_sched.head = timer->next;
+        alarm_set(instance);
     } else {
         for (timer_t *cur = head; cur; cur = cur->next) {
             if (cur->next == timer) {
@@ -86,19 +87,18 @@ exit:
     return;
 }
 
-static void timer_process(void *instance)
+static void timer_process(instance_t *instance)
 {
-    instance_t *inst = (instance_t *)instance;
-    timer_t *timer = inst->timer_sched.head;
+    timer_t *timer = instance->timer_sched.head;
     if (timer) {
         if (!is_strictly_before(alarm_get_now(), timer->firetime)) {
-            timer_remove(inst, timer);
+            timer_remove(instance, timer);
             timer->handler(timer);
         } else {
-            alarm_set(inst);
+            alarm_set(instance);
         }
     } else {
-        alarm_set(inst);
+        alarm_set(instance);
     }
 }
 
@@ -144,10 +144,9 @@ static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
     return retval;
 }
 
-static void alarm_set(void *instance)
+static void alarm_set(instance_t *instance)
 {
-    instance_t *inst = (instance_t *)instance;
-    timer_t *head = inst->timer_sched.head;
+    timer_t *head = instance->timer_sched.head;
     if (head == NULL) {
         alarm_stop();
     } else {
@@ -176,7 +175,7 @@ void ns_plat_alarm_fired(ns_instance_t instance)
 {
     instance_t *inst = (instance_t *)instance;
     VERIFY_OR_EXIT(inst->is_initialized);
-    timer_process(instance);
+    timer_process(inst);
 exit:
     return;
 }

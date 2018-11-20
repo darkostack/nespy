@@ -49,7 +49,7 @@ struct _message_pool {
     buffer_t buffers[MESSAGE_NUM_BUFFERS];
     buffer_t *free_buffers;
     // message pool driver
-    message_t (* create)(void *instance, uint8_t type, uint16_t reserved, uint8_t priority);
+    message_t (* new)(uint8_t type, uint16_t reserved, uint8_t priority);
 };
 
 void message_pool_make_new(void *instance);

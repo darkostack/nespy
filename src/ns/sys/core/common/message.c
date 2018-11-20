@@ -3,17 +3,19 @@
 #include <string.h>
 #include <stdio.h>
 
-static message_t  msg_pool_create(void *instance, uint8_t type, uint16_t reserved, uint8_t priority);
+// --- message pool functions
+static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority);
 
+// --- private functions
 static ns_error_t msg_set_length(instance_t *instance, buffer_t *message, uint16_t length);
-static uint16_t   msg_get_free_buffer_count(instance_t *instance);
+static uint16_t msg_get_free_buffer_count(instance_t *instance);
 static ns_error_t msg_reclaim_buffers(instance_t *instance, int num_buffers, uint8_t priority);
-static buffer_t * msg_new_buffer(instance_t *instance, uint8_t priority);
-static uint16_t   msg_get_reserved_len(buffer_t *message);
-static uint16_t   msg_get_length(buffer_t *message);
-static uint8_t    msg_get_priority(buffer_t *message);
+static buffer_t *msg_new_buffer(instance_t *instance, uint8_t priority);
+static uint16_t msg_get_reserved_len(buffer_t *message);
+static uint16_t msg_get_length(buffer_t *message);
+static uint8_t msg_get_priority(buffer_t *message);
 static ns_error_t msg_resize(instance_t *instance, buffer_t *message, uint16_t length);
-static void       msg_free_buffers(instance_t *instance, buffer_t *buffer);
+static void msg_free_buffers(instance_t *instance, buffer_t *buffer);
 
 void message_pool_make_new(void *instance)
 {
@@ -25,15 +27,16 @@ void message_pool_make_new(void *instance)
     }
     inst->message_pool.buffers[MESSAGE_NUM_BUFFERS - 1].next = NULL;
     inst->message_pool.num_free_buffers = MESSAGE_NUM_BUFFERS;
-    // assign message poll driver
-    inst->message_pool.create = msg_pool_create;
+
+    // --- message pool functions
+    inst->message_pool.new = msg_pool_new;
 }
 
-static message_t msg_pool_create(void *instance, uint8_t type, uint16_t reserved, uint8_t priority)
+static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
 
-    instance_t *inst = (instance_t *)instance;
+    instance_t *inst = instance_get();
     buffer_t *message = NULL;
 
     VERIFY_OR_EXIT((message = msg_new_buffer(inst, priority)) != NULL);
@@ -55,6 +58,7 @@ exit:
     return (message_t *)message;
 }
 
+// --- private functions
 static ns_error_t msg_set_length(instance_t *instance, buffer_t *message, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
