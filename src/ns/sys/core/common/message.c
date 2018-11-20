@@ -1,4 +1,5 @@
 #include "ns/include/error.h"
+#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
 #include <string.h>
 #include <stdio.h>
@@ -7,12 +8,15 @@
 static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority);
 static ns_error_t msg_set_length(message_t *message, uint16_t length);
 static uint16_t msg_get_length(message_t *message);
+static int msg_write(message_t *message, uint16_t offset, uint16_t length, void *buf);
+static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *buf);
+static void msg_free(message_t *message);
 
 // --- private functions
 static uint16_t msg_get_free_buffer_count(instance_t *instance);
 static ns_error_t msg_reclaim_buffers(instance_t *instance, int num_buffers, uint8_t priority);
 static buffer_t *msg_new_buffer(instance_t *instance, uint8_t priority);
-static uint16_t msg_get_reserved_len(buffer_t *message);
+static uint16_t msg_get_reserved(buffer_t *message);
 static uint8_t msg_get_priority(buffer_t *message);
 static ns_error_t msg_resize(instance_t *instance, buffer_t *message, uint16_t length);
 static void msg_free_buffers(instance_t *instance, buffer_t *buffer);
@@ -30,6 +34,11 @@ void message_pool_make_new(void *instance)
 
     // --- message pool functions
     inst->message_pool.new = msg_pool_new;
+    inst->message_pool.set_length = msg_set_length;
+    inst->message_pool.get_length = msg_get_length;
+    inst->message_pool.write = msg_write;
+    inst->message_pool.read = msg_read;
+    inst->message_pool.free = msg_free;
 }
 
 // --- message pool functions
@@ -48,8 +57,6 @@ static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority)
     // TODO: message set priority!
     VERIFY_OR_EXIT((error = msg_set_length((message_t *)message, 0)) == NS_ERROR_NONE);
 
-    printf("free buffers: %u\r\n", instance->message_pool.num_free_buffers);
-
 exit:
     if (error != NS_ERROR_NONE) {
         msg_free_buffers(instance, message);
@@ -64,8 +71,8 @@ static ns_error_t msg_set_length(message_t *message, uint16_t length)
     instance_t *instance = instance_get();
     buffer_t *msg = (buffer_t *)message;
 
-    uint16_t total_len_request = msg_get_reserved_len(msg) + length;
-    uint16_t total_len_current = msg_get_reserved_len(msg) + msg_get_length((void *)msg);
+    uint16_t total_len_request = msg_get_reserved(msg) + length;
+    uint16_t total_len_current = msg_get_reserved(msg) + msg_get_length((void *)msg);
     int bufs = 0;
 
     if (total_len_request > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
@@ -89,6 +96,131 @@ static uint16_t msg_get_length(message_t *message)
 {
     buffer_t *msg = (buffer_t *)message;
     return msg->buffer.head.info.length;
+}
+
+static int msg_write(message_t *message, uint16_t offset, uint16_t length, void *buf)
+{
+    buffer_t *msg = (buffer_t *)message;
+    buffer_t *cur_buffer;
+    uint16_t bytes_copied = 0;
+    uint16_t bytes_to_copy;
+
+    ns_assert(offset + length <= msg_get_length((message_t *)msg));
+
+    if (offset + length >= msg_get_length((message_t *)msg)) {
+        length = msg_get_length((message_t *)msg) - offset;
+    }
+
+    offset += msg_get_reserved(msg);
+
+    // special case first buffer
+    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_copy = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
+        if (bytes_to_copy > length) {
+            bytes_to_copy = length;
+        }
+        memcpy(msg->buffer.head.data + offset, buf, bytes_to_copy);
+        length -= bytes_to_copy;
+        bytes_copied += bytes_to_copy;
+        buf = (uint8_t *)buf + bytes_to_copy;
+        offset = 0;
+    } else {
+        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
+    }
+
+    // advance to offset
+    cur_buffer = msg->next;
+
+    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
+        ns_assert(cur_buffer != NULL);
+        cur_buffer = cur_buffer->next;
+        offset -= MESSAGE_BUFFER_DATA_SIZE;
+    }
+
+    // begin copy
+    while (length > 0) {
+        ns_assert(cur_buffer != NULL);
+        bytes_to_copy = MESSAGE_BUFFER_DATA_SIZE - offset;
+        if (bytes_to_copy > length) {
+            bytes_to_copy = length;
+        }
+        memcpy(cur_buffer->buffer.data + offset, buf, bytes_to_copy);
+        length -= bytes_to_copy;
+        bytes_copied += bytes_to_copy;
+        buf = (uint8_t *)buf + bytes_to_copy;
+
+        cur_buffer = cur_buffer->next;
+        offset = 0;
+    }
+
+    return bytes_copied;
+}
+
+static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *buf)
+{
+    buffer_t *msg = (buffer_t *)message;
+    buffer_t *cur_buffer;
+    uint16_t bytes_copied = 0;
+    uint16_t bytes_to_copy;
+
+    if (offset >= msg_get_length((message_t *)msg)) {
+        EXIT_NOW();
+    }
+
+    if (offset + length >= msg_get_length((message_t *)msg)) {
+        length = msg_get_length((message_t *)msg) - offset;
+    }
+
+    offset += msg_get_reserved(msg);
+
+    // special case first buffer
+    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_copy = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
+        if (bytes_to_copy > length) {
+            bytes_to_copy = length;
+        }
+        memcpy(buf, msg->buffer.head.data + offset, bytes_to_copy);
+        length -= bytes_to_copy;
+        bytes_copied += bytes_to_copy;
+        buf = (uint8_t *)buf + bytes_to_copy;
+        offset = 0;
+    } else {
+        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
+    }
+
+    // advance to offset
+    cur_buffer = msg->next;
+
+    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
+        ns_assert(cur_buffer != NULL);
+        cur_buffer = cur_buffer->next;
+        offset -= MESSAGE_BUFFER_DATA_SIZE;
+    }
+
+    // begin copy
+    while (length > 0) {
+        ns_assert(cur_buffer != NULL);
+        bytes_to_copy = MESSAGE_BUFFER_DATA_SIZE - offset;
+        if (bytes_to_copy > length) {
+            bytes_to_copy = length;
+        }
+        memcpy(buf, cur_buffer->buffer.data + offset, bytes_to_copy);
+        length -= bytes_to_copy;
+        bytes_copied += bytes_to_copy;
+        buf = (uint8_t *)buf + bytes_to_copy;
+
+        cur_buffer = cur_buffer->next;
+        offset = 0;
+    }
+
+exit:
+    return bytes_copied;
+}
+
+static void msg_free(message_t *message)
+{
+    instance_t *inst = instance_get();
+    msg_free_buffers(inst, (buffer_t *)message);
 }
 
 // --- private functions
@@ -121,7 +253,7 @@ exit:
     return buffer;
 }
 
-static uint16_t msg_get_reserved_len(buffer_t *message)
+static uint16_t msg_get_reserved(buffer_t *message)
 {
     return message->buffer.head.info.reserved;
 }
@@ -168,4 +300,29 @@ static void msg_free_buffers(instance_t *instance, buffer_t *buffer)
         instance->message_pool.num_free_buffers++;
         buffer = tmp_buffer;
     }
+}
+
+// -------------------------------------------------------------- TEST FUNCTIONS
+void message_test(void)
+{
+    instance_t *inst = instance_get();
+    uint8_t write_buffer[1024];
+    uint8_t read_buffer[1024];
+    extern uint32_t ns_plat_random_get(void);
+    for (unsigned i = 0; i < sizeof(write_buffer); i++) {
+        write_buffer[i] = (uint8_t)ns_plat_random_get();
+    }
+    message_t *message = inst->get_message_pool().new(0, 0, 0);
+    printf("num of free buffers: %u\r\n", inst->get_message_pool().num_free_buffers);
+    inst->get_message_pool().set_length(message, sizeof(write_buffer));
+    inst->get_message_pool().write(message, 0, sizeof(write_buffer), write_buffer);
+    inst->get_message_pool().read(message, 0, sizeof(read_buffer), read_buffer);
+    if (memcmp(write_buffer, read_buffer, sizeof(write_buffer)) == 0) {
+        printf("message write and read test SUCCESS\r\n");
+    } else {
+        printf("message write and read test FAILED\r\n");
+    }
+    printf("message get length: %u\r\n", inst->get_message_pool().get_length(message));
+    inst->get_message_pool().free(message);
+    printf("freed message, num of free buffers now: %u\r\n", inst->get_message_pool().num_free_buffers);
 }

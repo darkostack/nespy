@@ -52,9 +52,9 @@ struct _message_pool {
     message_t (* new)(uint8_t type, uint16_t reserved, uint8_t priority);
     ns_error_t (* set_length)(message_t *message, uint16_t length);
     uint16_t (* get_length)(message_t *message);
-    // TODO: uint16_t (* write)
-    // TODO: uint16_t (* read)
-    // TODO: void (* free)(void);
+    int (* write)(message_t *message, uint16_t offset, uint16_t length, void *buf);
+    int (* read)(message_t *message, uint16_t offset, uint16_t length, void *buf);
+    void (* free)(message_t *message);
 };
 
 void message_pool_make_new(void *instance);
