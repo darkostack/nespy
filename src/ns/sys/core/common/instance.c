@@ -27,6 +27,12 @@ instance_t *instance_init(void)
     inst->get_tasklet_scheduler = get_tasklet_scheduler;
     inst->get_message_pool = get_message_pool;
 
+    extern void message_write_read_test(void);
+    message_write_read_test();
+
+    extern void message_queue_test(void);
+    message_queue_test();
+
     inst->is_initialized = true;
 
 exit:
