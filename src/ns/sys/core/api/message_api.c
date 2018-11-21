@@ -22,13 +22,13 @@ ns_message_set_length(ns_message_t message, uint16_t length)
 uint16_t
 ns_message_get_offset(ns_message_t message)
 {
-
+    return message_get_offset((message_t)message);
 }
 
 ns_error_t
 ns_message_set_offset(ns_message_t message, uint16_t offset)
 {
-
+    return message_set_offset((message_t)message, offset);
 }
 
 bool

@@ -111,6 +111,12 @@ message_set_length(message_t message, uint16_t length);
 uint16_t
 message_get_length(message_t message);
 
+ns_error_t
+message_set_offset(message_t message, uint16_t offset);
+
+uint16_t
+message_get_offset(message_t message);
+
 int
 message_write(message_t message, uint16_t offset, const void *buf, uint16_t length);
 

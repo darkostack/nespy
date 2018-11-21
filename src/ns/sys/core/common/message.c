@@ -203,6 +203,28 @@ message_get_length(message_t message)
     return msgbuf->buffer.head.info.length;
 }
 
+ns_error_t
+message_set_offset(message_t message, uint16_t offset)
+{
+    ns_error_t  error = NS_ERROR_NONE;
+    buffer_t *msgbuf = (buffer_t *)message;
+
+    ns_assert(offset <= message_get_length((message_t)msgbuf));
+    VERIFY_OR_EXIT(offset <= message_get_length((message_t)msgbuf),
+                   error = NS_ERROR_INVALID_ARGS);
+
+    msgbuf->buffer.head.info.offset = offset;
+
+exit:
+    return error;
+}
+
+uint16_t
+message_get_offset(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.offset;
+}
+
 int
 message_write(message_t message, uint16_t offset, const void *buf, uint16_t length)
 {
