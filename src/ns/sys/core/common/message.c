@@ -151,13 +151,13 @@ message_resize(message_t message, uint16_t length)
             cur_buffer->next = (void *)msg_new_buffer(message_get_priority((message_t)msgbuf));
             VERIFY_OR_EXIT(cur_buffer->next != NULL, error = NS_ERROR_NO_BUFS);
         }
-        cur_buffer = cur_buffer->next;
+        cur_buffer = (buffer_t *)cur_buffer->next;
         cur_length += MSG_HEAD_BUFFER_DATA_SIZE;
     }
 
     // remove buffers
     last_buffer = cur_buffer;
-    cur_buffer = cur_buffer->next;
+    cur_buffer = (buffer_t *)cur_buffer->next;
     last_buffer->next = NULL;
 
     message_free((message_t)cur_buffer);
@@ -235,11 +235,11 @@ message_write(message_t message, uint16_t offset, uint16_t length, void *buf)
     }
 
     // advance to offset
-    cur_buffer = msgbuf->next;
+    cur_buffer = (buffer_t *)msgbuf->next;
 
     while (offset >= MSG_BUFFER_DATA_SIZE) {
         ns_assert(cur_buffer != NULL);
-        cur_buffer = cur_buffer->next;
+        cur_buffer = (buffer_t *)cur_buffer->next;
         offset -= MSG_BUFFER_DATA_SIZE;
     }
 
@@ -255,7 +255,7 @@ message_write(message_t message, uint16_t offset, uint16_t length, void *buf)
         bytes_copied += bytes_to_copy;
         buf = (uint8_t *)buf + bytes_to_copy;
 
-        cur_buffer = cur_buffer->next;
+        cur_buffer = (buffer_t *)cur_buffer->next;
         offset = 0;
     }
 
@@ -296,11 +296,11 @@ message_read(message_t message, uint16_t offset, uint16_t length, void *buf)
     }
 
     // advance to offset
-    cur_buffer = msgbuf->next;
+    cur_buffer = (buffer_t *)msgbuf->next;
 
     while (offset >= MSG_BUFFER_DATA_SIZE) {
         ns_assert(cur_buffer != NULL);
-        cur_buffer = cur_buffer->next;
+        cur_buffer = (buffer_t *)cur_buffer->next;
         offset -= MSG_BUFFER_DATA_SIZE;
     }
 
@@ -316,7 +316,7 @@ message_read(message_t message, uint16_t offset, uint16_t length, void *buf)
         bytes_copied += bytes_to_copy;
         buf = (uint8_t *)buf + bytes_to_copy;
 
-        cur_buffer = cur_buffer->next;
+        cur_buffer = (buffer_t *)cur_buffer->next;
         offset = 0;
     }
 
@@ -330,8 +330,8 @@ message_free(message_t message)
     instance_t *inst = instance_get();
     buffer_t *msgbuf = (buffer_t *)message;
     while (msgbuf != NULL) {
-        buffer_t *tmp_buffer = msgbuf->next;
-        msgbuf->next = inst->message_pool.free_buffers;
+        buffer_t *tmp_buffer = (buffer_t *)msgbuf->next;
+        msgbuf->next = (void *)inst->message_pool.free_buffers;
         inst->message_pool.free_buffers = msgbuf;
         inst->message_pool.num_free_buffers++;
         msgbuf = tmp_buffer;
