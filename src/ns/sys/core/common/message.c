@@ -15,11 +15,10 @@ static void msg_free(message_t *message);
 // --- private functions
 static uint16_t msg_get_free_buffer_count(instance_t *instance);
 static ns_error_t msg_reclaim_buffers(instance_t *instance, int num_buffers, uint8_t priority);
-static buffer_t *msg_new_buffer(instance_t *instance, uint8_t priority);
-static uint16_t msg_get_reserved(buffer_t *message);
-static uint8_t msg_get_priority(buffer_t *message);
-static ns_error_t msg_resize(instance_t *instance, buffer_t *message, uint16_t length);
-static void msg_free_buffers(instance_t *instance, buffer_t *buffer);
+static message_t *msg_new_buffer(instance_t *instance, uint8_t priority);
+static uint16_t msg_get_reserved(message_t *message);
+static uint8_t msg_get_priority(message_t *message);
+static ns_error_t msg_resize(instance_t *instance, message_t *message, uint16_t length);
 
 void message_pool_make_new(void *instance)
 {
@@ -45,34 +44,34 @@ void message_pool_make_new(void *instance)
 static message_t msg_pool_new(uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
-    instance_t *instance = instance_get();
-    buffer_t *message = NULL;
+    instance_t *inst = instance_get();
+    buffer_t *msgbuf = NULL;
 
-    VERIFY_OR_EXIT((message = msg_new_buffer(instance, priority)) != NULL);
+    VERIFY_OR_EXIT((msgbuf = (buffer_t *)msg_new_buffer(inst, priority)) != NULL);
 
-    memset(message, 0, sizeof(*message));
-    message->buffer.head.info.message_pool = (message_pool_t *)&instance->message_pool;
-    message->buffer.head.info.type = type;
-    message->buffer.head.info.reserved = reserved;
+    memset(msgbuf, 0, sizeof(*msgbuf));
+    msgbuf->buffer.head.info.message_pool = (message_pool_t *)&inst->message_pool;
+    msgbuf->buffer.head.info.type = type;
+    msgbuf->buffer.head.info.reserved = reserved;
     // TODO: message set priority!
-    VERIFY_OR_EXIT((error = msg_set_length((message_t *)message, 0)) == NS_ERROR_NONE);
+    VERIFY_OR_EXIT((error = msg_set_length((message_t *)msgbuf, 0)) == NS_ERROR_NONE);
 
 exit:
     if (error != NS_ERROR_NONE) {
-        msg_free_buffers(instance, message);
-        message = NULL;
+        msg_free((message_t *)msgbuf);
+        msgbuf = NULL;
     }
-    return (message_t *)message;
+    return (message_t *)msgbuf;
 }
 
 static ns_error_t msg_set_length(message_t *message, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
-    instance_t *instance = instance_get();
-    buffer_t *msg = (buffer_t *)message;
+    instance_t *inst = instance_get();
+    buffer_t *msgbuf = (buffer_t *)message;
 
-    uint16_t total_len_request = msg_get_reserved(msg) + length;
-    uint16_t total_len_current = msg_get_reserved(msg) + msg_get_length((void *)msg);
+    uint16_t total_len_request = msg_get_reserved((message_t *)msgbuf) + length;
+    uint16_t total_len_current = msg_get_reserved((message_t *)msgbuf) + msg_get_length((message_t *)msgbuf);
     int bufs = 0;
 
     if (total_len_request > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
@@ -83,10 +82,13 @@ static ns_error_t msg_set_length(message_t *message, uint16_t length)
         bufs -= (((total_len_current - MESSAGE_HEAD_BUFFER_DATA_SIZE) - 1) / MESSAGE_BUFFER_DATA_SIZE) + 1;
     }
 
-    VERIFY_OR_EXIT((error = msg_reclaim_buffers(instance, bufs, msg_get_priority(msg))) == NS_ERROR_NONE);
-    VERIFY_OR_EXIT((error = msg_resize(instance, msg, total_len_request)) == NS_ERROR_NONE);
+    error = msg_reclaim_buffers(inst, bufs, msg_get_priority((message_t *)msgbuf));
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    msg->buffer.head.info.length = length;
+    error = msg_resize(inst, (message_t *)msgbuf, total_len_request);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    msgbuf->buffer.head.info.length = length;
 
 exit:
     return error;
@@ -94,24 +96,24 @@ exit:
 
 static uint16_t msg_get_length(message_t *message)
 {
-    buffer_t *msg = (buffer_t *)message;
-    return msg->buffer.head.info.length;
+    buffer_t *msgbuf = (buffer_t *)message;
+    return msgbuf->buffer.head.info.length;
 }
 
 static int msg_write(message_t *message, uint16_t offset, uint16_t length, void *buf)
 {
-    buffer_t *msg = (buffer_t *)message;
+    buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *cur_buffer;
     uint16_t bytes_copied = 0;
     uint16_t bytes_to_copy;
 
-    ns_assert(offset + length <= msg_get_length((message_t *)msg));
+    ns_assert(offset + length <= msg_get_length((message_t *)msgbuf));
 
-    if (offset + length >= msg_get_length((message_t *)msg)) {
-        length = msg_get_length((message_t *)msg) - offset;
+    if (offset + length >= msg_get_length((message_t *)msgbuf)) {
+        length = msg_get_length((message_t *)msgbuf) - offset;
     }
 
-    offset += msg_get_reserved(msg);
+    offset += msg_get_reserved((message_t *)msgbuf);
 
     // special case first buffer
     if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
@@ -119,7 +121,7 @@ static int msg_write(message_t *message, uint16_t offset, uint16_t length, void 
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
-        memcpy(msg->buffer.head.data + offset, buf, bytes_to_copy);
+        memcpy(msgbuf->buffer.head.data + offset, buf, bytes_to_copy);
         length -= bytes_to_copy;
         bytes_copied += bytes_to_copy;
         buf = (uint8_t *)buf + bytes_to_copy;
@@ -129,7 +131,7 @@ static int msg_write(message_t *message, uint16_t offset, uint16_t length, void 
     }
 
     // advance to offset
-    cur_buffer = msg->next;
+    cur_buffer = msgbuf->next;
 
     while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
         ns_assert(cur_buffer != NULL);
@@ -158,20 +160,20 @@ static int msg_write(message_t *message, uint16_t offset, uint16_t length, void 
 
 static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *buf)
 {
-    buffer_t *msg = (buffer_t *)message;
+    buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *cur_buffer;
     uint16_t bytes_copied = 0;
     uint16_t bytes_to_copy;
 
-    if (offset >= msg_get_length((message_t *)msg)) {
+    if (offset >= msg_get_length((message_t *)msgbuf)) {
         EXIT_NOW();
     }
 
-    if (offset + length >= msg_get_length((message_t *)msg)) {
-        length = msg_get_length((message_t *)msg) - offset;
+    if (offset + length >= msg_get_length((message_t *)msgbuf)) {
+        length = msg_get_length((message_t *)msgbuf) - offset;
     }
 
-    offset += msg_get_reserved(msg);
+    offset += msg_get_reserved((message_t *)msgbuf);
 
     // special case first buffer
     if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
@@ -179,7 +181,7 @@ static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
-        memcpy(buf, msg->buffer.head.data + offset, bytes_to_copy);
+        memcpy(buf, msgbuf->buffer.head.data + offset, bytes_to_copy);
         length -= bytes_to_copy;
         bytes_copied += bytes_to_copy;
         buf = (uint8_t *)buf + bytes_to_copy;
@@ -189,7 +191,7 @@ static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *
     }
 
     // advance to offset
-    cur_buffer = msg->next;
+    cur_buffer = msgbuf->next;
 
     while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
         ns_assert(cur_buffer != NULL);
@@ -220,7 +222,14 @@ exit:
 static void msg_free(message_t *message)
 {
     instance_t *inst = instance_get();
-    msg_free_buffers(inst, (buffer_t *)message);
+    buffer_t *msgbuf = (buffer_t *)message;
+    while (msgbuf != NULL) {
+        buffer_t *tmp_buffer = msgbuf->next;
+        msgbuf->next = inst->message_pool.free_buffers;
+        inst->message_pool.free_buffers = msgbuf;
+        inst->message_pool.num_free_buffers++;
+        msgbuf = tmp_buffer;
+    }
 }
 
 // --- private functions
@@ -235,7 +244,7 @@ static ns_error_t msg_reclaim_buffers(instance_t *instance, int num_buffers, uin
     return (num_buffers < 0 || num_buffers <= free_buffer_count) ? NS_ERROR_NONE : NS_ERROR_NO_BUFS;
 }
 
-static buffer_t *msg_new_buffer(instance_t *instance, uint8_t priority)
+static message_t *msg_new_buffer(instance_t *instance, uint8_t priority)
 {
     buffer_t *buffer = NULL;
     buffer_t *free_buffers = instance->message_pool.free_buffers;
@@ -250,30 +259,32 @@ static buffer_t *msg_new_buffer(instance_t *instance, uint8_t priority)
     }
 
 exit:
-    return buffer;
+    return (message_t *)buffer;
 }
 
-static uint16_t msg_get_reserved(buffer_t *message)
+static uint16_t msg_get_reserved(message_t *message)
 {
-    return message->buffer.head.info.reserved;
+    buffer_t *msg = (buffer_t *)message;
+    return msg->buffer.head.info.reserved;
 }
 
-static uint8_t msg_get_priority(buffer_t *message)
+static uint8_t msg_get_priority(message_t *message)
 {
-    return message->buffer.head.info.priority;
+    buffer_t *msg = (buffer_t *)message;
+    return msg->buffer.head.info.priority;
 }
 
-static ns_error_t msg_resize(instance_t *instance, buffer_t *message, uint16_t length)
+static ns_error_t msg_resize(instance_t *instance, message_t *message, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
-
+    buffer_t *msgbuf = (buffer_t *)message;
     // add buffers
-    buffer_t *cur_buffer = message;
+    buffer_t *cur_buffer = msgbuf;
     buffer_t *last_buffer;
     uint16_t cur_length = MESSAGE_HEAD_BUFFER_DATA_SIZE;
     while (cur_length < length) {
         if (cur_buffer->next == NULL) {
-            cur_buffer->next = (void *)msg_new_buffer(instance, msg_get_priority(message));
+            cur_buffer->next = (void *)msg_new_buffer(instance, msg_get_priority((message_t *)msgbuf));
             VERIFY_OR_EXIT(cur_buffer->next != NULL, error = NS_ERROR_NO_BUFS);
         }
         cur_buffer = cur_buffer->next;
@@ -285,44 +296,41 @@ static ns_error_t msg_resize(instance_t *instance, buffer_t *message, uint16_t l
     cur_buffer = cur_buffer->next;
     last_buffer->next = NULL;
 
-    msg_free_buffers(instance, cur_buffer);
+    msg_free((message_t *)cur_buffer);
 
 exit:
     return error;
 }
 
-static void msg_free_buffers(instance_t *instance, buffer_t *buffer)
-{
-    while (buffer != NULL) {
-        buffer_t *tmp_buffer = buffer->next;
-        buffer->next = instance->message_pool.free_buffers;
-        instance->message_pool.free_buffers = buffer;
-        instance->message_pool.num_free_buffers++;
-        buffer = tmp_buffer;
-    }
-}
-
 // -------------------------------------------------------------- TEST FUNCTIONS
-void message_test(void)
+void message_write_read_test(void)
 {
     instance_t *inst = instance_get();
+
     uint8_t write_buffer[1024];
     uint8_t read_buffer[1024];
-    extern uint32_t ns_plat_random_get(void);
+
     for (unsigned i = 0; i < sizeof(write_buffer); i++) {
-        write_buffer[i] = (uint8_t)ns_plat_random_get();
+        write_buffer[i] = i;
     }
+
     message_t *message = inst->get_message_pool().new(0, 0, 0);
+
     printf("num of free buffers: %u\r\n", inst->get_message_pool().num_free_buffers);
+
     inst->get_message_pool().set_length(message, sizeof(write_buffer));
     inst->get_message_pool().write(message, 0, sizeof(write_buffer), write_buffer);
     inst->get_message_pool().read(message, 0, sizeof(read_buffer), read_buffer);
+
     if (memcmp(write_buffer, read_buffer, sizeof(write_buffer)) == 0) {
         printf("message write and read test SUCCESS\r\n");
     } else {
         printf("message write and read test FAILED\r\n");
     }
+
     printf("message get length: %u\r\n", inst->get_message_pool().get_length(message));
+
     inst->get_message_pool().free(message);
+
     printf("freed message, num of free buffers now: %u\r\n", inst->get_message_pool().num_free_buffers);
 }
