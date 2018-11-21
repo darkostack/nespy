@@ -30,10 +30,14 @@ struct _py_tasklet_list {
 
 static py_tasklet_list_obj_t py_tasklet_list;
 
-static void py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj);
-static void py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj);
+static void
+py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj);
 
-static void tasklet_handler(tasklet_t *tasklet)
+static void
+py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj);
+
+static void
+tasklet_handler(tasklet_t *tasklet)
 {
     py_tasklet_obj_t *head = py_tasklet_list.head;
     py_tasklet_obj_t *cur;
@@ -46,10 +50,11 @@ static void tasklet_handler(tasklet_t *tasklet)
     }
 }
 
-STATIC mp_obj_t py_tasklet_make_new(const mp_obj_type_t *type,
-                                    size_t n_args,
-                                    size_t n_kw,
-                                    const mp_obj_t *all_args)
+STATIC mp_obj_t
+py_tasklet_make_new(const mp_obj_type_t *type,
+                    size_t n_args,
+                    size_t n_kw,
+                    const mp_obj_t *all_args)
 {
     if (n_args == 0 && n_kw != 2) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
@@ -78,13 +83,13 @@ STATIC mp_obj_t py_tasklet_make_new(const mp_obj_type_t *type,
     return MP_OBJ_FROM_PTR(tasklet);
 }
 
-STATIC mp_obj_t py_tasklet_post(mp_obj_t self_in)
+STATIC mp_obj_t
+py_tasklet_post(mp_obj_t self_in)
 {
     py_tasklet_obj_t *self = MP_OBJ_TO_PTR(self_in);
     // add this task to the list & post
     py_tasklet_list_add(self);
-    instance_t *inst = (instance_t *)self->instance;
-    inst->get_tasklet_scheduler().post((tasklet_t *)&self->tasklet);
+    tasklet_post((tasklet_t *)&self->tasklet);
     return mp_const_none;
 }
 
@@ -103,7 +108,8 @@ const mp_obj_type_t py_tasklet_type = {
     .locals_dict = (mp_obj_dict_t *)&py_tasklet_locals_dict,
 };
 
-static void py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj)
+static void
+py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj)
 {
     py_tasklet_list_remove(tasklet_obj);
     py_tasklet_obj_t *head = py_tasklet_list.head;
@@ -123,7 +129,8 @@ static void py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj)
     }
 }
 
-static void py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj)
+static void
+py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj)
 {
     VERIFY_OR_EXIT(tasklet_obj->next != tasklet_obj);
     py_tasklet_obj_t *head = py_tasklet_list.head;

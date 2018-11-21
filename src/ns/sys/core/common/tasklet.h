@@ -14,12 +14,18 @@ struct _tasklet {
 typedef struct _tasklet_scheduler {
     tasklet_t *head;
     tasklet_t *tail;
-    // --- tasklet scheduler functions
-    ns_error_t (*post)(tasklet_t *tasklet);
-    bool (*are_pending)(void);
-    void (*process_queued_task)(void);
 } tasklet_scheduler_t;
 
-void tasklet_scheduler_make_new(void *instance);
+void
+tasklet_scheduler_make_new(void *instance);
+
+ns_error_t
+tasklet_post(tasklet_t *tasklet);
+
+bool
+tasklet_are_pending(void *instance);
+
+void 
+tasklet_process_queued_task(void *instance);
 
 #endif // NS_CORE_COMMON_TASKLET_H_

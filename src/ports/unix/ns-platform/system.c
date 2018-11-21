@@ -12,13 +12,15 @@ uint32_t node_id = 1;
 
 static volatile bool terminate = false;
 
-static void handle_signal(int signal)
+static void
+handle_signal(int signal)
 {
     (void)signal;
     terminate = true;
 }
 
-void ns_plat_sys_init(uint32_t id)
+void
+ns_plat_sys_init(uint32_t id)
 {
     signal(SIGTERM, &handle_signal);
     signal(SIGHUP, &handle_signal);
@@ -35,7 +37,8 @@ void ns_plat_sys_init(uint32_t id)
     plat_random_init();
 }
 
-void ns_plat_sys_process_drivers(ns_instance_t instance)
+void
+ns_plat_sys_process_drivers(ns_instance_t instance)
 {
     fd_set read_fds;
     fd_set write_fds;

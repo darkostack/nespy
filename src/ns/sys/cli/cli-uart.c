@@ -14,32 +14,44 @@ static const char cli_command_prompt[] = {'>', '>', '>', ' '};
 static const char cli_erase_str[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
 
-static void process_command(void);
-static void output_format(const char *fmt, va_list ap);
-static int output(const char *buf, uint16_t buf_len);
-static void send(void);
+static void
+process_command(void);
 
-void ns_plat_uart_send_done(void)
+static void
+output_format(const char *fmt, va_list ap);
+
+static int
+output(const char *buf, uint16_t buf_len);
+
+static void
+send(void);
+
+void
+ns_plat_uart_send_done(void)
 {
     cli_uart_send_done_task();
 }
 
-void ns_plat_uart_received(const uint8_t *buf, uint16_t buf_length)
+void
+ns_plat_uart_received(const uint8_t *buf, uint16_t buf_length)
 {
     cli_uart_receive_task(buf, buf_length);
 }
 
-void cli_uart_init(void)
+void
+cli_uart_init(void)
 {
     ns_plat_uart_enable();
 }
 
-void cli_uart_output_bytes(const uint8_t *bytes, uint8_t len)
+void
+cli_uart_output_bytes(const uint8_t *bytes, uint8_t len)
 {
     cli_output_bytes(bytes, len);
 }
 
-void cli_uart_output_format(const char *format, ...)
+void
+cli_uart_output_format(const char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -47,7 +59,8 @@ void cli_uart_output_format(const char *format, ...)
     va_end(ap);
 }
 
-void cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
+void
+cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
 {
     const uint8_t *end;
 
@@ -87,7 +100,8 @@ void cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
     }
 }
 
-void cli_uart_send_done_task(void)
+void
+cli_uart_send_done_task(void)
 {
     cli_tx_head = (cli_tx_head + cli_send_length) % CLI_UART_TX_BUF_SIZE;
     cli_tx_length -= cli_send_length;
@@ -95,7 +109,8 @@ void cli_uart_send_done_task(void)
     send();
 }
 
-static void process_command(void)
+static void
+process_command(void)
 {
     if (cli_rx_buffer[cli_rx_length - 1] == '\n') {
         cli_rx_buffer[--cli_rx_length] = '\0';
@@ -107,14 +122,16 @@ static void process_command(void)
     cli_rx_length = 0;
 }
 
-static void output_format(const char *fmt, va_list ap)
+static void
+output_format(const char *fmt, va_list ap)
 {
     char buf[CLI_UART_CLI_MAX_LINE_LEN];
     vsnprintf(buf, sizeof(buf), fmt, ap);
     output(buf, (uint16_t)ns_strlen(buf));
 }
 
-static int output(const char *buf, uint16_t buf_len)
+static int
+output(const char *buf, uint16_t buf_len)
 {
     uint16_t remaining = CLI_UART_TX_BUF_SIZE - cli_tx_length;
     uint16_t tail;
@@ -130,7 +147,8 @@ static int output(const char *buf, uint16_t buf_len)
     return buf_len;
 }
 
-static void send(void)
+static void
+send(void)
 {
     if (cli_send_length != 0) {
         return;

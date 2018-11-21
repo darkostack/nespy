@@ -18,24 +18,28 @@ static int out_fd;
 static struct termios original_stdin_termios;
 static struct termios original_stdout_termios;
 
-static void restore_stdin_termios(void)
+static void
+restore_stdin_termios(void)
 {
     tcsetattr(in_fd, TCSAFLUSH, &original_stdin_termios);
 }
 
-static void restore_stdout_termios(void)
+static void
+restore_stdout_termios(void)
 {
     tcsetattr(out_fd, TCSAFLUSH, &original_stdout_termios);
 }
 
-void plat_uart_restore(void)
+void
+plat_uart_restore(void)
 {
     restore_stdin_termios();
     restore_stdout_termios();
     dup2(out_fd, STDOUT_FILENO);
 }
 
-ns_error_t ns_plat_uart_enable(void)
+ns_error_t
+ns_plat_uart_enable(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     struct termios termios;
@@ -136,14 +140,16 @@ exit:
     return error;
 }
 
-ns_error_t ns_plat_uart_disable(void)
+ns_error_t
+ns_plat_uart_disable(void)
 {
     close(in_fd);
     close(out_fd);
     return NS_ERROR_NONE;
 }
 
-ns_error_t ns_plat_uart_send(const uint8_t *buf, uint16_t buf_length)
+ns_error_t
+ns_plat_uart_send(const uint8_t *buf, uint16_t buf_length)
 {
     ns_error_t error = NS_ERROR_NONE;
     if (write_length != 0) {
@@ -156,7 +162,8 @@ exit:
     return error;
 }
 
-void plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd, int *max_fd)
+void
+plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd, int *max_fd)
 {
     if (read_fd != NULL) {
         FD_SET(in_fd, read_fd);
@@ -178,7 +185,8 @@ void plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd
     }
 }
 
-void plat_uart_process(void)
+void
+plat_uart_process(void)
 {
     ssize_t rval;
     const int error_flags = POLLERR | POLLNVAL | POLLHUP;

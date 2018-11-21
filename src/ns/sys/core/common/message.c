@@ -4,19 +4,37 @@
 #include <string.h>
 #include <stdio.h>
 
-// --- private functions
-static uint16_t msg_get_free_buffer_count(void);
-static message_t msg_new_buffer(uint8_t priority);
-static bool msg_is_in_queue(message_t message);
-static message_t msg_find_first_non_null_tail(uint8_t start_prio_level);
-static uint8_t msg_prev_priority(uint8_t priority);
-static message_t msg_queue_get_head(message_queue_t *queue);
-static message_t msg_get_next(message_t message);
-static uint8_t msg_get_buffer_count(message_t message);
-static void msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint16_t *buffer_count);
+// --- private functions declarations
+static uint16_t
+msg_get_free_buffer_count(void);
+
+static message_t
+msg_new_buffer(uint8_t priority);
+
+static bool
+msg_is_in_queue(message_t message);
+
+static message_t
+msg_find_first_non_null_tail(uint8_t start_prio_level);
+
+static uint8_t
+msg_prev_priority(uint8_t priority);
+
+static message_t
+msg_queue_get_head(message_queue_t *queue);
+
+static message_t
+msg_get_next(message_t message);
+
+static uint8_t
+msg_get_buffer_count(message_t message);
+
+static void
+msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint16_t *buffer_count);
 
 // --- message pool functions
-void message_pool_make_new(void *instance)
+void
+message_pool_make_new(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
 
@@ -36,12 +54,14 @@ void message_pool_make_new(void *instance)
     }
 }
 
-void message_queue_make_new(message_queue_t *queue)
+void
+message_queue_make_new(message_queue_t *queue)
 {
     queue->tail = NULL;
 }
 
-message_t message_new(uint8_t type, uint16_t reserved, uint8_t priority)
+message_t
+message_new(uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
@@ -65,25 +85,29 @@ exit:
     return (message_t)msgbuf;
 }
 
-ns_error_t message_reclaim_buffers(int num_buffers, uint8_t priority)
+ns_error_t
+message_reclaim_buffers(int num_buffers, uint8_t priority)
 {
     uint16_t free_buffer_count = msg_get_free_buffer_count();
     return (num_buffers < 0 || num_buffers <= free_buffer_count) ? NS_ERROR_NONE : NS_ERROR_NO_BUFS;
 }
 
-uint16_t message_get_reserved(message_t message)
+uint16_t
+message_get_reserved(message_t message)
 {
     buffer_t *msg = (buffer_t *)message;
     return msg->buffer.head.info.reserved;
 }
 
-uint8_t message_get_priority(message_t message)
+uint8_t
+message_get_priority(message_t message)
 {
     buffer_t *msg = (buffer_t *)message;
     return msg->buffer.head.info.priority;
 }
 
-ns_error_t message_set_priority(message_t message, uint8_t priority)
+ns_error_t
+message_set_priority(message_t message, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -111,7 +135,8 @@ exit:
     return error;
 }
 
-ns_error_t message_resize(message_t message, uint16_t length)
+ns_error_t
+message_resize(message_t message, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -141,7 +166,8 @@ exit:
     return error;
 }
 
-ns_error_t message_set_length(message_t message, uint16_t length)
+ns_error_t
+message_set_length(message_t message, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -170,13 +196,15 @@ exit:
     return error;
 }
 
-uint16_t message_get_length(message_t message)
+uint16_t
+message_get_length(message_t message)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     return msgbuf->buffer.head.info.length;
 }
 
-int message_write(message_t message, uint16_t offset, uint16_t length, void *buf)
+int
+message_write(message_t message, uint16_t offset, uint16_t length, void *buf)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *cur_buffer;
@@ -234,7 +262,8 @@ int message_write(message_t message, uint16_t offset, uint16_t length, void *buf
     return bytes_copied;
 }
 
-int message_read(message_t message, uint16_t offset, uint16_t length, void *buf)
+int
+message_read(message_t message, uint16_t offset, uint16_t length, void *buf)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *cur_buffer;
@@ -295,7 +324,8 @@ exit:
     return bytes_copied;
 }
 
-void message_free(message_t message)
+void
+message_free(message_t message)
 {
     instance_t *inst = instance_get();
     buffer_t *msgbuf = (buffer_t *)message;
@@ -308,7 +338,8 @@ void message_free(message_t message)
     }
 }
 
-void message_remove_from_list(message_t message, uint8_t list, void *queue)
+void
+message_remove_from_list(message_t message, uint8_t list, void *queue)
 {
     instance_t *inst = instance_get();
     buffer_t *msgbuf = (buffer_t *)message;
@@ -320,14 +351,14 @@ void message_remove_from_list(message_t message, uint8_t list, void *queue)
 
         priority = msgbuf->buffer.head.info.priority;
 
-        tail = (buffer_t *)inst->get_message_pool().all_queue.tails[priority];
+        tail = (buffer_t *)inst->message_pool.all_queue.tails[priority];
 
         if (msgbuf == tail) {
             tail = (buffer_t *)tail->buffer.head.info.prev[list];
             if ((msgbuf == tail) || (tail->buffer.head.info.priority != priority)) {
                 tail = NULL;
             }
-            inst->get_message_pool().all_queue.tails[priority] = (message_t)tail;
+            inst->message_pool.all_queue.tails[priority] = (message_t)tail;
         }
 
         ((buffer_t *)msgbuf->buffer.head.info.next[list])->buffer.head.info.prev[list] = 
@@ -366,7 +397,8 @@ void message_remove_from_list(message_t message, uint8_t list, void *queue)
     }
 }
 
-void message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos)
+void
+message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos)
 {
     instance_t *inst = instance_get();
     buffer_t *msgbuf = (buffer_t *)message;
@@ -388,7 +420,7 @@ void message_add_to_list(message_t message, uint8_t list, void *queue, queue_pos
             msgbuf->buffer.head.info.next[list] = (message_t)msgbuf;
             msgbuf->buffer.head.info.prev[list] = (message_t)msgbuf;
         }
-        inst->get_message_pool().all_queue.tails[priority] = (message_t)msgbuf;
+        inst->message_pool.all_queue.tails[priority] = (message_t)msgbuf;
     }
 
     // this list maintained by message queue interface
@@ -416,21 +448,24 @@ void message_add_to_list(message_t message, uint8_t list, void *queue, queue_pos
     }
 }
 
-void message_set_message_queue(message_t message, message_queue_t *queue)
+void
+message_set_message_queue(message_t message, message_queue_t *queue)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     msgbuf->buffer.head.info.queue.message = queue;
     msgbuf->buffer.head.info.in_priority_queue = false;
 }
 
-void message_set_priority_queue(message_t message, priority_queue_t *queue)
+void
+message_set_priority_queue(message_t message, priority_queue_t *queue)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     msgbuf->buffer.head.info.queue.priority = queue;
     msgbuf->buffer.head.info.in_priority_queue = true;
 }
 
-ns_error_t message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos)
+ns_error_t
+message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -446,7 +481,8 @@ exit:
     return error;
 }
 
-ns_error_t message_queue_dequeue(message_t message, message_queue_t *queue)
+ns_error_t
+message_queue_dequeue(message_t message, message_queue_t *queue)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -463,13 +499,15 @@ exit:
 }
 
 // --- private functions
-static uint16_t msg_get_free_buffer_count(void)
+static uint16_t
+msg_get_free_buffer_count(void)
 {
     instance_t *inst = instance_get();
     return inst->message_pool.num_free_buffers;
 }
 
-static message_t msg_new_buffer(uint8_t priority)
+static message_t
+msg_new_buffer(uint8_t priority)
 {
     instance_t *inst = instance_get();
     buffer_t *buffer = NULL;
@@ -488,13 +526,15 @@ exit:
     return (message_t)buffer;
 }
 
-static bool msg_is_in_queue(message_t message)
+static bool
+msg_is_in_queue(message_t message)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     return (msgbuf->buffer.head.info.queue.message != NULL);
 }
 
-static message_t msg_find_first_non_null_tail(uint8_t start_prio_level)
+static message_t
+msg_find_first_non_null_tail(uint8_t start_prio_level)
 {
     instance_t *inst = instance_get();
     message_t tail = NULL;
@@ -503,8 +543,8 @@ static message_t msg_find_first_non_null_tail(uint8_t start_prio_level)
     priority = start_prio_level;
 
     do {
-        if (inst->get_message_pool().all_queue.tails[priority] != NULL) {
-            tail = inst->get_message_pool().all_queue.tails[priority];
+        if (inst->message_pool.all_queue.tails[priority] != NULL) {
+            tail = inst->message_pool.all_queue.tails[priority];
             break;
         }
         priority = msg_prev_priority(priority);
@@ -513,18 +553,21 @@ static message_t msg_find_first_non_null_tail(uint8_t start_prio_level)
     return tail;
 }
 
-static uint8_t msg_prev_priority(uint8_t priority)
+static uint8_t
+msg_prev_priority(uint8_t priority)
 {
     return (priority == MSG_NUM_PRIORITIES - 1) ? 0 : (priority + 1);
 }
 
-static message_t msg_queue_get_head(message_queue_t *queue)
+static message_t
+msg_queue_get_head(message_queue_t *queue)
 {
     return (queue->tail == NULL) ? NULL :
            ((buffer_t *)queue->tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
 }
 
-static message_t msg_get_next(message_t message)
+static message_t
+msg_get_next(message_t message)
 {
     message_t next = NULL;
     message_t tail = NULL;
@@ -543,7 +586,8 @@ exit:
     return next;
 }
 
-static uint8_t msg_get_buffer_count(message_t message)
+static uint8_t
+msg_get_buffer_count(message_t message)
 {
     uint8_t rval = 1;
     for (buffer_t *cur_buffer = (buffer_t *)((buffer_t *)message)->next; cur_buffer; cur_buffer = cur_buffer->next) {
@@ -552,7 +596,8 @@ static uint8_t msg_get_buffer_count(message_t message)
     return rval;
 }
 
-static void msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint16_t *buffer_count)
+static void
+msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint16_t *buffer_count)
 {
     uint16_t nmsg = 0;
     uint16_t nbuf = 0;
@@ -566,7 +611,8 @@ static void msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint
 }
 
 // -------------------------------------------------------------- TEST FUNCTIONS
-void message_write_read_test(void)
+void
+message_write_read_test(void)
 {
     instance_t *inst = instance_get();
 
@@ -581,7 +627,7 @@ void message_write_read_test(void)
 
     message_t message = message_new(0, 0, 0);
 
-    printf("num of free buffers: %u\r\n", inst->get_message_pool().num_free_buffers);
+    printf("num of free buffers: %u\r\n", inst->message_pool.num_free_buffers);
 
     message_set_length(message, sizeof(write_buffer));
     message_write(message, 0, sizeof(write_buffer), write_buffer);
@@ -597,10 +643,11 @@ void message_write_read_test(void)
 
     message_free(message);
 
-    printf("freed message, num of free buffers now: %u\r\n", inst->get_message_pool().num_free_buffers);
+    printf("freed message, num of free buffers now: %u\r\n", inst->message_pool.num_free_buffers);
 }
 
-static ns_error_t verify_message_queue_content(message_queue_t *queue, int expected_length, ...)
+static ns_error_t
+verify_message_queue_content(message_queue_t *queue, int expected_length, ...)
 {
     ns_error_t error = NS_ERROR_NONE;
     va_list args;
@@ -643,7 +690,8 @@ exit:
     return error;
 }
 
-void message_queue_test(void)
+void
+message_queue_test(void)
 {
     uint8_t num_of_test_messages = 5;
     message_queue_t message_queue;

@@ -2,29 +2,44 @@
 #include "ns/include/platform/alarm.h"
 #include "ns/sys/core/common/instance.h"
 
-// --- timer scheduler functions
-static void timer_start(timer_t *timer, uint32_t t0, uint32_t dt);
+// --- private functions declarations
+static void
+timer_add(instance_t *instance, timer_t *timer);
 
-// --- private functions
-static void timer_add(instance_t *instance, timer_t *timer);
-static void timer_remove(instance_t *instance,  timer_t *timer);
-static void timer_process(instance_t *instance);
-static bool is_strictly_before(uint32_t time_a, uint32_t time_b);
-static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now);
-static void alarm_set(instance_t *instance);
-static void alarm_start_at(uint32_t t0, uint32_t dt);
-static void alarm_stop(void);
-static uint32_t alarm_get_now(void);
+static void
+timer_remove(instance_t *instance,  timer_t *timer);
 
-void timer_scheduler_make_new(void *instance)
+static void
+timer_process(instance_t *instance);
+
+static bool
+is_strictly_before(uint32_t time_a, uint32_t time_b);
+
+static bool
+does_fire_before(timer_t *timer, timer_t *cur, uint32_t now);
+
+static void
+alarm_set(instance_t *instance);
+
+static void
+alarm_start_at(uint32_t t0, uint32_t dt);
+
+static void
+alarm_stop(void);
+
+static uint32_t
+alarm_get_now(void);
+
+// --- timer functions
+void
+timer_scheduler_make_new(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
     inst->timer_sched.head = NULL;
-    // timer scheduler functions
-    inst->timer_sched.start = timer_start;
 }
 
-static void timer_start(timer_t *timer, uint32_t t0, uint32_t dt)
+void
+timer_start(timer_t *timer, uint32_t t0, uint32_t dt)
 {
     instance_t *inst = instance_get();
     ns_assert(dt <= TIMER_MAX_DT);
@@ -32,7 +47,9 @@ static void timer_start(timer_t *timer, uint32_t t0, uint32_t dt)
     timer_add(inst, timer);
 }
 
-static void timer_add(instance_t *instance, timer_t *timer)
+// --- private functions
+static void
+timer_add(instance_t *instance, timer_t *timer)
 {
     timer_remove(instance, timer);
     timer_t *head = instance->timer_sched.head;
@@ -66,7 +83,8 @@ static void timer_add(instance_t *instance, timer_t *timer)
     }
 }
 
-static void timer_remove(instance_t *instance, timer_t *timer)
+static void
+timer_remove(instance_t *instance, timer_t *timer)
 {
     VERIFY_OR_EXIT(timer->next != timer);
     timer_t *head = instance->timer_sched.head;
@@ -87,7 +105,8 @@ exit:
     return;
 }
 
-static void timer_process(instance_t *instance)
+static void
+timer_process(instance_t *instance)
 {
     timer_t *timer = instance->timer_sched.head;
     if (timer) {
@@ -102,7 +121,8 @@ static void timer_process(instance_t *instance)
     }
 }
 
-static bool is_strictly_before(uint32_t time_a, uint32_t time_b)
+static bool
+is_strictly_before(uint32_t time_a, uint32_t time_b)
 {
     uint32_t diff = time_a - time_b;
 
@@ -122,7 +142,8 @@ static bool is_strictly_before(uint32_t time_a, uint32_t time_b)
     return ((diff & (1UL << 31)) != 0);
 }
 
-static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
+static bool
+does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
 {
     bool retval;
     bool is_before_now = is_strictly_before(timer->firetime, now);
@@ -144,7 +165,8 @@ static bool does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
     return retval;
 }
 
-static void alarm_set(instance_t *instance)
+static void
+alarm_set(instance_t *instance)
 {
     timer_t *head = instance->timer_sched.head;
     if (head == NULL) {
@@ -156,22 +178,26 @@ static void alarm_set(instance_t *instance)
     }
 }
 
-static void alarm_start_at(uint32_t t0, uint32_t dt)
+static void
+alarm_start_at(uint32_t t0, uint32_t dt)
 {
     ns_plat_alarm_start_at(t0, dt);
 }
 
-static void alarm_stop(void)
+static void
+alarm_stop(void)
 {
     ns_plat_alarm_stop();
 }
 
-static uint32_t alarm_get_now(void)
+static uint32_t
+alarm_get_now(void)
 {
     return ns_plat_alarm_get_now();
 }
 
-void ns_plat_alarm_fired(ns_instance_t instance)
+void
+ns_plat_alarm_fired(ns_instance_t instance)
 {
     instance_t *inst = (instance_t *)instance;
     VERIFY_OR_EXIT(inst->is_initialized);

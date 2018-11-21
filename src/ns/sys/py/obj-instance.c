@@ -12,10 +12,11 @@
 const mp_obj_type_t py_instance_type;
 static bool instance_obj_is_created = false;
 
-STATIC mp_obj_t py_instance_make_new(const mp_obj_type_t *type,
-                                     size_t n_args,
-                                     size_t n_kw,
-                                     const mp_obj_t *all_args)
+STATIC mp_obj_t
+py_instance_make_new(const mp_obj_type_t *type,
+                     size_t n_args,
+                     size_t n_kw,
+                     const mp_obj_t *all_args)
 {
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
     if (instance_obj_is_created) {
@@ -31,7 +32,8 @@ STATIC mp_obj_t py_instance_make_new(const mp_obj_type_t *type,
     return MP_OBJ_FROM_PTR(instance);
 }
 
-STATIC mp_obj_t py_instance_is_initialized(mp_obj_t self_in)
+STATIC mp_obj_t
+py_instance_is_initialized(mp_obj_t self_in)
 {
     py_instance_obj_t *self = MP_OBJ_TO_PTR(self_in);
     bool ret = ns_instance_is_initialized(self->instance);

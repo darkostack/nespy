@@ -81,24 +81,61 @@ struct _message_pool {
     priority_queue_t all_queue;
 };
 
-void       message_pool_make_new(void *instance);
-void       message_queue_make_new(message_queue_t *queue);
-message_t  message_new(uint8_t type, uint16_t reserved, uint8_t priority);
-ns_error_t message_reclaim_buffers(int num_buffers, uint8_t priority);
-uint16_t   message_get_reserved(message_t message);
-uint8_t    message_get_priority(message_t message);
-ns_error_t message_set_priority(message_t message, uint8_t priority);
-ns_error_t message_resize(message_t message, uint16_t length);
-ns_error_t message_set_length(message_t message, uint16_t length);
-uint16_t   message_get_length(message_t message);
-int        message_write(message_t message, uint16_t offset, uint16_t length, void *buf);
-int        message_read(message_t message, uint16_t offset, uint16_t length, void *buf);
-void       message_free(message_t message);
-void       message_remove_from_list(message_t message, uint8_t list, void *queue);
-void       message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos);
-void       message_set_message_queue(message_t message, message_queue_t *queue);
-void       message_set_priority_queue(message_t message, priority_queue_t *queue);
-ns_error_t message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos);
-ns_error_t message_queue_dequeue(message_t message, message_queue_t *queue);
+void
+message_pool_make_new(void *instance);
+
+void
+message_queue_make_new(message_queue_t *queue);
+
+message_t
+message_new(uint8_t type, uint16_t reserved, uint8_t priority);
+
+ns_error_t
+message_reclaim_buffers(int num_buffers, uint8_t priority);
+
+uint16_t
+message_get_reserved(message_t message);
+
+uint8_t
+message_get_priority(message_t message);
+
+ns_error_t
+message_set_priority(message_t message, uint8_t priority);
+
+ns_error_t
+message_resize(message_t message, uint16_t length);
+
+ns_error_t
+message_set_length(message_t message, uint16_t length);
+
+uint16_t
+message_get_length(message_t message);
+
+int
+message_write(message_t message, uint16_t offset, uint16_t length, void *buf);
+
+int
+message_read(message_t message, uint16_t offset, uint16_t length, void *buf);
+
+void
+message_free(message_t message);
+
+void
+message_remove_from_list(message_t message, uint8_t list, void *queue);
+
+void
+message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos);
+
+void
+message_set_message_queue(message_t message, message_queue_t *queue);
+
+void
+message_set_priority_queue(message_t message, priority_queue_t *queue);
+
+ns_error_t
+message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos);
+
+ns_error_t
+message_queue_dequeue(message_t message, message_queue_t *queue);
 
 #endif // NS_CORE_COMMON_MESSAGE_H_

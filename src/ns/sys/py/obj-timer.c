@@ -31,10 +31,14 @@ struct _py_timer_list {
 
 static py_timer_list_obj_t py_timer_list;
 
-static void py_timer_list_add(py_timer_obj_t *timer_obj);
-static void py_timer_list_remove(py_timer_obj_t *timer_obj);
+static void
+py_timer_list_add(py_timer_obj_t *timer_obj);
 
-void timer_handler(timer_t *timer)
+static void
+py_timer_list_remove(py_timer_obj_t *timer_obj);
+
+void
+timer_handler(timer_t *timer)
 {
     py_timer_obj_t *head = py_timer_list.head;
     py_timer_obj_t *cur;
@@ -47,10 +51,11 @@ void timer_handler(timer_t *timer)
     }
 }
 
-STATIC mp_obj_t py_timer_make_new(const mp_obj_type_t *type,
-                                  size_t n_args,
-                                  size_t n_kw,
-                                  const mp_obj_t *all_args)
+STATIC mp_obj_t
+py_timer_make_new(const mp_obj_type_t *type,
+                  size_t n_args,
+                  size_t n_kw,
+                  const mp_obj_t *all_args)
 {
     if (n_args == 0 && n_kw != 2) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
@@ -80,16 +85,16 @@ STATIC mp_obj_t py_timer_make_new(const mp_obj_type_t *type,
     return MP_OBJ_FROM_PTR(tim);
 }
 
-STATIC mp_obj_t py_timer_start(mp_obj_t self_in,
-                               mp_obj_t interval_in)
+STATIC mp_obj_t
+py_timer_start(mp_obj_t self_in,
+               mp_obj_t interval_in)
 {
     py_timer_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
     uint32_t now = ns_plat_alarm_get_now();
     // add this timer to the list & start
     py_timer_list_add(self);
-    instance_t *inst = (instance_t *)self->instance;
-    inst->get_timer_scheduler().start((timer_t *)&self->timer, now, self->interval);
+    timer_start((timer_t *)&self->timer, now, self->interval);
     return mp_const_none;
 }
 
@@ -108,7 +113,8 @@ const mp_obj_type_t py_timer_type = {
     .locals_dict = (mp_obj_dict_t *)&py_timer_locals_dict,
 };
 
-static void py_timer_list_add(py_timer_obj_t *timer_obj)
+static void
+py_timer_list_add(py_timer_obj_t *timer_obj)
 {
     py_timer_list_remove(timer_obj);
     py_timer_obj_t *head = py_timer_list.head;
@@ -128,7 +134,8 @@ static void py_timer_list_add(py_timer_obj_t *timer_obj)
     }
 }
 
-static void py_timer_list_remove(py_timer_obj_t *timer_obj)
+static void
+py_timer_list_remove(py_timer_obj_t *timer_obj)
 {
     VERIFY_OR_EXIT(timer_obj->next != timer_obj);
     py_timer_obj_t *head = py_timer_list.head;

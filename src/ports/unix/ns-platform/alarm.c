@@ -15,12 +15,14 @@ static uint32_t ms_alarm = 0;
 
 static struct timeval start;
 
-void plat_alarm_init(void)
+void
+plat_alarm_init(void)
 {
     gettimeofday(&start, NULL);
 }
 
-uint64_t plat_alarm_get_now(void)
+uint64_t
+plat_alarm_get_now(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -28,23 +30,27 @@ uint64_t plat_alarm_get_now(void)
     return (uint64_t)tv.tv_sec * US_PER_S + (uint64_t)tv.tv_usec;
 }
 
-uint32_t ns_plat_alarm_get_now(void)
+uint32_t
+ns_plat_alarm_get_now(void)
 {
     return (uint32_t)(plat_alarm_get_now() / US_PER_MS);
 }
 
-void ns_plat_alarm_start_at(uint32_t t0, uint32_t dt)
+void
+ns_plat_alarm_start_at(uint32_t t0, uint32_t dt)
 {
     ms_alarm = t0 + dt;
     is_ms_running = true;
 }
 
-void ns_plat_alarm_stop(void)
+void
+ns_plat_alarm_stop(void)
 {
     is_ms_running = false;
 }
 
-void plat_alarm_update_timeout(struct timeval *timeout)
+void
+plat_alarm_update_timeout(struct timeval *timeout)
 {
     int32_t ms_remaining = DEFAULT_TIMEOUT *MS_PER_S;
 
@@ -69,7 +75,8 @@ void plat_alarm_update_timeout(struct timeval *timeout)
     }
 }
 
-void plat_alarm_process(ns_instance_t instance)
+void
+plat_alarm_process(ns_instance_t instance)
 {
     int32_t remaining;
 

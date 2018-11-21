@@ -26,10 +26,11 @@ typedef struct _py_platform_obj_t {
     uint32_t node_id;
 } py_platform_obj_t;
 
-STATIC mp_obj_t py_platform_make_new(const mp_obj_type_t *type,
-                                     size_t n_args,
-                                     size_t n_kw,
-                                     const mp_obj_t *all_args)
+STATIC mp_obj_t
+py_platform_make_new(const mp_obj_type_t *type,
+                     size_t n_args,
+                     size_t n_kw,
+                     const mp_obj_t *all_args)
 {
     if (n_args == 0 && n_kw != 2) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
@@ -61,21 +62,24 @@ STATIC mp_obj_t py_platform_make_new(const mp_obj_type_t *type,
     return MP_OBJ_FROM_PTR(plat);
 }
 
-STATIC mp_obj_t py_platform_system_init(mp_obj_t self_in)
+STATIC mp_obj_t
+py_platform_system_init(mp_obj_t self_in)
 {
     py_platform_obj_t *self = MP_OBJ_TO_PTR(self_in);
     ns_plat_sys_init(self->node_id);
     return mp_const_none;
 }
 
-STATIC mp_obj_t py_platform_process_drivers(mp_obj_t self_in)
+STATIC mp_obj_t
+py_platform_process_drivers(mp_obj_t self_in)
 {
     py_platform_obj_t *self = MP_OBJ_TO_PTR(self_in);
     ns_plat_sys_process_drivers(self->instance);
     return mp_const_none;
 }
 
-STATIC mp_obj_t py_platform_tasklet_run(mp_obj_t self_in)
+STATIC mp_obj_t
+py_platform_tasklet_run(mp_obj_t self_in)
 {
     py_platform_obj_t *self = MP_OBJ_TO_PTR(self_in);
     ns_tasklet_process(self->instance);

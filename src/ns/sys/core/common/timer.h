@@ -16,10 +16,12 @@ struct _timer {
 
 typedef struct _timer_scheduler {
     timer_t *head;
-    // --- timer scheduler functions
-    void (*start)(timer_t *timer, uint32_t t0, uint32_t dt);
 } timer_scheduler_t;
 
-void timer_scheduler_make_new(void *instance);
+void
+timer_scheduler_make_new(void *instance);
+
+void
+timer_start(timer_t *timer, uint32_t t0, uint32_t dt);
 
 #endif // NS_CORE_COMMON_TIMER_H_

@@ -28,13 +28,28 @@ enum
 
 extern uint32_t node_id;
 
-void plat_alarm_init(void);
-void plat_alarm_update_timeout(struct timeval *tv);
-void plat_alarm_process(ns_instance_t instance);
-uint64_t plat_alarm_get_now(void);
-void plat_random_init(void);
-void plat_uart_restore(void);
-void plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd, int *max_fd);
-void plat_uart_process(void);
+void
+plat_alarm_init(void);
+
+void
+plat_alarm_update_timeout(struct timeval *tv);
+
+void 
+plat_alarm_process(ns_instance_t instance);
+
+uint64_t
+plat_alarm_get_now(void);
+
+void
+plat_random_init(void);
+
+void
+plat_uart_restore(void);
+
+void
+plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd, int *max_fd);
+
+void
+plat_uart_process(void);
 
 #endif // NS_PLATFORM_UNIX_H_

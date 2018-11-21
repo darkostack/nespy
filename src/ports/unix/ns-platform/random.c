@@ -5,12 +5,14 @@
 
 static uint32_t state = 1;
 
-void plat_random_init(void)
+void
+plat_random_init(void)
 {
     state = (uint32_t)time(NULL) + (3600 * node_id);
 }
 
-uint32_t ns_plat_random_get(void)
+uint32_t
+ns_plat_random_get(void)
 {
     uint32_t mlcg, p, q;
     uint64_t tmpstate;
@@ -27,7 +29,8 @@ uint32_t ns_plat_random_get(void)
     return mlcg;
 }
 
-ns_error_t ns_plat_random_get_true(uint8_t *output, uint16_t output_length)
+ns_error_t
+ns_plat_random_get_true(uint8_t *output, uint16_t output_length)
 {
     ns_error_t error = NS_ERROR_NONE;
     if (!(output && output_length)) {

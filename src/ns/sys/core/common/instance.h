@@ -20,13 +20,12 @@ struct _instance {
     timer_scheduler_t timer_sched;
     tasklet_scheduler_t tasklet_sched;
     message_pool_t message_pool;
-    // --- instance objects
-    timer_scheduler_t (*get_timer_scheduler)(void);
-    tasklet_scheduler_t (*get_tasklet_scheduler)(void);
-    message_pool_t (*get_message_pool)(void);
 };
 
-instance_t *instance_init(void);
-instance_t *instance_get(void);
+instance_t *
+instance_init(void);
+
+instance_t *
+instance_get(void);
 
 #endif // NS_CORE_COMMON_INSTANCE_H_
