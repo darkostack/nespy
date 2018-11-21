@@ -25,11 +25,11 @@ void message_pool_make_new(void *instance)
     instance_t *inst = (instance_t *)instance;
     memset(inst->message_pool.buffers, 0, sizeof(inst->message_pool.buffers));
     inst->message_pool.free_buffers = inst->message_pool.buffers;
-    for (uint16_t i = 0; i < MESSAGE_NUM_BUFFERS - 1; i++) {
+    for (uint16_t i = 0; i < MSG_NUM_BUFFERS - 1; i++) {
         inst->message_pool.buffers[i].next = (void *)&inst->message_pool.buffers[i + 1];
     }
-    inst->message_pool.buffers[MESSAGE_NUM_BUFFERS - 1].next = NULL;
-    inst->message_pool.num_free_buffers = MESSAGE_NUM_BUFFERS;
+    inst->message_pool.buffers[MSG_NUM_BUFFERS - 1].next = NULL;
+    inst->message_pool.num_free_buffers = MSG_NUM_BUFFERS;
 
     // --- message pool functions
     inst->message_pool.new = msg_pool_new;
@@ -74,12 +74,12 @@ static ns_error_t msg_set_length(message_t *message, uint16_t length)
     uint16_t total_len_current = msg_get_reserved((message_t *)msgbuf) + msg_get_length((message_t *)msgbuf);
     int bufs = 0;
 
-    if (total_len_request > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
-        bufs = (((total_len_request - MESSAGE_HEAD_BUFFER_DATA_SIZE) - 1) / MESSAGE_BUFFER_DATA_SIZE) + 1;
+    if (total_len_request > MSG_HEAD_BUFFER_DATA_SIZE) {
+        bufs = (((total_len_request - MSG_HEAD_BUFFER_DATA_SIZE) - 1) / MSG_BUFFER_DATA_SIZE) + 1;
     }
 
-    if (total_len_current > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
-        bufs -= (((total_len_current - MESSAGE_HEAD_BUFFER_DATA_SIZE) - 1) / MESSAGE_BUFFER_DATA_SIZE) + 1;
+    if (total_len_current > MSG_HEAD_BUFFER_DATA_SIZE) {
+        bufs -= (((total_len_current - MSG_HEAD_BUFFER_DATA_SIZE) - 1) / MSG_BUFFER_DATA_SIZE) + 1;
     }
 
     error = msg_reclaim_buffers(inst, bufs, msg_get_priority((message_t *)msgbuf));
@@ -116,8 +116,8 @@ static int msg_write(message_t *message, uint16_t offset, uint16_t length, void 
     offset += msg_get_reserved((message_t *)msgbuf);
 
     // special case first buffer
-    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
-        bytes_to_copy = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
+    if (offset < MSG_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_copy = MSG_HEAD_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -127,22 +127,22 @@ static int msg_write(message_t *message, uint16_t offset, uint16_t length, void 
         buf = (uint8_t *)buf + bytes_to_copy;
         offset = 0;
     } else {
-        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
+        offset -= MSG_HEAD_BUFFER_DATA_SIZE;
     }
 
     // advance to offset
     cur_buffer = msgbuf->next;
 
-    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
+    while (offset >= MSG_BUFFER_DATA_SIZE) {
         ns_assert(cur_buffer != NULL);
         cur_buffer = cur_buffer->next;
-        offset -= MESSAGE_BUFFER_DATA_SIZE;
+        offset -= MSG_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
         ns_assert(cur_buffer != NULL);
-        bytes_to_copy = MESSAGE_BUFFER_DATA_SIZE - offset;
+        bytes_to_copy = MSG_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -176,8 +176,8 @@ static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *
     offset += msg_get_reserved((message_t *)msgbuf);
 
     // special case first buffer
-    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
-        bytes_to_copy = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
+    if (offset < MSG_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_copy = MSG_HEAD_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -187,22 +187,22 @@ static int msg_read(message_t *message, uint16_t offset, uint16_t length, void *
         buf = (uint8_t *)buf + bytes_to_copy;
         offset = 0;
     } else {
-        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
+        offset -= MSG_HEAD_BUFFER_DATA_SIZE;
     }
 
     // advance to offset
     cur_buffer = msgbuf->next;
 
-    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
+    while (offset >= MSG_BUFFER_DATA_SIZE) {
         ns_assert(cur_buffer != NULL);
         cur_buffer = cur_buffer->next;
-        offset -= MESSAGE_BUFFER_DATA_SIZE;
+        offset -= MSG_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
         ns_assert(cur_buffer != NULL);
-        bytes_to_copy = MESSAGE_BUFFER_DATA_SIZE - offset;
+        bytes_to_copy = MSG_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -281,14 +281,14 @@ static ns_error_t msg_resize(instance_t *instance, message_t *message, uint16_t 
     // add buffers
     buffer_t *cur_buffer = msgbuf;
     buffer_t *last_buffer;
-    uint16_t cur_length = MESSAGE_HEAD_BUFFER_DATA_SIZE;
+    uint16_t cur_length = MSG_HEAD_BUFFER_DATA_SIZE;
     while (cur_length < length) {
         if (cur_buffer->next == NULL) {
             cur_buffer->next = (void *)msg_new_buffer(instance, msg_get_priority((message_t *)msgbuf));
             VERIFY_OR_EXIT(cur_buffer->next != NULL, error = NS_ERROR_NO_BUFS);
         }
         cur_buffer = cur_buffer->next;
-        cur_length += MESSAGE_HEAD_BUFFER_DATA_SIZE;
+        cur_length += MSG_HEAD_BUFFER_DATA_SIZE;
     }
 
     // remove buffers
