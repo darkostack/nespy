@@ -15,8 +15,8 @@ enum {
 };
 
 struct _message_info {
-    message_t *next[MSG_INFO_NUM_LISTS]; // a pointer to the next message in doubly linked list
-    message_t *prev[MSG_INFO_NUM_LISTS]; // a pointer to the previous message ind doubly linked list
+    message_t next[MSG_INFO_NUM_LISTS]; // a pointer to the next message in doubly linked list
+    message_t prev[MSG_INFO_NUM_LISTS]; // a pointer to the previous message ind doubly linked list
     message_pool_t *message_pool;
 
     union {
@@ -67,11 +67,11 @@ typedef enum _queue_position {
 } queue_position_t;
 
 struct _message_queue {
-    message_t *tail;
+    message_t tail;
 };
 
 struct _priority_queue {
-    message_t *tails[MSG_NUM_PRIORITIES];
+    message_t tails[MSG_NUM_PRIORITIES];
 };
 
 struct _message_pool {
@@ -79,24 +79,26 @@ struct _message_pool {
     buffer_t buffers[MSG_NUM_BUFFERS];
     buffer_t *free_buffers;
     priority_queue_t all_queue;
-    // --- message pool functions
-    message_t (* new)(uint8_t type, uint16_t reserved, uint8_t priority);
-    ns_error_t (* set_priority)(message_t *message, uint8_t priority);
-    ns_error_t (* set_length)(message_t *message, uint16_t length);
-    uint16_t (* get_length)(message_t *message);
-    int (* write)(message_t *message, uint16_t offset, uint16_t length, void *buf);
-    int (* read)(message_t *message, uint16_t offset, uint16_t length, void *buf);
-    void (* free)(message_t *message);
-    void (* remove_from_list)(message_t *message, uint8_t list, void *queue);
-    void (* add_to_list)(message_t *message, uint8_t list, void *queue, queue_position_t pos);
-    void (* set_message_queue)(message_t *message, message_queue_t *queue);
-    void (* set_priority_queue)(message_t *message, priority_queue_t *queue);
-    ns_error_t (* message_enqueue)(message_t *message, message_queue_t *queue, queue_position_t pos);
-    ns_error_t (* message_dequeue)(message_t *message, message_queue_t *queue);
-    // TODO: ns_error_t (* priority_enqueue)(message_t *message);
-    // TODO: ns_error_t (* priority_dequeue)(message_t *message);
 };
 
-void message_pool_make_new(void *instance);
+void       message_pool_make_new(void *instance);
+void       message_queue_make_new(message_queue_t *queue);
+message_t  message_new(uint8_t type, uint16_t reserved, uint8_t priority);
+ns_error_t message_reclaim_buffers(int num_buffers, uint8_t priority);
+uint16_t   message_get_reserved(message_t message);
+uint8_t    message_get_priority(message_t message);
+ns_error_t message_set_priority(message_t message, uint8_t priority);
+ns_error_t message_resize(message_t message, uint16_t length);
+ns_error_t message_set_length(message_t message, uint16_t length);
+uint16_t   message_get_length(message_t message);
+int        message_write(message_t message, uint16_t offset, uint16_t length, void *buf);
+int        message_read(message_t message, uint16_t offset, uint16_t length, void *buf);
+void       message_free(message_t message);
+void       message_remove_from_list(message_t message, uint8_t list, void *queue);
+void       message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos);
+void       message_set_message_queue(message_t message, message_queue_t *queue);
+void       message_set_priority_queue(message_t message, priority_queue_t *queue);
+ns_error_t message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos);
+ns_error_t message_queue_dequeue(message_t message, message_queue_t *queue);
 
 #endif // NS_CORE_COMMON_MESSAGE_H_
