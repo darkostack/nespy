@@ -380,7 +380,7 @@ message_remove_from_list(message_t message, uint8_t list, void *queue)
                   (msgbuf->buffer.head.info.prev[list] != NULL));
 
         if (msgbuf == (buffer_t *)msg_queue->tail) {
-            msg_queue->tail = ((buffer_t *)msg_queue->tail)->buffer.head.info.prev[list];
+            msg_queue->tail = (void *)((buffer_t *)msg_queue->tail)->buffer.head.info.prev[list];
             if (msgbuf == (buffer_t *)msg_queue->tail) {
                 msg_queue->tail = NULL;
             }
@@ -431,18 +431,18 @@ message_add_to_list(message_t message, uint8_t list, void *queue, queue_position
         if (msg_queue->tail == NULL) {
             msgbuf->buffer.head.info.next[list] = (message_t)msgbuf;
             msgbuf->buffer.head.info.prev[list] = (message_t)msgbuf;
-            msg_queue->tail = (message_t)msgbuf;
+            msg_queue->tail = (void *)msgbuf;
         } else {
             message_t head = ((buffer_t *)msg_queue->tail)->buffer.head.info.next[list];
 
             msgbuf->buffer.head.info.next[list] = head;
-            msgbuf->buffer.head.info.prev[list] = msg_queue->tail;
+            msgbuf->buffer.head.info.prev[list] = (message_t)msg_queue->tail;
 
             ((buffer_t *)head)->buffer.head.info.prev[list] = (message_t)msgbuf;
             ((buffer_t *)msg_queue->tail)->buffer.head.info.next[list] = (message_t)msgbuf;
 
             if (pos == MSG_QUEUE_POS_TAIL) {
-                msg_queue->tail = (message_t)msgbuf;
+                msg_queue->tail = (void *)msgbuf;
             }
         }
     }
@@ -577,7 +577,7 @@ msg_get_next(message_t message)
     } else {
         message_queue_t *msg_queue = ((buffer_t *)message)->buffer.head.info.queue.message;
         VERIFY_OR_EXIT(msg_queue != NULL, next = NULL);
-        tail = msg_queue->tail;
+        tail = (message_t)msg_queue->tail;
     }
 
     next = (message == tail) ? NULL : ((buffer_t *)message)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];

@@ -67,7 +67,7 @@ typedef enum _queue_position {
 } queue_position_t;
 
 struct _message_queue {
-    message_t tail;
+    void *tail;
 };
 
 struct _priority_queue {
