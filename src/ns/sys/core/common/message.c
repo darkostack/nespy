@@ -204,7 +204,7 @@ message_get_length(message_t message)
 }
 
 int
-message_write(message_t message, uint16_t offset, uint16_t length, void *buf)
+message_write(message_t message, uint16_t offset, const void *buf, uint16_t length)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *cur_buffer;
@@ -263,7 +263,7 @@ message_write(message_t message, uint16_t offset, uint16_t length, void *buf)
 }
 
 int
-message_read(message_t message, uint16_t offset, uint16_t length, void *buf)
+message_read(message_t message, uint16_t offset, void *buf, uint16_t length)
 {
     buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *cur_buffer;
@@ -465,7 +465,7 @@ message_set_priority_queue(message_t message, priority_queue_t *queue)
 }
 
 ns_error_t
-message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos)
+message_queue_enqueue(message_queue_t *queue, message_t message, queue_position_t pos)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -482,7 +482,7 @@ exit:
 }
 
 ns_error_t
-message_queue_dequeue(message_t message, message_queue_t *queue)
+message_queue_dequeue(message_queue_t *queue, message_t message)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
@@ -630,8 +630,8 @@ message_write_read_test(void)
     printf("num of free buffers: %u\r\n", inst->message_pool.num_free_buffers);
 
     message_set_length(message, sizeof(write_buffer));
-    message_write(message, 0, sizeof(write_buffer), write_buffer);
-    message_read(message, 0, sizeof(read_buffer), read_buffer);
+    message_write(message, 0, write_buffer, sizeof(write_buffer));
+    message_read(message, 0, read_buffer, sizeof(read_buffer));
 
     if (memcmp(write_buffer, read_buffer, sizeof(write_buffer)) == 0) {
         printf("message write and read test SUCCESS\r\n");
@@ -714,41 +714,41 @@ message_queue_test(void)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // enqueue 1 message and remove it
-    error = message_queue_enqueue(msg[0], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_dequeue(msg[0], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[0]);
     error = verify_message_queue_content(&message_queue, 0);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // enqueue 1 message at head and remove it
-    error = message_queue_enqueue(msg[0], &message_queue, MSG_QUEUE_POS_HEAD);
+    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_HEAD);
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_dequeue(msg[0], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[0]);
     error = verify_message_queue_content(&message_queue, 0);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // enqueue 5 messages
-    error = message_queue_enqueue(msg[0], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_enqueue(msg[1], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[1], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 2, msg[0], msg[1]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_enqueue(msg[2], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 3, msg[0], msg[1], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_enqueue(msg[3], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[3], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 4, msg[0], msg[1], msg[2], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_enqueue(msg[4], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[4], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 5, msg[0], msg[1], msg[2], msg[3], msg[4]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
@@ -760,85 +760,85 @@ message_queue_test(void)
     }
 
     // remove message in head
-    error = message_queue_dequeue(msg[0], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[0]);
     error = verify_message_queue_content(&message_queue, 4, msg[1], msg[2], msg[3], msg[4]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // remove message in middle
-    error = message_queue_dequeue(msg[3], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[3]);
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[2], msg[4]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // remove message from tail
-    error = message_queue_dequeue(msg[4], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[4]);
     error = verify_message_queue_content(&message_queue, 2, msg[1], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add after remove
-    error = message_queue_enqueue(msg[0], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[2], msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_enqueue(msg[3], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[3], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 4, msg[1], msg[2], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // remove from middle
-    error = message_queue_dequeue(msg[2], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[2]);
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add to head
-    error = message_queue_enqueue(msg[2], &message_queue, MSG_QUEUE_POS_HEAD);
+    error = message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_HEAD);
     error = verify_message_queue_content(&message_queue, 4, msg[2], msg[1], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // remove from head
-    error = message_queue_dequeue(msg[2], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[2]);
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // remove from head
-    error = message_queue_dequeue(msg[1], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[1]);
     error = verify_message_queue_content(&message_queue, 2, msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add to head
-    error = message_queue_enqueue(msg[1], &message_queue, MSG_QUEUE_POS_HEAD);
+    error = message_queue_enqueue(&message_queue, msg[1], MSG_QUEUE_POS_HEAD);
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add to tail
-    error = message_queue_enqueue(msg[2], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 4, msg[1], msg[0], msg[3], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // remove all messages
-    error = message_queue_dequeue(msg[3], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[3]);
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_dequeue(msg[1], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[1]);
     error = verify_message_queue_content(&message_queue, 2, msg[0], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_dequeue(msg[2], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[2]);
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    error = message_queue_dequeue(msg[0], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[0]);
     error = verify_message_queue_content(&message_queue, 0);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // check the failure cases
-    error = message_queue_enqueue(msg[0], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
     // enqueue already queued message
-    error = message_queue_enqueue(msg[0], &message_queue, MSG_QUEUE_POS_TAIL);
+    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
     VERIFY_OR_EXIT(error == NS_ERROR_ALREADY);
     // dequeue not queued message
-    error = message_queue_dequeue(msg[1], &message_queue);
+    error = message_queue_dequeue(&message_queue, msg[1]);
     VERIFY_OR_EXIT(error == NS_ERROR_NOT_FOUND);
 
     error = NS_ERROR_NONE;

@@ -112,10 +112,10 @@ uint16_t
 message_get_length(message_t message);
 
 int
-message_write(message_t message, uint16_t offset, uint16_t length, void *buf);
+message_write(message_t message, uint16_t offset, const void *buf, uint16_t length);
 
 int
-message_read(message_t message, uint16_t offset, uint16_t length, void *buf);
+message_read(message_t message, uint16_t offset, void *buf, uint16_t length);
 
 void
 message_free(message_t message);
@@ -133,9 +133,9 @@ void
 message_set_priority_queue(message_t message, priority_queue_t *queue);
 
 ns_error_t
-message_queue_enqueue(message_t message, message_queue_t *queue, queue_position_t pos);
+message_queue_enqueue(message_queue_t *queue, message_t message, queue_position_t pos);
 
 ns_error_t
-message_queue_dequeue(message_t message, message_queue_t *queue);
+message_queue_dequeue(message_queue_t *queue, message_t message);
 
 #endif // NS_CORE_COMMON_MESSAGE_H_
