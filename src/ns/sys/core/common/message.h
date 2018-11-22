@@ -262,10 +262,16 @@ uint8_t
 message_buffer_count(message_t message);
 
 void
-message_remove_from_list(message_t message, uint8_t list, void *queue);
+message_remove_from_message_queue_list(message_t message, message_queue_t *queue);
 
 void
-message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos);
+message_remove_from_pool_all_queue_list(message_t message, uint8_t list);
+
+void
+message_add_to_message_queue_list(message_t message, message_queue_t *queue, queue_position_t pos);
+
+void
+message_add_to_pool_all_queue_list(message_t message, uint8_t list);
 
 void
 message_set_message_queue(message_t message, message_queue_t *queue);
@@ -290,5 +296,11 @@ message_queue_get_next(message_queue_t *queue, const message_t message);
 
 void
 message_queue_get_info(message_queue_t *queue, uint16_t *message_count, uint16_t *buffer_count);
+
+ns_error_t
+message_priority_queue_enqueue(priority_queue_t *queue, message_t message);
+
+ns_error_t
+message_priority_queue_dequeue(priority_queue_t *queue, message_t message);
 
 #endif // NS_CORE_COMMON_MESSAGE_H_

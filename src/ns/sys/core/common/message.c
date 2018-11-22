@@ -14,7 +14,7 @@ static bool
 msg_is_in_queue(message_t message);
 
 static message_t
-msg_find_first_non_null_tail(uint8_t start_prio_level);
+msg_find_first_non_null_tail(priority_queue_t *queue, uint8_t start_prio_level);
 
 static uint8_t
 msg_prev_priority(uint8_t priority);
@@ -117,17 +117,18 @@ message_set_priority(message_t message, uint8_t priority)
     VERIFY_OR_EXIT(msgbuf->buffer.head.info.priority != priority);
 
     if (msgbuf->buffer.head.info.in_priority_queue) {
-        // TODO: priority queue dequeue
+        prio_queue = msgbuf->buffer.head.info.queue.priority;
+        message_priority_queue_dequeue(prio_queue, (message_t)msgbuf);
     } else {
-        message_remove_from_list((message_t)msgbuf, MSG_INFO_LIST_ALL, NULL);
+        message_remove_from_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_ALL);
     }
 
     msgbuf->buffer.head.info.priority = priority;
 
     if (prio_queue != NULL) {
-        // TODO: priority queue enqueue
+        message_priority_queue_enqueue(prio_queue, (message_t)msgbuf);
     } else {
-        message_add_to_list((message_t)msgbuf, MSG_INFO_LIST_ALL, NULL, MSG_QUEUE_POS_TAIL);
+        message_add_to_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_ALL);
     }
 
 exit:
@@ -784,66 +785,103 @@ message_buffer_count(message_t message)
 }
 
 void
-message_remove_from_list(message_t message, uint8_t list, void *queue)
+message_remove_from_message_queue_list(message_t message, message_queue_t *queue)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+
+    // this list maintained by message queue interface
+    uint8_t list = MSG_INFO_LIST_INTERFACE;
+
+    ns_assert((msgbuf->buffer.head.info.next[list] != NULL) &&
+              (msgbuf->buffer.head.info.prev[list] != NULL));
+
+    if (msgbuf == (buffer_t *)queue->tail) {
+        queue->tail = (void *)((buffer_t *)queue->tail)->buffer.head.info.prev[list];
+        if (msgbuf == (buffer_t *)queue->tail) {
+            queue->tail = NULL;
+        }
+    }
+
+    ((buffer_t *)msgbuf->buffer.head.info.prev[list])->buffer.head.info.next[list] =
+        msgbuf->buffer.head.info.next[list];
+
+    ((buffer_t *)msgbuf->buffer.head.info.next[list])->buffer.head.info.prev[list] =
+        msgbuf->buffer.head.info.prev[list];
+
+    msgbuf->buffer.head.info.prev[list] = NULL;
+    msgbuf->buffer.head.info.next[list] = NULL;
+}
+
+void
+message_remove_from_pool_all_queue_list(message_t message, uint8_t list)
 {
     instance_t *inst = instance_get();
     buffer_t *msgbuf = (buffer_t *)message;
     uint8_t priority;
     buffer_t *tail;
 
-    // this list mantained by message pool
-    if (list == MSG_INFO_LIST_ALL && queue == NULL) {
+    priority = msgbuf->buffer.head.info.priority;
 
-        priority = msgbuf->buffer.head.info.priority;
-
+    if (list == MSG_INFO_LIST_INTERFACE) {
+        tail = (buffer_t *)msgbuf->buffer.head.info.queue.priority->tails[priority];
+    } else {
         tail = (buffer_t *)inst->message_pool.all_queue.tails[priority];
-
-        if (msgbuf == tail) {
-            tail = (buffer_t *)tail->buffer.head.info.prev[list];
-            if ((msgbuf == tail) || (tail->buffer.head.info.priority != priority)) {
-                tail = NULL;
-            }
-            inst->message_pool.all_queue.tails[priority] = (message_t)tail;
-        }
-
-        ((buffer_t *)msgbuf->buffer.head.info.next[list])->buffer.head.info.prev[list] = 
-            msgbuf->buffer.head.info.prev[list];
-
-        ((buffer_t *)msgbuf->buffer.head.info.prev[list])->buffer.head.info.next[list] =
-            msgbuf->buffer.head.info.next[list];
-
-        msgbuf->buffer.head.info.next[list] = NULL;
-        msgbuf->buffer.head.info.prev[list] = NULL;
     }
 
-    // this list maintained by message queue interface
-    if (list == MSG_INFO_LIST_INTERFACE && queue != NULL) {
-
-        message_queue_t *msg_queue = (message_queue_t *)queue;
-
-        ns_assert((msgbuf->buffer.head.info.next[list] != NULL) &&
-                  (msgbuf->buffer.head.info.prev[list] != NULL));
-
-        if (msgbuf == (buffer_t *)msg_queue->tail) {
-            msg_queue->tail = (void *)((buffer_t *)msg_queue->tail)->buffer.head.info.prev[list];
-            if (msgbuf == (buffer_t *)msg_queue->tail) {
-                msg_queue->tail = NULL;
-            }
+    if (msgbuf == tail) {
+        tail = (buffer_t *)tail->buffer.head.info.prev[list];
+        if ((msgbuf == tail) || (tail->buffer.head.info.priority != priority)) {
+            tail = NULL;
         }
+        if (list == MSG_INFO_LIST_INTERFACE) {
+            msgbuf->buffer.head.info.queue.priority->tails[priority] = (message_t)tail;
+        } else {
+            inst->message_pool.all_queue.tails[priority] = (message_t)tail;
+        }
+    }
 
-        ((buffer_t *)msgbuf->buffer.head.info.prev[list])->buffer.head.info.next[list] =
-            msgbuf->buffer.head.info.next[list];
+    ((buffer_t *)msgbuf->buffer.head.info.next[list])->buffer.head.info.prev[list] =
+        msgbuf->buffer.head.info.prev[list];
 
-        ((buffer_t *)msgbuf->buffer.head.info.next[list])->buffer.head.info.prev[list] =
-            msgbuf->buffer.head.info.prev[list];
+    ((buffer_t *)msgbuf->buffer.head.info.prev[list])->buffer.head.info.next[list] =
+        msgbuf->buffer.head.info.next[list];
 
-        msgbuf->buffer.head.info.prev[list] = NULL;
-        msgbuf->buffer.head.info.next[list] = NULL;
+    msgbuf->buffer.head.info.next[list] = NULL;
+    msgbuf->buffer.head.info.prev[list] = NULL;
+}
+
+void
+message_add_to_message_queue_list(message_t message, message_queue_t *queue, queue_position_t pos)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+
+    // this list maintained by message queue interface
+    uint8_t list = MSG_INFO_LIST_INTERFACE;
+
+    ns_assert((msgbuf->buffer.head.info.next[list] == NULL) &&
+              (msgbuf->buffer.head.info.prev[list] == NULL));
+
+    if (queue->tail == NULL) {
+        msgbuf->buffer.head.info.next[list] = (message_t)msgbuf;
+        msgbuf->buffer.head.info.prev[list] = (message_t)msgbuf;
+        queue->tail = (void *)msgbuf;
+    } else {
+        message_t head = ((buffer_t *)queue->tail)->buffer.head.info.next[list];
+
+        msgbuf->buffer.head.info.next[list] = head;
+        msgbuf->buffer.head.info.prev[list] = (message_t)queue->tail;
+
+        ((buffer_t *)head)->buffer.head.info.prev[list] = (message_t)msgbuf;
+        ((buffer_t *)queue->tail)->buffer.head.info.next[list] = (message_t)msgbuf;
+
+        if (pos == MSG_QUEUE_POS_TAIL) {
+            queue->tail = (void *)msgbuf;
+        }
     }
 }
 
 void
-message_add_to_list(message_t message, uint8_t list, void *queue, queue_position_t pos)
+message_add_to_pool_all_queue_list(message_t message, uint8_t list)
 {
     instance_t *inst = instance_get();
     buffer_t *msgbuf = (buffer_t *)message;
@@ -851,45 +889,29 @@ message_add_to_list(message_t message, uint8_t list, void *queue, queue_position
     buffer_t *tail;
     buffer_t *next;
 
-    // this list mantained by message pool
-    if (list == MSG_INFO_LIST_ALL && queue == NULL) {
-        priority = msgbuf->buffer.head.info.priority;
-        tail = (buffer_t *)msg_find_first_non_null_tail(priority);
-        if (tail != NULL) {
-            next = (buffer_t *)tail->buffer.head.info.next[list];
-            msgbuf->buffer.head.info.next[list] = (message_t)next;
-            msgbuf->buffer.head.info.prev[list] = (message_t)tail;
-            next->buffer.head.info.prev[list] = (message_t)msgbuf;
-            tail->buffer.head.info.next[list] = (message_t)msgbuf;
-        } else {
-            msgbuf->buffer.head.info.next[list] = (message_t)msgbuf;
-            msgbuf->buffer.head.info.prev[list] = (message_t)msgbuf;
-        }
-        inst->message_pool.all_queue.tails[priority] = (message_t)msgbuf;
+    priority = msgbuf->buffer.head.info.priority;
+
+    if (list == MSG_INFO_LIST_INTERFACE) {
+        tail = (buffer_t *)msg_find_first_non_null_tail(msgbuf->buffer.head.info.queue.priority, priority);
+    } else {
+        tail = (buffer_t *)msg_find_first_non_null_tail(&inst->message_pool.all_queue, priority);
     }
 
-    // this list maintained by message queue interface
-    if (list == MSG_INFO_LIST_INTERFACE && queue != NULL) {
-        message_queue_t *msg_queue = (message_queue_t *)queue;
-        ns_assert((msgbuf->buffer.head.info.next[list] == NULL) &&
-                  (msgbuf->buffer.head.info.prev[list] == NULL));
-        if (msg_queue->tail == NULL) {
-            msgbuf->buffer.head.info.next[list] = (message_t)msgbuf;
-            msgbuf->buffer.head.info.prev[list] = (message_t)msgbuf;
-            msg_queue->tail = (void *)msgbuf;
-        } else {
-            message_t head = ((buffer_t *)msg_queue->tail)->buffer.head.info.next[list];
+    if (tail != NULL) {
+        next = (buffer_t *)tail->buffer.head.info.next[list];
+        msgbuf->buffer.head.info.next[list] = (message_t)next;
+        msgbuf->buffer.head.info.prev[list] = (message_t)tail;
+        next->buffer.head.info.prev[list] = (message_t)msgbuf;
+        tail->buffer.head.info.next[list] = (message_t)msgbuf;
+    } else {
+        msgbuf->buffer.head.info.next[list] = (message_t)msgbuf;
+        msgbuf->buffer.head.info.prev[list] = (message_t)msgbuf;
+    }
 
-            msgbuf->buffer.head.info.next[list] = head;
-            msgbuf->buffer.head.info.prev[list] = (message_t)msg_queue->tail;
-
-            ((buffer_t *)head)->buffer.head.info.prev[list] = (message_t)msgbuf;
-            ((buffer_t *)msg_queue->tail)->buffer.head.info.next[list] = (message_t)msgbuf;
-
-            if (pos == MSG_QUEUE_POS_TAIL) {
-                msg_queue->tail = (void *)msgbuf;
-            }
-        }
+    if (list == MSG_INFO_LIST_INTERFACE) {
+        msgbuf->buffer.head.info.queue.priority->tails[priority] = (message_t)msgbuf;
+    } else {
+        inst->message_pool.all_queue.tails[priority] = (message_t)msgbuf;
     }
 }
 
@@ -926,8 +948,8 @@ message_queue_enqueue(message_queue_t *queue, message_t message, queue_position_
 
     message_set_message_queue((message_t)msgbuf, queue);
 
-    message_add_to_list((message_t)msgbuf, MSG_INFO_LIST_INTERFACE, (void *)queue, pos);
-    message_add_to_list((message_t)msgbuf, MSG_INFO_LIST_ALL, NULL, MSG_QUEUE_POS_TAIL);
+    message_add_to_message_queue_list((message_t)msgbuf, queue, pos);
+    message_add_to_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_ALL);
 
 exit:
     return error;
@@ -941,8 +963,8 @@ message_queue_dequeue(message_queue_t *queue, message_t message)
 
     VERIFY_OR_EXIT(msgbuf->buffer.head.info.queue.message == queue, error = NS_ERROR_NOT_FOUND);
 
-    message_remove_from_list((message_t)msgbuf, MSG_INFO_LIST_INTERFACE, (void *)queue);
-    message_remove_from_list((message_t)msgbuf, MSG_INFO_LIST_ALL, NULL);
+    message_remove_from_message_queue_list((message_t)msgbuf, queue);
+    message_remove_from_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_ALL);
 
     message_set_message_queue((message_t)msgbuf, NULL);
 
@@ -983,6 +1005,40 @@ message_queue_get_info(message_queue_t *queue, uint16_t *message_count, uint16_t
     *buffer_count = nbuf;
 }
 
+ns_error_t
+message_priority_queue_enqueue(priority_queue_t *queue, message_t message)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    buffer_t *msgbuf = (buffer_t *)message;
+
+    VERIFY_OR_EXIT(!msg_is_in_queue((message_t)msgbuf), error = NS_ERROR_ALREADY);
+
+    message_set_priority_queue((message_t)msgbuf, queue);
+
+    message_add_to_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_INTERFACE);
+    message_add_to_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_ALL);
+
+exit:
+    return error;
+}
+
+ns_error_t
+message_priority_queue_dequeue(priority_queue_t *queue, message_t message)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    buffer_t *msgbuf = (buffer_t *)message;
+
+    VERIFY_OR_EXIT(msgbuf->buffer.head.info.queue.priority == queue, error = NS_ERROR_NOT_FOUND);
+
+    message_remove_from_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_INTERFACE);
+    message_remove_from_pool_all_queue_list((message_t)msgbuf, MSG_INFO_LIST_ALL);
+
+    message_set_priority_queue((message_t)msgbuf, NULL);
+
+exit:
+    return error;
+}
+
 // --- private functions
 static uint16_t
 msg_get_free_buffer_count(void)
@@ -1019,17 +1075,16 @@ msg_is_in_queue(message_t message)
 }
 
 static message_t
-msg_find_first_non_null_tail(uint8_t start_prio_level)
+msg_find_first_non_null_tail(priority_queue_t *queue, uint8_t start_prio_level)
 {
-    instance_t *inst = instance_get();
     message_t tail = NULL;
     uint8_t priority;
 
     priority = start_prio_level;
 
     do {
-        if (inst->message_pool.all_queue.tails[priority] != NULL) {
-            tail = inst->message_pool.all_queue.tails[priority];
+        if (queue->tails[priority] != NULL) {
+            tail = queue->tails[priority];
             break;
         }
         priority = msg_prev_priority(priority);
