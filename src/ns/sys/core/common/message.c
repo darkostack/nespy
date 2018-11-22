@@ -761,7 +761,9 @@ message_get_next(message_t message)
     message_t tail = NULL;
 
     if (((buffer_t *)message)->buffer.head.info.in_priority_queue) {
-        // TODO: priority queue
+        priority_queue_t *prio_queue = ((buffer_t *)message)->buffer.head.info.queue.priority;
+        VERIFY_OR_EXIT(prio_queue != NULL, next = NULL);
+        tail = msg_find_first_non_null_tail(prio_queue, 0);
     } else {
         message_queue_t *msg_queue = ((buffer_t *)message)->buffer.head.info.queue.message;
         VERIFY_OR_EXIT(msg_queue != NULL, next = NULL);
