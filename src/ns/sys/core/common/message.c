@@ -168,6 +168,9 @@ exit:
 ns_error_t
 message_set_length(message_t message, uint16_t length)
 {
+    // NOTE: don't use freed message, it will cause invalid number of free
+    // buffers in message pool because their buffer pointer isn't valid anymore.
+
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = (buffer_t *)message;
 
@@ -649,6 +652,9 @@ message_clone_length(message_t message, uint16_t length)
                           message_get_priority(message));
 
     VERIFY_OR_EXIT(msgcopy != NULL, error = NS_ERROR_NO_BUFS);
+    VERIFY_OR_EXIT((error = message_set_length(msgcopy, length)) == NS_ERROR_NONE);
+
+    message_copy_to(message, 0, 0, length, msgcopy);
 
     // copy selected information
     message_set_offset(msgcopy, message_get_offset(message));

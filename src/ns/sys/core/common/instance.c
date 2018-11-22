@@ -14,10 +14,13 @@ instance_init(void)
     tasklet_scheduler_make_new(inst);
     message_pool_make_new(inst);
 
-    extern void test_message_write_read(void);
+    extern ns_error_t test_message_write_read(void);
     test_message_write_read();
 
-    extern void test_message_queue(void);
+    extern ns_error_t test_message_utility(void);
+    test_message_utility();
+
+    extern ns_error_t test_message_queue(void);
     test_message_queue();
 
     inst->is_initialized = true;
