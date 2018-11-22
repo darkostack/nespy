@@ -303,4 +303,16 @@ message_priority_queue_enqueue(priority_queue_t *queue, message_t message);
 ns_error_t
 message_priority_queue_dequeue(priority_queue_t *queue, message_t message);
 
+message_t
+message_priority_queue_get_head(priority_queue_t *queue);
+
+message_t
+message_priority_queue_get_head_for_priority(priority_queue_t *queue, uint8_t priority);
+
+message_t
+message_priority_queue_get_tail(priority_queue_t *queue);
+
+void
+message_priority_queue_get_info(priority_queue_t *queue, uint16_t *message_count, uint16_t *buffer_count);
+
 #endif // NS_CORE_COMMON_MESSAGE_H_

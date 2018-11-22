@@ -763,7 +763,7 @@ message_get_next(message_t message)
     if (((buffer_t *)message)->buffer.head.info.in_priority_queue) {
         priority_queue_t *prio_queue = ((buffer_t *)message)->buffer.head.info.queue.priority;
         VERIFY_OR_EXIT(prio_queue != NULL, next = NULL);
-        tail = msg_find_first_non_null_tail(prio_queue, 0);
+        tail = message_priority_queue_get_tail(prio_queue);
     } else {
         message_queue_t *msg_queue = ((buffer_t *)message)->buffer.head.info.queue.message;
         VERIFY_OR_EXIT(msg_queue != NULL, next = NULL);
@@ -1039,6 +1039,53 @@ message_priority_queue_dequeue(priority_queue_t *queue, message_t message)
 
 exit:
     return error;
+}
+
+message_t
+message_priority_queue_get_head(priority_queue_t *queue)
+{
+    message_t tail;
+    tail = msg_find_first_non_null_tail(queue, 0);
+    return (tail == NULL) ? NULL : ((buffer_t *)tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+}
+
+message_t
+message_priority_queue_get_head_for_priority(priority_queue_t *queue, uint8_t priority)
+{
+    message_t head;
+    message_t previous_tail;
+
+    if (queue->tails[priority] != NULL) {
+        previous_tail = msg_find_first_non_null_tail(queue, msg_prev_priority(priority));
+        ns_assert(previous_tail != NULL);
+        head = ((buffer_t *)previous_tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+    } else {
+        head = NULL;
+    }
+
+    return head;
+}
+
+message_t
+message_priority_queue_get_tail(priority_queue_t *queue)
+{
+    return msg_find_first_non_null_tail(queue, 0);
+}
+
+void
+message_priority_queue_get_info(priority_queue_t *queue, uint16_t *message_count, uint16_t *buffer_count)
+{
+    uint16_t nmsg = 0;
+    uint16_t nbuf = 0;
+
+    for (message_t message = message_priority_queue_get_head(queue);
+         message != NULL;
+         message = message_get_next(message)) {
+        nmsg++;
+        nbuf += message_buffer_count(message);
+    }
+    *message_count = nmsg;
+    *buffer_count = nbuf;
 }
 
 // --- private functions

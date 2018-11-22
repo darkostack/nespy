@@ -9,6 +9,11 @@
 static ns_error_t
 verify_message_queue_content(message_queue_t *queue, int expected_length, ...);
 
+#if 0
+static ns_error_t
+verify_priority_queue_content(priority_queue_t *queue, int expected_length, ...);
+#endif
+
 // --- message test functions
 ns_error_t
 test_message_write_read(void)
@@ -369,4 +374,12 @@ exit:
     va_end(args);
     return error;
 }
+
+#if 0
+static ns_error_t
+verify_priority_queue_content(priority_queue_t *queue, int expected_length, ...)
+{
+    return NS_ERROR_NONE;
+}
+#endif
 // END OF MESSAGE TEST FUNCTIONS -----------------------------------------------
