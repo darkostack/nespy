@@ -1,6 +1,8 @@
 #ifndef NS_MESSAGE_H_
 #define NS_MESSAGE_H_
 
+#include "ns/include/error.h"
+
 typedef void *ns_message_t;
 
 typedef struct _ns_buffer_info
@@ -26,6 +28,9 @@ typedef struct _ns_message_queue
 {
     void *tail;
 } ns_message_queue_t;
+
+ns_message_t
+ns_message_new(uint16_t type, uint16_t reserved, uint8_t priority);
 
 void
 ns_message_free(ns_message_t message);
@@ -58,7 +63,7 @@ int
 ns_message_read(ns_message_t message, uint16_t offset, void *buf, uint16_t length);
 
 int
-ns_message_write(ns_message_t message, uint16_t offset, void *buf, uint16_t length);
+ns_message_write(ns_message_t message, uint16_t offset, const void *buf, uint16_t length);
 
 void
 ns_message_queue_init(ns_message_queue_t *queue);
@@ -79,6 +84,6 @@ ns_message_t
 ns_message_queue_get_next(ns_message_queue_t *queue, const ns_message_t message);
 
 void
-ns_message_get_buffer_info(ns_instance_t, ns_buffer_info_t *buffer_info);
+ns_message_get_buffer_info(void *instance, ns_buffer_info_t *buffer_info);
 
 #endif // NS_MESSAGE_H_

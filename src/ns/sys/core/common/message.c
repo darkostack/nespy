@@ -2,7 +2,6 @@
 #include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
 #include <string.h>
-#include <stdio.h>
 
 // --- private functions declarations
 static uint16_t
@@ -20,17 +19,11 @@ msg_find_first_non_null_tail(uint8_t start_prio_level);
 static uint8_t
 msg_prev_priority(uint8_t priority);
 
-static message_t
-msg_queue_get_head(message_queue_t *queue);
+static uint16_t
+msg_update_checksum_value(uint16_t checksum, uint16_t value);
 
-static message_t
-msg_get_next(message_t message);
-
-static uint8_t
-msg_get_buffer_count(message_t message);
-
-static void
-msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint16_t *buffer_count);
+static uint16_t
+msg_update_checksum_buffer(uint16_t checksum, const void *buf, uint16_t length);
 
 // --- message pool functions
 void
@@ -73,6 +66,7 @@ message_new(uint8_t type, uint16_t reserved, uint8_t priority)
     msgbuf->buffer.head.info.message_pool = (message_pool_t *)&inst->message_pool;
     msgbuf->buffer.head.info.type = type;
     msgbuf->buffer.head.info.reserved = reserved;
+    msgbuf->buffer.head.info.link_security = false; // TODO: use link security
 
     VERIFY_OR_EXIT((error = message_set_priority((message_t)msgbuf, priority)) == NS_ERROR_NONE);
     VERIFY_OR_EXIT((error = message_set_length((message_t)msgbuf, 0)) == NS_ERROR_NONE);
@@ -95,8 +89,13 @@ message_reclaim_buffers(int num_buffers, uint8_t priority)
 uint16_t
 message_get_reserved(message_t message)
 {
-    buffer_t *msg = (buffer_t *)message;
-    return msg->buffer.head.info.reserved;
+    return ((buffer_t *)message)->buffer.head.info.reserved;
+}
+
+void
+message_set_reserved(message_t message, uint16_t reserved)
+{
+    ((buffer_t *)message)->buffer.head.info.reserved = reserved;
 }
 
 uint8_t
@@ -199,8 +198,7 @@ exit:
 uint16_t
 message_get_length(message_t message)
 {
-    buffer_t *msgbuf = (buffer_t *)message;
-    return msgbuf->buffer.head.info.length;
+    return ((buffer_t *)message)->buffer.head.info.length;
 }
 
 ns_error_t
@@ -223,6 +221,342 @@ uint16_t
 message_get_offset(message_t message)
 {
     return ((buffer_t *)message)->buffer.head.info.offset;
+}
+
+uint8_t
+message_get_type(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.type;
+}
+
+void
+message_set_type(message_t message, uint8_t type)
+{
+    ((buffer_t *)message)->buffer.head.info.type = type;
+}
+
+uint8_t
+message_get_sub_type(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.sub_type;
+}
+
+void
+message_set_sub_type(message_t message, uint8_t sub_type)
+{
+    ((buffer_t *)message)->buffer.head.info.sub_type = sub_type;
+}
+
+bool
+message_is_sub_type_mle(message_t message)
+{
+    // TODO: check the message is sub type MLE or not
+    return false;
+}
+
+ns_error_t
+message_move_offset(message_t message, int delta)
+{
+    ns_error_t error = NS_ERROR_NONE;
+
+    ns_assert(message_get_offset(message) + delta <= message_get_length(message));
+
+    VERIFY_OR_EXIT(message_get_offset(message) + delta <= message_get_length(message),
+                   error = NS_ERROR_INVALID_ARGS);
+
+    ((buffer_t *)message)->buffer.head.info.offset += (int16_t)delta;
+    ns_assert(((buffer_t *)message)->buffer.head.info.offset <= message_get_length(message));
+
+exit:
+    return error;
+}
+
+bool
+message_is_link_security_enabled(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.link_security;
+}
+
+void
+message_set_link_security_enabled(message_t message, bool enabled)
+{
+    ((buffer_t *)message)->buffer.head.info.link_security = enabled;
+}
+
+void
+message_set_direct_transmission(message_t message)
+{
+    ((buffer_t *)message)->buffer.head.info.direct_tx = true;
+}
+
+void 
+message_clear_direct_transmission(message_t message)
+{
+    ((buffer_t *)message)->buffer.head.info.direct_tx = false;
+}
+
+bool
+message_get_direct_transmission(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.direct_tx;
+}
+
+void
+message_set_tx_success(message_t message, bool tx_success)
+{
+    ((buffer_t *)message)->buffer.head.info.tx_success = tx_success;
+}
+
+bool
+message_get_tx_success(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.tx_success;
+}
+
+uint16_t
+message_get_datagram_tag(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.datagram_tag;
+}
+
+void
+message_set_datagram_tag(message_t message, uint16_t tag)
+{
+    ((buffer_t *)message)->buffer.head.info.datagram_tag = tag;
+}
+
+bool
+message_get_child_mask(message_t message, uint8_t child_index)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+    ns_assert(child_index < sizeof(msgbuf->buffer.head.info.child_mask) * 8);
+    return (msgbuf->buffer.head.info.child_mask[child_index / 8] & (0x80 >> (child_index % 8))) != 0;
+}
+
+void
+message_clear_child_mask(message_t message, uint8_t child_index)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+    ns_assert(child_index < sizeof(msgbuf->buffer.head.info.child_mask) * 8);
+    msgbuf->buffer.head.info.child_mask[child_index / 8] &= ~(0x80 >> (child_index % 8));
+}
+
+void
+message_set_child_mask(message_t message, uint8_t child_index)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+    ns_assert(child_index < sizeof(msgbuf->buffer.head.info.child_mask) * 8);
+    msgbuf->buffer.head.info.child_mask[child_index / 8] |= (0x80 >> (child_index % 8));
+}
+
+bool
+message_is_child_pending(message_t message)
+{
+    bool rval = false;
+    buffer_t *msgbuf = (buffer_t *)message;
+    for (size_t i = 0; i < sizeof(msgbuf->buffer.head.info.child_mask); i++) {
+        if (msgbuf->buffer.head.info.child_mask[i] != 0) {
+            EXIT_NOW(rval = true);
+        }
+    }
+exit:
+    return rval;
+}
+
+uint16_t
+message_get_panid(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.panid_channel.panid;
+}
+
+void
+message_set_panid(message_t message, uint16_t panid)
+{
+    ((buffer_t *)message)->buffer.head.info.panid_channel.panid = panid;
+}
+
+uint8_t
+message_get_channel(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.panid_channel.channel;
+}
+
+void
+message_set_channel(message_t message, uint8_t channel)
+{
+    ((buffer_t *)message)->buffer.head.info.panid_channel.channel = channel;
+}
+
+uint8_t
+message_get_timeout(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.timeout;
+}
+
+void
+message_set_timeout(message_t message, uint8_t timeout)
+{
+    ((buffer_t *)message)->buffer.head.info.timeout = timeout;
+}
+
+int8_t
+message_get_interface_id(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.interface_id;
+}
+
+void
+message_set_interface_id(message_t message, int8_t interface_id)
+{
+    ((buffer_t *)message)->buffer.head.info.interface_id = interface_id;
+}
+
+/* TODO:
+void
+message_add_rss(message_t message, int8_t rss)
+{
+
+}
+
+int8_t
+message_get_average_rss(message_t message)
+{
+
+}
+
+rss_averager_t *
+message_get_rss_averager(message_t message)
+{
+
+}
+*/
+
+uint16_t
+message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, uint16_t length)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+    buffer_t *cur_buffer;
+    uint16_t bytes_covered = 0;
+    uint16_t bytes_to_cover;
+
+    ns_assert(offset + length <= message_get_length((message_t)msgbuf));
+
+    offset += message_get_reserved((message_t)msgbuf);
+
+    // special case first buffer
+    if (offset < MSG_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_cover = MSG_HEAD_BUFFER_DATA_SIZE - offset;
+        if (bytes_to_cover > length) {
+            bytes_to_cover = length;
+        }
+        checksum = msg_update_checksum_buffer(checksum, msgbuf->buffer.head.data + offset, bytes_to_cover);
+        length -= bytes_to_cover;
+        bytes_covered += bytes_to_cover;
+        offset = 0;
+    } else {
+        offset -= MSG_HEAD_BUFFER_DATA_SIZE;
+    }
+
+    // advance to offset
+    cur_buffer = (buffer_t *)msgbuf->next;
+
+    while (offset >= MSG_BUFFER_DATA_SIZE) {
+        ns_assert(cur_buffer != NULL);
+        cur_buffer = (buffer_t *)cur_buffer->next;
+        offset -= MSG_BUFFER_DATA_SIZE;
+    }
+
+    // begin copy
+    while (length > 0) {
+        ns_assert(cur_buffer != NULL);
+        bytes_to_cover = MSG_BUFFER_DATA_SIZE - offset;
+
+        if (bytes_to_cover > length) {
+            bytes_to_cover = length;
+        }
+
+        checksum = msg_update_checksum_buffer(checksum, cur_buffer->buffer.head.data + offset, bytes_to_cover);
+
+        length -= bytes_to_cover;
+        bytes_covered += bytes_to_cover;
+        cur_buffer = (buffer_t *)cur_buffer->next;
+        offset = 0;
+    }
+
+    return checksum;
+}
+
+ns_error_t
+message_prepend(message_t message, const void *buf, uint16_t length)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    buffer_t *msgbuf = (buffer_t *)message;
+    buffer_t *new_buffer = NULL;
+
+    while (length < message_get_reserved(message)) {
+        VERIFY_OR_EXIT((new_buffer = (buffer_t *)msg_new_buffer(message_get_priority((message_t)msgbuf))) != NULL, error = NS_ERROR_NO_BUFS);
+
+        new_buffer->next = (void *)msgbuf->next;
+        msgbuf->next = (void *)new_buffer;
+
+        if (message_get_reserved((message_t)msgbuf) < sizeof(msgbuf->buffer.head.data)) {
+            // copy payload from the first buffer
+            memcpy(new_buffer->buffer.head.data + message_get_reserved((message_t)msgbuf),
+                   msgbuf->buffer.head.data + message_get_reserved((message_t)msgbuf),
+                   sizeof(msgbuf->buffer.head.data) - message_get_reserved((message_t)msgbuf));
+        }
+
+        message_set_reserved((message_t)msgbuf, message_get_reserved((message_t)msgbuf) + MSG_BUFFER_DATA_SIZE);
+    }
+
+    message_set_reserved((message_t)msgbuf, message_get_reserved((message_t)msgbuf) - length);
+    msgbuf->buffer.head.info.length += length;
+    message_set_offset((message_t)msgbuf, message_get_offset((message_t)msgbuf) + length);
+
+    if (buf != NULL) {
+        message_write((message_t)msgbuf, 0, buf, length);
+    }
+
+exit:
+    return error;
+}
+
+ns_error_t
+message_remove_header(message_t message, uint16_t length)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+
+    ns_assert(length <= msgbuf->buffer.head.info.length);
+
+    msgbuf->buffer.head.info.reserved += length;
+    msgbuf->buffer.head.info.length -= length;
+
+    if (msgbuf->buffer.head.info.offset > length) {
+        msgbuf->buffer.head.info.offset -= length;
+    } else {
+        msgbuf->buffer.head.info.offset = 0;
+    }
+
+    return NS_ERROR_NONE;
+}
+
+ns_error_t
+message_append(message_t message, const void *buf, uint16_t length)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    uint16_t old_length = message_get_length(message);
+    int bytes_written;
+
+    error = message_set_length(message, message_get_length(message) + length);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    bytes_written = message_write(message, old_length, buf, length);
+
+    ns_assert(bytes_written == (int)length);
+    (void)bytes_written;
+
+exit:
+    return error;
 }
 
 int
@@ -282,6 +616,59 @@ message_write(message_t message, uint16_t offset, const void *buf, uint16_t leng
     }
 
     return bytes_copied;
+}
+
+int
+message_copy_to(message_t source_message, uint16_t source_offset, uint16_t destination_offset, uint16_t length, message_t destination_message)
+{
+    uint16_t bytes_copied = 0;
+    uint16_t bytes_to_copy;
+    uint8_t buf[16];
+
+    while (length > 0) {
+        bytes_to_copy = (length < sizeof(buf)) ? length : sizeof(buf);
+        message_read(source_message, source_offset, buf, bytes_to_copy);
+        message_write(destination_message, destination_offset, buf, bytes_to_copy);
+        source_offset += bytes_to_copy;
+        destination_offset += bytes_to_copy;
+        length -= bytes_to_copy;
+        bytes_copied += bytes_to_copy;
+    }
+
+    return bytes_copied;
+}
+
+message_t
+message_clone_length(message_t message, uint16_t length)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    message_t msgcopy;
+
+    msgcopy = message_new(message_get_type(message),
+                          message_get_reserved(message),
+                          message_get_priority(message));
+
+    VERIFY_OR_EXIT(msgcopy != NULL, error = NS_ERROR_NO_BUFS);
+
+    // copy selected information
+    message_set_offset(msgcopy, message_get_offset(message));
+    message_set_interface_id(msgcopy, message_get_interface_id(message));
+    message_set_sub_type(msgcopy, message_get_sub_type(message));
+    message_set_link_security_enabled(msgcopy, message_is_link_security_enabled(message));
+
+exit:
+    if (error != NS_ERROR_NONE && msgcopy != NULL) {
+        message_free(msgcopy);
+        msgcopy = NULL;
+    }
+
+    return msgcopy;
+}
+
+message_t
+message_clone(message_t message)
+{
+    return message_clone_length(message, message_get_length(message));
 }
 
 int
@@ -358,6 +745,36 @@ message_free(message_t message)
         inst->message_pool.num_free_buffers++;
         msgbuf = tmp_buffer;
     }
+}
+
+message_t
+message_get_next(message_t message)
+{
+    message_t next = NULL;
+    message_t tail = NULL;
+
+    if (((buffer_t *)message)->buffer.head.info.in_priority_queue) {
+        // TODO: priority queue
+    } else {
+        message_queue_t *msg_queue = ((buffer_t *)message)->buffer.head.info.queue.message;
+        VERIFY_OR_EXIT(msg_queue != NULL, next = NULL);
+        tail = (message_t)msg_queue->tail;
+    }
+
+    next = (message == tail) ? NULL : ((buffer_t *)message)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+
+exit:
+    return next;
+}
+
+uint8_t
+message_buffer_count(message_t message)
+{
+    uint8_t rval = 1;
+    for (buffer_t *cur_buffer = (buffer_t *)((buffer_t *)message)->next; cur_buffer; cur_buffer = cur_buffer->next) {
+        rval++;
+    }
+    return rval;
 }
 
 void
@@ -478,6 +895,13 @@ message_set_message_queue(message_t message, message_queue_t *queue)
     msgbuf->buffer.head.info.in_priority_queue = false;
 }
 
+message_queue_t *
+message_get_message_queue(message_t message)
+{
+    buffer_t *msgbuf = (buffer_t *)message;
+    return (!msgbuf->buffer.head.info.in_priority_queue) ? msgbuf->buffer.head.info.queue.message : NULL;
+}
+
 void
 message_set_priority_queue(message_t message, priority_queue_t *queue)
 {
@@ -518,6 +942,39 @@ message_queue_dequeue(message_queue_t *queue, message_t message)
 
 exit:
     return error;
+}
+
+message_t
+message_queue_get_head(message_queue_t *queue)
+{
+    return (queue->tail == NULL) ? NULL :
+           ((buffer_t *)queue->tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+}
+
+message_t
+message_queue_get_next(message_queue_t *queue, const message_t message)
+{
+    message_t next;
+    VERIFY_OR_EXIT(message != NULL, next = NULL);
+    message_queue_t *msgqueue = ((buffer_t *)message)->buffer.head.info.queue.message;
+    VERIFY_OR_EXIT(msgqueue == queue, next = NULL);
+    next = message_get_next(message);
+exit:
+    return next;
+}
+
+void
+message_queue_get_info(message_queue_t *queue, uint16_t *message_count, uint16_t *buffer_count)
+{
+    uint16_t nmsg = 0;
+    uint16_t nbuf = 0;
+
+    for (message_t message = message_queue_get_head(queue); message != NULL; message = message_get_next(message)) {
+        nmsg++;
+        nbuf += message_buffer_count(message);
+    }
+    *message_count = nmsg;
+    *buffer_count = nbuf;
 }
 
 // --- private functions
@@ -581,295 +1038,19 @@ msg_prev_priority(uint8_t priority)
     return (priority == MSG_NUM_PRIORITIES - 1) ? 0 : (priority + 1);
 }
 
-static message_t
-msg_queue_get_head(message_queue_t *queue)
+static uint16_t
+msg_update_checksum_value(uint16_t checksum, uint16_t value)
 {
-    return (queue->tail == NULL) ? NULL :
-           ((buffer_t *)queue->tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+    uint16_t result = checksum + value;
+    return result + (result < checksum);
 }
 
-static message_t
-msg_get_next(message_t message)
+static uint16_t
+msg_update_checksum_buffer(uint16_t checksum, const void *buf, uint16_t length)
 {
-    message_t next = NULL;
-    message_t tail = NULL;
-
-    if (((buffer_t *)message)->buffer.head.info.in_priority_queue) {
-        // TODO: priority queue
-    } else {
-        message_queue_t *msg_queue = ((buffer_t *)message)->buffer.head.info.queue.message;
-        VERIFY_OR_EXIT(msg_queue != NULL, next = NULL);
-        tail = (message_t)msg_queue->tail;
+    const uint8_t *bytes = (const uint8_t *)buf;
+    for (int i = 0; i < length; i++) {
+        checksum = msg_update_checksum_value(checksum, (i & 1) ? bytes[i] : (uint16_t)(bytes[i] << 8));
     }
-
-    next = (message == tail) ? NULL : ((buffer_t *)message)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
-
-exit:
-    return next;
-}
-
-static uint8_t
-msg_get_buffer_count(message_t message)
-{
-    uint8_t rval = 1;
-    for (buffer_t *cur_buffer = (buffer_t *)((buffer_t *)message)->next; cur_buffer; cur_buffer = cur_buffer->next) {
-        rval++;
-    }
-    return rval;
-}
-
-static void
-msg_queue_get_info(message_queue_t *queue, uint16_t *msg_count, uint16_t *buffer_count)
-{
-    uint16_t nmsg = 0;
-    uint16_t nbuf = 0;
-
-    for (message_t message = msg_queue_get_head(queue); message != NULL; message = msg_get_next(message)) {
-        nmsg++;
-        nbuf += msg_get_buffer_count(message);
-    }
-    *msg_count = nmsg;
-    *buffer_count = nbuf;
-}
-
-// -------------------------------------------------------------- TEST FUNCTIONS
-void
-message_write_read_test(void)
-{
-    instance_t *inst = instance_get();
-
-    uint8_t write_buffer[1024];
-    uint8_t read_buffer[1024];
-
-    extern uint32_t ns_plat_random_get(void);
-
-    for (unsigned i = 0; i < sizeof(write_buffer); i++) {
-        write_buffer[i] = (uint8_t)ns_plat_random_get();
-    }
-
-    message_t message = message_new(0, 0, 0);
-
-    printf("num of free buffers: %u\r\n", inst->message_pool.num_free_buffers);
-
-    message_set_length(message, sizeof(write_buffer));
-    message_write(message, 0, write_buffer, sizeof(write_buffer));
-    message_read(message, 0, read_buffer, sizeof(read_buffer));
-
-    if (memcmp(write_buffer, read_buffer, sizeof(write_buffer)) == 0) {
-        printf("message write and read test SUCCESS\r\n");
-    } else {
-        printf("message write and read test FAILED\r\n");
-    }
-
-    printf("message get length: %u\r\n", message_get_length(message));
-
-    message_free(message);
-
-    printf("freed message, num of free buffers now: %u\r\n", inst->message_pool.num_free_buffers);
-}
-
-static ns_error_t
-verify_message_queue_content(message_queue_t *queue, int expected_length, ...)
-{
-    ns_error_t error = NS_ERROR_NONE;
-    va_list args;
-    message_t message;
-    message_t msg_arg;
-
-    va_start(args, expected_length);
-
-    if (expected_length == 0) {
-        message = msg_queue_get_head(queue);
-        if (message != NULL) {
-            printf("message queue is not empty when expected length is zero.\r\n");
-            EXIT_NOW(error = NS_ERROR_FAILED);
-        }
-    } else {
-        for (message = msg_queue_get_head(queue); message != NULL; message = msg_get_next(message)) {
-            if (expected_length == 0) {
-                printf("message queue contains more entries than expected.\r\n");
-                EXIT_NOW(error = NS_ERROR_FAILED);
-            }
-
-            msg_arg = va_arg(args, message_t);
-
-            if (msg_arg != message) {
-                printf("message queue content does not match what is expected.\r\n");
-                EXIT_NOW(error = NS_ERROR_FAILED);
-            }
-
-            expected_length--;
-        }
-
-        if (expected_length != 0) {
-            printf("message queue contains less entries than expected\r\n");
-            EXIT_NOW(error = NS_ERROR_FAILED);
-        }
-    }
-
-exit:
-    va_end(args);
-    return error;
-}
-
-void
-message_queue_test(void)
-{
-    uint8_t num_of_test_messages = 5;
-    message_queue_t message_queue;
-    message_t msg[num_of_test_messages];
-    ns_error_t error = NS_ERROR_NONE;
-    uint16_t msg_count, buffer_count;
-
-    // Note: this is a must otherwise it will cause hard-fault
-    message_queue_make_new(&message_queue);
-
-    for (int i = 0; i < num_of_test_messages; i++) {
-        msg[i] = message_new(0, 0, 0);
-        if (msg[i] == NULL) {
-            printf("failed to create the message!\r\n");
-            EXIT_NOW();
-        }
-    }
-
-    error = verify_message_queue_content(&message_queue, 0);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // enqueue 1 message and remove it
-    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 1, msg[0]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_dequeue(&message_queue, msg[0]);
-    error = verify_message_queue_content(&message_queue, 0);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // enqueue 1 message at head and remove it
-    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_HEAD);
-    error = verify_message_queue_content(&message_queue, 1, msg[0]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_dequeue(&message_queue, msg[0]);
-    error = verify_message_queue_content(&message_queue, 0);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // enqueue 5 messages
-    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 1, msg[0]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_enqueue(&message_queue, msg[1], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 2, msg[0], msg[1]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 3, msg[0], msg[1], msg[2]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_enqueue(&message_queue, msg[3], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 4, msg[0], msg[1], msg[2], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_enqueue(&message_queue, msg[4], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 5, msg[0], msg[1], msg[2], msg[3], msg[4]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // check get info
-    msg_queue_get_info(&message_queue, &msg_count, &buffer_count);
-    if (msg_count != 5 ) {
-        printf("ERROR: message count: %u, expect 5\r\n", msg_count);
-        EXIT_NOW(error = NS_ERROR_FAILED);
-    }
-
-    // remove message in head
-    error = message_queue_dequeue(&message_queue, msg[0]);
-    error = verify_message_queue_content(&message_queue, 4, msg[1], msg[2], msg[3], msg[4]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // remove message in middle
-    error = message_queue_dequeue(&message_queue, msg[3]);
-    error = verify_message_queue_content(&message_queue, 3, msg[1], msg[2], msg[4]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // remove message from tail
-    error = message_queue_dequeue(&message_queue, msg[4]);
-    error = verify_message_queue_content(&message_queue, 2, msg[1], msg[2]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // add after remove
-    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 3, msg[1], msg[2], msg[0]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_enqueue(&message_queue, msg[3], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 4, msg[1], msg[2], msg[0], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // remove from middle
-    error = message_queue_dequeue(&message_queue, msg[2]);
-    error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // add to head
-    error = message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_HEAD);
-    error = verify_message_queue_content(&message_queue, 4, msg[2], msg[1], msg[0], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // remove from head
-    error = message_queue_dequeue(&message_queue, msg[2]);
-    error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // remove from head
-    error = message_queue_dequeue(&message_queue, msg[1]);
-    error = verify_message_queue_content(&message_queue, 2, msg[0], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // add to head
-    error = message_queue_enqueue(&message_queue, msg[1], MSG_QUEUE_POS_HEAD);
-    error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // add to tail
-    error = message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 4, msg[1], msg[0], msg[3], msg[2]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // remove all messages
-    error = message_queue_dequeue(&message_queue, msg[3]);
-    error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[2]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_dequeue(&message_queue, msg[1]);
-    error = verify_message_queue_content(&message_queue, 2, msg[0], msg[2]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_dequeue(&message_queue, msg[2]);
-    error = verify_message_queue_content(&message_queue, 1, msg[0]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    error = message_queue_dequeue(&message_queue, msg[0]);
-    error = verify_message_queue_content(&message_queue, 0);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-
-    // check the failure cases
-    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
-    error = verify_message_queue_content(&message_queue, 1, msg[0]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
-    // enqueue already queued message
-    error = message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL);
-    VERIFY_OR_EXIT(error == NS_ERROR_ALREADY);
-    // dequeue not queued message
-    error = message_queue_dequeue(&message_queue, msg[1]);
-    VERIFY_OR_EXIT(error == NS_ERROR_NOT_FOUND);
-
-    error = NS_ERROR_NONE;
-
-exit:
-    if (error != NS_ERROR_NONE) {
-        printf("message queue test FAILED\r\n");
-    } else {
-        printf("message queue test SUCCESS\r\n");
-    }
-    return;
+    return checksum;
 }
