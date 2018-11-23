@@ -23,6 +23,9 @@ instance_init(void)
     extern ns_error_t test_message_queue(void);
     test_message_queue();
 
+    extern ns_error_t test_message_priority_queue(void);
+    test_message_priority_queue();
+
     inst->is_initialized = true;
 
 exit:

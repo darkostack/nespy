@@ -100,6 +100,9 @@ message_pool_make_new(void *instance);
 void
 message_queue_make_new(message_queue_t *queue);
 
+void
+message_priority_queue_make_new(priority_queue_t *queue);
+
 message_t
 message_new(uint8_t type, uint16_t reserved, uint8_t priority);
 
@@ -265,13 +268,19 @@ void
 message_remove_from_message_queue_list(message_t message, message_queue_t *queue);
 
 void
-message_remove_from_all_queue_list(message_t message, uint8_t list);
+message_remove_from_priority_queue_list(message_t message, priority_queue_t *queue);
+
+void
+message_remove_from_all_queue_list(message_t message);
 
 void
 message_add_to_message_queue_list(message_t message, message_queue_t *queue, queue_position_t pos);
 
 void
-message_add_to_all_queue_list(message_t message, uint8_t list);
+message_add_to_priority_queue_list(message_t message, priority_queue_t *queue);
+
+void
+message_add_to_all_queue_list(message_t message);
 
 void
 message_set_message_queue(message_t message, message_queue_t *queue);
