@@ -109,8 +109,7 @@ message_set_reserved(message_t message, uint16_t reserved)
 uint8_t
 message_get_priority(message_t message)
 {
-    buffer_t *msg = (buffer_t *)message;
-    return msg->buffer.head.info.priority;
+    return ((buffer_t *)message)->buffer.head.info.priority;
 }
 
 ns_error_t
