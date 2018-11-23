@@ -197,9 +197,9 @@ test_message_queue(void)
 
 exit:
     if (error != NS_ERROR_NONE) {
-        printf("message queue test FAILED\r\n");
+        printf("FAILED\r\n");
     } else {
-        printf("message queue test SUCCESS\r\n");
+        printf("PASSED\r\n");
     }
 
     return error;

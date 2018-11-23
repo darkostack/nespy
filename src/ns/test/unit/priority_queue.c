@@ -205,9 +205,9 @@ test_message_priority_queue(void)
 
 exit:
     if (error != NS_ERROR_NONE) {
-        printf("message priority queue test FAILED\r\n");
+        printf("FAILED\r\n");
     } else {
-        printf("message priority queue test SUCCESS\r\n");
+        printf("PASSED\r\n");
     }
 
     return error;
