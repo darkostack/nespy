@@ -5,7 +5,6 @@ SRC_NS_CORE += $(addprefix ns/sys/core/,\
     common/timer.c \
     common/tasklet.c \
     common/message.c \
-	common/testunit.c \
     api/instance_api.c \
     api/nstd_api.c \
     api/tasklet_api.c \
@@ -17,5 +16,12 @@ SRC_NS_CLI += $(addprefix ns/sys/cli/,\
     cli-uart.c \
     )
 
+SRC_NS_TEST += $(addprefix ns/test/unit/,\
+    message.c \
+    message_queue.c \
+    priority_queue.c \
+    )
+
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CORE:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CLI:.c=.o))
+OBJ += $(addprefix $(BUILD)/,$(SRC_NS_TEST:.c=.o))
