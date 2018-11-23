@@ -87,6 +87,30 @@ exit:
     return (message_t)msgbuf;
 }
 
+message_t
+message_new_set(uint8_t type, uint16_t reserved, const message_settings_t *settings)
+{
+    message_t message;
+    bool link_security_enabled;
+    uint8_t priority;
+
+    if (settings == NULL) {
+        link_security_enabled = true;
+        priority = MSG_PRIO_NORMAL;
+    } else {
+        link_security_enabled = settings->link_security_enabled;
+        priority = settings->priority;
+    }
+
+    message = message_new(type, reserved, priority);
+
+    if (message != NULL) {
+        message_set_link_security_enabled(message, link_security_enabled);
+    }
+
+    return message;
+}
+
 ns_error_t
 message_reclaim_buffers(int num_buffers, uint8_t priority)
 {

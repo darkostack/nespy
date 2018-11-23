@@ -66,13 +66,18 @@ struct _buffer {
     void *next;
 };
 
-enum {
+typedef enum _message_priority {
     MSG_PRIO_LOW,
     MSG_PRIO_NORMAL,
     MSG_PRIO_HIGH,
     MSG_PRIO_NET,
     MSG_NUM_PRIORITIES = 4,
-};
+} message_priority_t;
+
+typedef struct _message_settings {
+    bool link_security_enabled;
+    message_priority_t priority;
+} message_settings_t;
 
 typedef enum _queue_position {
     MSG_QUEUE_POS_HEAD,
@@ -105,6 +110,9 @@ message_priority_queue_make_new(priority_queue_t *queue);
 
 message_t
 message_new(uint8_t type, uint16_t reserved, uint8_t priority);
+
+message_t
+message_new_set(uint8_t type, uint16_t reserved, const message_settings_t *settings);
 
 ns_error_t
 message_reclaim_buffers(int num_buffers, uint8_t priority);
