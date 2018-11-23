@@ -152,47 +152,56 @@ test_message_priority_queue(void)
     }
 
     error = verify_priority_queue_content(&queue, 0);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add messages in different orders and check the content of queue
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_high[0]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 1,
             msg_high[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_high[1]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 2,
             msg_high[0], msg_high[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_net[0]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 3,
             msg_net[0], msg_high[0], msg_high[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_net[1]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 4,
             msg_net[0], msg_net[1], msg_high[0], msg_high[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_high[2]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 5,
             msg_net[0], msg_net[1], msg_high[0], msg_high[1], msg_high[2]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_low[0]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 6,
             msg_net[0], msg_net[1], msg_high[0], msg_high[1], msg_high[2], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_nor[0]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 7,
             msg_net[0], msg_net[1], msg_high[0], msg_high[1], msg_high[2], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_high[3]) == NS_ERROR_NONE,
                         "priority queue enqueue failed.\r\n");
     error = verify_priority_queue_content(&queue, 8,
             msg_net[0], msg_net[1], msg_high[0], msg_high[1], msg_high[2], msg_high[3], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
 exit:
     if (error != NS_ERROR_NONE) {
