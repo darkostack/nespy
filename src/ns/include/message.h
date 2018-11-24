@@ -5,16 +5,25 @@
 
 typedef void *ns_message_t;
 
-typedef struct _ns_buffer_info
-{
+typedef struct _ns_buffer_info {
     uint16_t total_buffers;
     uint16_t free_buffers;
 } ns_buffer_info_t;
 
-typedef struct _ns_message_queue
-{
+typedef struct _ns_message_queue {
     void *tail;
 } ns_message_queue_t;
+
+typedef enum _ns_message_priority {
+    NS_MESSAGE_PRIORITY_LOW = 0,
+    NS_MESSAGE_PRIORITY_NORMAL = 1,
+    NS_MESSAGE_PRIORITY_HIGH = 2,
+} ns_message_priority_t;
+
+typedef struct _ns_message_settings {
+    bool link_security_enabled;
+    ns_message_priority_t priority;
+} ns_message_settings_t;
 
 ns_message_t
 ns_message_new(uint16_t type, uint16_t reserved, uint8_t priority);

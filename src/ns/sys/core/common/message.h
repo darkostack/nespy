@@ -1,12 +1,15 @@
 #ifndef NS_CORE_COMMON_MESSAGE_H_
 #define NS_CORE_COMMON_MESSAGE_H_
 
-typedef void *message_t;
+#include "ns/include/message.h"
+
+typedef ns_message_t message_t;
 typedef struct _buffer buffer_t;
 typedef struct _message_info message_info_t;
 typedef struct _message_pool message_pool_t;
-typedef struct _message_queue message_queue_t;
+typedef ns_message_queue_t message_queue_t;
 typedef struct _priority_queue priority_queue_t;
+typedef ns_message_settings_t message_settings_t;
 
 enum {
     MSG_INFO_LIST_ALL       = 0, // identifies the all messages list (maintained by the message_pool)
@@ -66,27 +69,18 @@ struct _buffer {
     void *next;
 };
 
-typedef enum _message_priority {
-    MSG_PRIO_LOW,
-    MSG_PRIO_NORMAL,
-    MSG_PRIO_HIGH,
-    MSG_PRIO_NET,
+enum {
+    MSG_PRIO_LOW    = NS_MESSAGE_PRIORITY_LOW,
+    MSG_PRIO_NORMAL = NS_MESSAGE_PRIORITY_NORMAL,
+    MSG_PRIO_HIGH   = NS_MESSAGE_PRIORITY_HIGH,
+    MSG_PRIO_NET    = NS_MESSAGE_PRIORITY_HIGH + 1,
     MSG_NUM_PRIORITIES = 4,
-} message_priority_t;
-
-typedef struct _message_settings {
-    bool link_security_enabled;
-    message_priority_t priority;
-} message_settings_t;
+};
 
 typedef enum _queue_position {
     MSG_QUEUE_POS_HEAD,
     MSG_QUEUE_POS_TAIL,
 } queue_position_t;
-
-struct _message_queue {
-    void *tail;
-};
 
 struct _priority_queue {
     message_t tails[MSG_NUM_PRIORITIES];
