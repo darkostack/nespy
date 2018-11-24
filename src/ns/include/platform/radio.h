@@ -35,15 +35,15 @@ enum {
 
 typedef uint16_t ns_panid_t;
 
-typedef uint16_t ns_shortaddr_t;
+typedef uint16_t ns_short_addr_t;
 
 #define NS_EXT_ADDRESS_SIZE 8
 
-struct _ns_extaddr {
+struct _ns_ext_addr {
     uint8_t m8[NS_EXT_ADDRESS_SIZE];
 };
 
-typedef struct _ns_extaddr ns_extaddr_t;
+typedef struct _ns_ext_addr ns_ext_addr_t;
 
 typedef struct _ns_radio_ie_info {
     uint8_t time_ie_offset;
@@ -111,10 +111,10 @@ void
 ns_plat_radio_set_panid(ns_instance_t *instance, ns_panid_t panid);
 
 void
-ns_plat_radio_set_extended_addr(ns_instance_t *instance, const ns_extaddr_t *extaddr);
+ns_plat_radio_set_extended_addr(ns_instance_t *instance, const ns_ext_addr_t *ext_addr);
 
 void
-ns_plat_radio_set_short_addr(ns_instance_t *instance, ns_shortaddr_t shortaddr);
+ns_plat_radio_set_short_addr(ns_instance_t *instance, ns_short_addr_t short_addr);
 
 ns_error_t
 ns_plat_radio_get_transmit_power(ns_instance_t *instance, int8_t *power);
@@ -180,16 +180,16 @@ void
 ns_plat_radio_enable_src_match(ns_instance_t *instance, bool enable);
 
 ns_error_t
-ns_plat_radio_add_src_match_short_entry(ns_instance_t *instance, ns_shortaddr_t shortaddr);
+ns_plat_radio_add_src_match_short_entry(ns_instance_t *instance, ns_short_addr_t short_addr);
 
 ns_error_t
-ns_plat_radio_add_src_match_ext_entry(ns_instance_t *instance, const ns_extaddr_t *extaddr);
+ns_plat_radio_add_src_match_ext_entry(ns_instance_t *instance, const ns_ext_addr_t *ext_addr);
 
 ns_error_t
-ns_plat_radio_clear_src_match_short_entry(ns_instance_t *instance, ns_shortaddr_t shortaddr);
+ns_plat_radio_clear_src_match_short_entry(ns_instance_t *instance, ns_short_addr_t short_addr);
 
 ns_error_t
-ns_plat_radio_clear_src_match_ext_entry(ns_instance_t *instance, const ns_extaddr_t *extaddr);
+ns_plat_radio_clear_src_match_ext_entry(ns_instance_t *instance, const ns_ext_addr_t *ext_addr);
 
 void
 ns_plat_radio_clear_src_match_short_entries(ns_instance_t *instance);
