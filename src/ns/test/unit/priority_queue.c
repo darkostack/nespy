@@ -88,6 +88,7 @@ test_message_priority_queue(void)
     ns_error_t error = NS_ERROR_NONE;
     //instance_t *inst = instance_get();
     priority_queue_t queue;
+    message_queue_t message_queue;
 
     message_t msg_net[NUM_TEST_MESSAGES];
     message_t msg_high[NUM_TEST_MESSAGES];
@@ -98,6 +99,9 @@ test_message_priority_queue(void)
 
     // initialize priority queue object
     message_priority_queue_make_new(&queue);
+
+    // initialize message queue object
+    message_queue_make_new(&message_queue);
 
     // use "message_new()" function to allocate messages with different priorities
     for (int i = 0; i < NUM_NEW_PRIORITY_TEST_MESSAGES; i++) {
@@ -267,6 +271,61 @@ test_message_priority_queue(void)
                         "priority queue dequeue failed.\r\n");
     error = verify_priority_queue_content(&queue, 0);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    // change the priority of an already queued message and check the order change in the queue
+    TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_nor[0]) == NS_ERROR_NONE,
+                        "priority queue enqueue failed.\r\n");
+    error = verify_priority_queue_content(&queue, 1, msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_high[0]) == NS_ERROR_NONE,
+                        "priority queue enqueue failed.\r\n");
+    error = verify_priority_queue_content(&queue, 2, msg_high[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_priority_queue_enqueue(&queue, msg_low[0]) == NS_ERROR_NONE,
+                        "priority queue enqueue failed.\r\n");
+    error = verify_priority_queue_content(&queue, 3, msg_high[0], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_nor[0], MSG_PRIO_NET) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+    error = verify_priority_queue_content(&queue, 3, msg_nor[0], msg_high[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[0], MSG_PRIO_LOW) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+    error = verify_priority_queue_content(&queue, 3, msg_nor[0], msg_high[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[0], MSG_PRIO_NORMAL) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+    error = verify_priority_queue_content(&queue, 3, msg_nor[0], msg_high[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[0], MSG_PRIO_HIGH) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+    error = verify_priority_queue_content(&queue, 3, msg_nor[0], msg_high[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[0], MSG_PRIO_NET) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+    error = verify_priority_queue_content(&queue, 3, msg_nor[0], msg_low[0], msg_high[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_nor[0], MSG_PRIO_NORMAL) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[0], MSG_PRIO_LOW) == NS_ERROR_NONE,
+                        "set priority failed for an already queued message.\r\n");
+
+    error = verify_priority_queue_content(&queue, 3, msg_high[0], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    // checking the all messages queue when adding messages frome same pool to another queue
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg_nor[1], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+                        "message queue enqueue failed.\r\n");
+
+    // TODO: verify all message queue content!!!
 
 exit:
     if (error != NS_ERROR_NONE) {
