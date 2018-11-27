@@ -6,6 +6,7 @@ SRC_NS_CORE += $(addprefix ns/sys/core/,\
     common/tasklet.c \
     common/message.c \
     mac/mac_frame.c \
+    utils/heap.c \
     api/instance_api.c \
     api/nstd_api.c \
     api/tasklet_api.c \
@@ -21,6 +22,7 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     message.c \
     message_queue.c \
     priority_queue.c \
+    heap.c \
     )
 
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CORE:.c=.o))

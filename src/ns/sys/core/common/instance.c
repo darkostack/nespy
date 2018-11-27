@@ -26,6 +26,9 @@ instance_init(void)
     extern ns_error_t test_message_priority_queue(void);
     test_message_priority_queue();
 
+    extern ns_error_t test_heap_allocate_single(void);
+    test_heap_allocate_single();
+
     inst->is_initialized = true;
 
 exit:
