@@ -86,9 +86,9 @@ ns_error_t
 test_message_priority_queue(void)
 {
     ns_error_t error = NS_ERROR_NONE;
-    //instance_t *inst = instance_get();
     priority_queue_t queue;
     message_queue_t message_queue;
+    message_iterator_t it;
 
     message_t msg_net[NUM_TEST_MESSAGES];
     message_t msg_high[NUM_TEST_MESSAGES];
@@ -97,10 +97,9 @@ test_message_priority_queue(void)
 
     printf("---------------- TEST MESSAGE PRIORITY QUEUE\r\n");
 
-    // initialize priority queue object
+    // initialize objects
     message_priority_queue_make_new(&queue);
-
-    // initialize message queue object
+    message_iterator_make_new(&it);
     message_queue_make_new(&message_queue);
 
     // use "message_new()" function to allocate messages with different priorities
@@ -206,6 +205,50 @@ test_message_priority_queue(void)
     error = verify_priority_queue_content(&queue, 8,
             msg_net[0], msg_net[1], msg_high[0], msg_high[1], msg_high[2], msg_high[3], msg_nor[0], msg_low[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    // check message iterator methods
+    TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `true` for an empty iterator\r\n");
+
+    it = *message_iterator_get_next(&it);
+    TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `true` for an empty iterator\r\n");
+
+    it = *message_iterator_get_next(&it);
+    TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `true` for an empty iterator\r\n");
+
+    it = *message_iterator_get_prev(&it);
+    TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `true` for an empty iterator\r\n");
+
+    it = *message_iterator_get_all_messages_head(&it);
+    TEST_VERIFY_OR_EXIT(!message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `false` when it's not empty\r\n");
+
+    TEST_VERIFY_OR_EXIT(message_iterator_get_message(&it) == msg_net[0],
+                        "iterator get message failed.\r\n");
+
+    it = *message_iterator_get_next(&it);
+    TEST_VERIFY_OR_EXIT(!message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `false` when it's not empty\r\n");
+    TEST_VERIFY_OR_EXIT(message_iterator_get_message(&it) == msg_net[1],
+                        "iterator get message failed.\r\n");
+
+    it = *message_iterator_get_prev(&it);
+    TEST_VERIFY_OR_EXIT(!message_iterator_is_empty(&it),
+                        "iterator is empty failed to return `false` when it's not empty\r\n");
+    TEST_VERIFY_OR_EXIT(message_iterator_get_message(&it) == msg_net[0],
+                        "iterator get message failed.\r\n");
+
+    it = *message_iterator_get_prev(&it);
+    TEST_VERIFY_OR_EXIT(message_iterator_has_ended(&it),
+                        "iterator goto prev failed to return empty at head.\r\n");
+
+    it = *message_iterator_get_all_messages_tail(&it);
+    it = *message_iterator_get_next(&it);
+    TEST_VERIFY_OR_EXIT(message_iterator_has_ended(&it),
+                        "iterator goto next failed to return empty at tail.\r\n");
 
     // remove messages in different order and check the content of queue in each step
     TEST_VERIFY_OR_EXIT(message_priority_queue_dequeue(&queue, msg_net[0]) == NS_ERROR_NONE,

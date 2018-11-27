@@ -10,6 +10,7 @@ typedef struct _message_pool message_pool_t;
 typedef ns_message_queue_t message_queue_t;
 typedef struct _priority_queue priority_queue_t;
 typedef ns_message_settings_t message_settings_t;
+typedef struct _message_iterator message_iterator_t;
 
 enum {
     MSG_INFO_LIST_ALL       = 0, // identifies the all messages list (maintained by the message_pool)
@@ -93,6 +94,10 @@ struct _message_pool {
     priority_queue_t all_queue;
 };
 
+struct _message_iterator {
+    message_t message;
+};
+
 void
 message_pool_make_new(void *instance);
 
@@ -101,6 +106,9 @@ message_queue_make_new(message_queue_t *queue);
 
 void
 message_priority_queue_make_new(priority_queue_t *queue);
+
+void
+message_iterator_make_new(message_iterator_t *iterator);
 
 message_t
 message_new(uint8_t type, uint16_t reserved, uint8_t priority);
@@ -325,5 +333,26 @@ message_priority_queue_get_tail(priority_queue_t *queue);
 
 void
 message_priority_queue_get_info(priority_queue_t *queue, uint16_t *message_count, uint16_t *buffer_count);
+
+message_iterator_t *
+message_iterator_get_all_messages_head(message_iterator_t *iterator);
+
+message_iterator_t *
+message_iterator_get_all_messages_tail(message_iterator_t *iterator);
+
+message_t
+message_iterator_get_message(message_iterator_t *iterator);
+
+bool
+message_iterator_is_empty(message_iterator_t *iterator);
+
+bool
+message_iterator_has_ended(message_iterator_t *iterator);
+
+message_iterator_t *
+message_iterator_get_next(message_iterator_t *iterator);
+
+message_iterator_t *
+message_iterator_get_prev(message_iterator_t *iterator);
 
 #endif // NS_CORE_COMMON_MESSAGE_H_

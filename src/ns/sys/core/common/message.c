@@ -25,6 +25,12 @@ msg_update_checksum_value(uint16_t checksum, uint16_t value);
 static uint16_t
 msg_update_checksum_buffer(uint16_t checksum, const void *buf, uint16_t length);
 
+message_t
+msg_iterator_next(message_iterator_t *iterator);
+
+message_t
+msg_iterator_prev(message_iterator_t *iterator);
+
 // --- message pool functions
 void
 message_pool_make_new(void *instance)
@@ -59,6 +65,12 @@ message_priority_queue_make_new(priority_queue_t *queue)
     for (int prio = 0; prio < MSG_NUM_PRIORITIES; prio++) {
         queue->tails[prio] = NULL;
     }
+}
+
+void
+message_iterator_make_new(message_iterator_t *iterator)
+{
+    iterator->message = NULL;
 }
 
 message_t
@@ -1162,8 +1174,70 @@ message_priority_queue_get_info(priority_queue_t *queue, uint16_t *message_count
         nmsg++;
         nbuf += message_buffer_count(message);
     }
+
     *message_count = nmsg;
     *buffer_count = nbuf;
+}
+
+message_iterator_t *
+message_iterator_get_all_messages_head(message_iterator_t *iterator)
+{
+    instance_t *inst = instance_get();
+    message_t head;
+    message_t tail;
+
+    tail = message_priority_queue_get_tail(&inst->message_pool.all_queue);
+
+    if (tail != NULL) {
+        head = ((buffer_t *)tail)->buffer.head.info.next[MSG_INFO_LIST_ALL];
+    } else {
+        head = NULL;
+    }
+
+    iterator->message = head;
+
+    return iterator;
+}
+
+message_iterator_t *
+message_iterator_get_all_messages_tail(message_iterator_t *iterator)
+{
+    instance_t *inst = instance_get();
+    message_t tail = message_priority_queue_get_tail(&inst->message_pool.all_queue);
+    iterator->message = tail;
+    return iterator;
+}
+
+message_t
+message_iterator_get_message(message_iterator_t *iterator)
+{
+    return iterator->message;
+}
+
+bool
+message_iterator_is_empty(message_iterator_t *iterator)
+{
+    return (iterator->message == NULL);
+}
+
+bool
+message_iterator_has_ended(message_iterator_t *iterator)
+{
+    return message_iterator_is_empty(iterator);
+}
+
+message_iterator_t *
+message_iterator_get_next(message_iterator_t *iterator)
+{
+    iterator->message = msg_iterator_next(iterator);
+    return iterator;
+}
+
+message_iterator_t *
+message_iterator_get_prev(message_iterator_t *iterator)
+{
+    iterator->message = msg_iterator_prev(iterator);
+    return iterator;
 }
 
 // --- private functions
@@ -1241,4 +1315,50 @@ msg_update_checksum_buffer(uint16_t checksum, const void *buf, uint16_t length)
         checksum = msg_update_checksum_value(checksum, (i & 1) ? bytes[i] : (uint16_t)(bytes[i] << 8));
     }
     return checksum;
+}
+
+message_t
+msg_iterator_next(message_iterator_t *iterator)
+{
+    message_t next;
+    message_t tail;
+    message_iterator_t it;
+
+    VERIFY_OR_EXIT(iterator->message != NULL, next = NULL);
+
+    it = *message_iterator_get_all_messages_tail(&it);
+
+    tail = it.message;
+
+    if (iterator->message == tail) {
+        next = NULL;
+    } else {
+        next = ((buffer_t *)iterator->message)->buffer.head.info.next[MSG_INFO_LIST_ALL];
+    }
+
+exit:
+    return next;
+}
+
+message_t
+msg_iterator_prev(message_iterator_t *iterator)
+{
+    message_t prev;
+    message_t head;
+    message_iterator_t it;
+
+    VERIFY_OR_EXIT(iterator->message != NULL, prev = NULL);
+
+    it = *message_iterator_get_all_messages_head(&it);
+
+    head = it.message;
+
+    if (iterator->message == head) {
+        prev = NULL;
+    } else {
+        prev = ((buffer_t *)iterator->message)->buffer.head.info.prev[MSG_INFO_LIST_ALL];
+    }
+
+exit:
+    return prev;
 }
