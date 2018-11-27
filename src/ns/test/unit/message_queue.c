@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
+// this function verifies the content of the message queue to match the passed in messages
 static ns_error_t
 verify_message_queue_content(message_queue_t *queue, int expected_length, ...);
 

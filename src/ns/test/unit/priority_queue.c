@@ -9,6 +9,7 @@
 #define NUM_SET_PRIORITY_TEST_MESSAGES 2
 #define NUM_TEST_MESSAGES (NUM_NEW_PRIORITY_TEST_MESSAGES + NUM_SET_PRIORITY_TEST_MESSAGES)
 
+// this function verifies the content of the priority queue to match the passed in messages
 static ns_error_t
 verify_priority_queue_content(priority_queue_t *queue, int expexted_length, ...)
 {
@@ -76,9 +77,117 @@ verify_priority_queue_content(priority_queue_t *queue, int expexted_length, ...)
         }
     }
 
+exit:
     va_end(args);
+    return error;
+}
+
+// this function verifies the content of the all message in queue to match the passed in messages
+static ns_error_t
+verify_all_messages_content(int expected_length, ...)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    va_list args;
+    message_iterator_t it;
+    message_t msg_arg;
+
+    va_start(args, expected_length);
+
+    if (expected_length == 0) {
+        it = *message_iterator_get_all_messages_head(&it);
+        TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                            "head is not empty when expected len is zero.\r\n");
+        it = *message_iterator_get_all_messages_tail(&it);
+        TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                            "tail is not empty when expected len is zero.\r\n");
+    } else {
+        for (it = *message_iterator_get_all_messages_head(&it);
+             !message_iterator_has_ended(&it);
+             it = *message_iterator_get_next(&it)) {
+            TEST_VERIFY_OR_EXIT(expected_length != 0,
+                                "all messages queue contains more entries than expected.\r\n");
+            msg_arg = va_arg(args, message_t);
+            TEST_VERIFY_OR_EXIT(msg_arg == message_iterator_get_message(&it),
+                                "all messages queue content does not match what is expected.\r\n");
+            expected_length--;
+        }
+
+        TEST_VERIFY_OR_EXIT(expected_length == 0,
+                            "all messages queue contains less entries than expeced.\r\n");
+    }
 
 exit:
+    va_end(args);
+    return error;
+}
+
+// this function verifies the content of the all message in queue to match the
+// passed int messages. it goes through the all messages list in reverse
+static ns_error_t
+verify_all_messages_content_in_reverse(int expected_length, ...)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    va_list args;
+    message_iterator_t it;
+    message_t msg_arg;
+
+    va_start(args, expected_length);
+
+    if (expected_length == 0) {
+        it = *message_iterator_get_all_messages_head(&it);
+        TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                            "head is not empty when expected len is zero.\r\n");
+        it = *message_iterator_get_all_messages_tail(&it);
+        TEST_VERIFY_OR_EXIT(message_iterator_is_empty(&it),
+                            "tail is not empty when expected len is zero.\r\n");
+    } else {
+        for (it = *message_iterator_get_all_messages_tail(&it);
+             !message_iterator_has_ended(&it);
+             it = *message_iterator_get_prev(&it)) {
+            TEST_VERIFY_OR_EXIT(expected_length != 0,
+                                "all messages queue contains more entries than expected.\r\n");
+            msg_arg = va_arg(args, message_t);
+            TEST_VERIFY_OR_EXIT(msg_arg == message_iterator_get_message(&it),
+                                "all messages queue content does not match what is expected.\r\n");
+            expected_length--;
+        }
+    }
+
+exit:
+    va_end(args);
+    return error;
+}
+
+// this function verifies the content of the message queue to match the passed in messages
+static ns_error_t
+verify_message_queue_content(message_queue_t *queue, int expected_length, ...)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    va_list args;
+    message_t message;
+    message_t msg_arg;
+
+    va_start(args, expected_length);
+
+    if (expected_length == 0) {
+        message = message_queue_get_head(queue);
+        TEST_VERIFY_OR_EXIT(message == NULL,
+                            "message queue is not empty when expected length is zero.\r\n");
+    } else {
+        for (message = message_queue_get_head(queue); message != NULL; message = message_get_next(message)) {
+            TEST_VERIFY_OR_EXIT(expected_length != 0,
+                                "message queue contains more entries than expected.\r\n");
+            msg_arg = va_arg(args, message_t);
+            TEST_VERIFY_OR_EXIT(msg_arg == message,
+                                "message queue content does not match what is expected.\r\n");
+            expected_length--;
+        }
+        TEST_VERIFY_OR_EXIT(expected_length == 0,
+                            "message queue contains less entries than expected.\r\n");
+    }
+
+exit:
+    va_end(args);
     return error;
 }
 
@@ -86,6 +195,7 @@ ns_error_t
 test_message_priority_queue(void)
 {
     ns_error_t error = NS_ERROR_NONE;
+    instance_t *inst = instance_get();
     priority_queue_t queue;
     message_queue_t message_queue;
     message_iterator_t it;
@@ -250,6 +360,15 @@ test_message_priority_queue(void)
     TEST_VERIFY_OR_EXIT(message_iterator_has_ended(&it),
                         "iterator goto next failed to return empty at tail.\r\n");
 
+    // check all messages queue content (should match the content of priority queue)
+    error = verify_all_messages_content(8,
+            msg_net[0], msg_net[1], msg_high[0], msg_high[1], msg_high[2], msg_high[3], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    error = verify_all_messages_content_in_reverse(8,
+            msg_low[0], msg_nor[0], msg_high[3], msg_high[2], msg_high[1], msg_high[0], msg_net[1], msg_net[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
     // remove messages in different order and check the content of queue in each step
     TEST_VERIFY_OR_EXIT(message_priority_queue_dequeue(&queue, msg_net[0]) == NS_ERROR_NONE,
                         "priority queue dequeue failed.\r\n");
@@ -364,11 +483,143 @@ test_message_priority_queue(void)
     error = verify_priority_queue_content(&queue, 3, msg_high[0], msg_nor[0], msg_low[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
+    error = verify_all_messages_content(3, msg_high[0], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    error = verify_all_messages_content_in_reverse(3, msg_low[0], msg_nor[0], msg_high[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
     // checking the all messages queue when adding messages frome same pool to another queue
     TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg_nor[1], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
+    error = verify_all_messages_content(4,
+            msg_high[0], msg_nor[0], msg_nor[1], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    // TODO: verify all message queue content!!!
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg_high[1], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+                        "message queue enqueue failed.\r\n");
+    error = verify_all_messages_content(5,
+            msg_high[0], msg_high[1], msg_nor[0], msg_nor[1], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg_net[1], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+                        "message queue enqueue failed.\r\n");
+    error = verify_all_messages_content(6,
+            msg_net[1], msg_high[0], msg_high[1], msg_nor[0], msg_nor[1], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    error = verify_message_queue_content(&message_queue, 3,
+            msg_nor[1], msg_high[1], msg_net[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    // change priority of message and check that order changes in the all
+    // messages queue and not in message queue
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_nor[1], MSG_PRIO_NET) == NS_ERROR_NONE,
+                        "message set priority failed for an already queued message.\r\n");
+    error = verify_all_messages_content(6,
+            msg_net[1], msg_nor[1], msg_high[0], msg_high[1], msg_nor[0], msg_low[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_all_messages_content_in_reverse(6,
+            msg_low[0], msg_nor[0], msg_high[1], msg_high[0], msg_nor[1], msg_net[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 3,
+            msg_nor[1], msg_high[1], msg_net[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[0], MSG_PRIO_HIGH) == NS_ERROR_NONE,
+                        "message set priority failed for an already queued message.\r\n");
+    error = verify_all_messages_content(6,
+            msg_net[1], msg_nor[1], msg_high[0], msg_high[1], msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_all_messages_content_in_reverse(6,
+            msg_nor[0], msg_low[0], msg_high[1], msg_high[0], msg_nor[1], msg_net[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 3,
+            msg_high[0], msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 3,
+            msg_nor[1], msg_high[1], msg_net[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    // remove messages from the two queues and verify that all message queue is updated correctly
+    TEST_VERIFY_OR_EXIT(message_priority_queue_dequeue(&queue, msg_high[0]) == NS_ERROR_NONE,
+                        "priority queue dequeue failed.\r\n");
+    error = verify_all_messages_content(5,
+            msg_net[1], msg_nor[1], msg_high[1], msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 2,
+            msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 3,
+            msg_nor[1], msg_high[1], msg_net[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_queue_dequeue(&message_queue, msg_net[1]) == NS_ERROR_NONE,
+                        "message queue dequeue failed.\r\n");
+    error = verify_all_messages_content(4,
+            msg_nor[1], msg_high[1], msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 2,
+            msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 2,
+            msg_nor[1], msg_high[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_queue_dequeue(&message_queue, msg_high[1]) == NS_ERROR_NONE,
+                        "message queue dequeue failed.\r\n");
+    error = verify_all_messages_content(3,
+            msg_nor[1], msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 2,
+            msg_low[0], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 1,
+            msg_nor[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_priority_queue_dequeue(&queue, msg_low[0]) == NS_ERROR_NONE,
+                        "priority queue dequeue failed.\r\n");
+    error = verify_all_messages_content(2,
+            msg_nor[1], msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 1,
+            msg_nor[0]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 1,
+            msg_nor[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_priority_queue_dequeue(&queue, msg_nor[0]) == NS_ERROR_NONE,
+                        "priority queue dequeue failed.\r\n");
+    error = verify_all_messages_content(1,
+            msg_nor[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 0);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 1,
+            msg_nor[1]);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    TEST_VERIFY_OR_EXIT(message_queue_dequeue(&message_queue, msg_nor[1]) == NS_ERROR_NONE,
+                        "message queue dequeue failed.\r\n");
+    error = verify_all_messages_content(0);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_priority_queue_content(&queue, 0);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+    error = verify_message_queue_content(&message_queue, 0);
+    VERIFY_OR_EXIT(error == NS_ERROR_NONE);
+
+    // free all the messages
+    for (int i = 0; i < NUM_TEST_MESSAGES; i++) {
+        message_free(msg_net[i]);
+        message_free(msg_high[i]);
+        message_free(msg_nor[i]);
+        message_free(msg_low[i]);
+    }
+
+    TEST_VERIFY_OR_EXIT(inst->message_pool.num_free_buffers == MSG_NUM_BUFFERS,
+                        "message free buffers failed, expected 44 num of free buffer.\r\n");
 
 exit:
     if (error != NS_ERROR_NONE) {
