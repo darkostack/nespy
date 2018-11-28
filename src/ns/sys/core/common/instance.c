@@ -59,9 +59,30 @@ instance_get(void)
     return (instance_t *)inst;
 }
 
+timer_scheduler_t *
+instance_get_timer_scheduler(void)
+{
+    instance_t *inst = instance_get();
+    return (timer_scheduler_t *)&inst->timer_sched;
+}
+
+tasklet_scheduler_t *
+instance_get_tasklet_scheduler(void)
+{
+    instance_t *inst = instance_get();
+    return (tasklet_scheduler_t *)&inst->tasklet_sched;
+}
+
 message_pool_t *
 instance_get_message_pool(void)
 {
     instance_t *inst = instance_get();
     return (message_pool_t *)&inst->message_pool;
+}
+
+heap_t *
+instance_get_heap(void)
+{
+    instance_t *inst = instance_get();
+    return (heap_t *)&inst->heap;
 }

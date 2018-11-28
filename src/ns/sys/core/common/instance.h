@@ -30,7 +30,16 @@ instance_init(void);
 instance_t *
 instance_get(void);
 
+timer_scheduler_t *
+instance_get_timer_scheduler(void);
+
+tasklet_scheduler_t *
+instance_get_tasklet_scheduler(void);
+
 message_pool_t *
 instance_get_message_pool(void);
+
+heap_t *
+instance_get_heap(void);
 
 #endif // NS_CORE_COMMON_INSTANCE_H_
