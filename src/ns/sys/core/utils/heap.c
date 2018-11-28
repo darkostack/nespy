@@ -1,7 +1,6 @@
 #include "ns/sys/core/utils/heap.h"
 #include "ns/sys/core/common/code_utils.h"
 #include <string.h>
-#include <stdio.h>
 
 // --- private functions declarations
 static uint16_t
@@ -122,7 +121,6 @@ heap_calloc(heap_t *heap, size_t count, size_t asize)
     block_set_next(curr, 0);
 
     memset(block_get_pointer(curr), 0, size);
-
     ret = block_get_pointer(curr);
 
 exit:
@@ -142,6 +140,7 @@ heap_free(heap_t *heap, void *ptr)
     heap->memory.free_size += block_get_size(block);
 
     if (heap_is_left_free(heap, block)) {
+
         block_t *prev = heap_block_super(heap);
         block_t *left = heap_block_next(heap, prev);
 
@@ -205,9 +204,8 @@ heap_is_clean(heap_t *heap)
 }
 
 size_t
-heap_get_capacity(heap_t *heap)
+heap_get_capacity(void)
 {
-    (void)heap;
     return HEAP_FIRST_BLOCK_SIZE;
 }
 
@@ -295,7 +293,7 @@ heap_block_next(heap_t *heap, block_t *block)
 static block_t *
 heap_block_right(heap_t *heap, block_t *block)
 {
-    return heap_block_at(heap, heap_block_offset(heap, block) + sizeof(block) + block_get_size(block));
+    return heap_block_at(heap, heap_block_offset(heap, block) + sizeof(block_t) + block_get_size(block));
 }
 
 static block_t *
