@@ -31,17 +31,17 @@ instance_init(void)
 
     inst->is_initialized = true;
 
-    extern ns_error_t test_message_write_read(void);
-    test_message_write_read();
+    extern ns_error_t test_message_write_read(void *instance);
+    test_message_write_read((void *)inst);
 
-    extern ns_error_t test_message_utility(void);
-    test_message_utility();
+    extern ns_error_t test_message_utility(void *instance);
+    test_message_utility((void *)inst);
 
-    extern ns_error_t test_message_queue(void);
-    test_message_queue();
+    extern ns_error_t test_message_queue(void *instance);
+    test_message_queue((void *)inst);
 
-    extern ns_error_t test_message_priority_queue(void);
-    test_message_priority_queue();
+    extern ns_error_t test_message_priority_queue(void *instance);
+    test_message_priority_queue((void *)inst);
 
     extern ns_error_t test_heap_allocate_single(void *instance);
     test_heap_allocate_single((void *)inst);

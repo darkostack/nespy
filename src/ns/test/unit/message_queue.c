@@ -10,10 +10,9 @@ static ns_error_t
 verify_message_queue_content(message_queue_t *queue, int expected_length, ...);
 
 ns_error_t
-test_message_queue(void)
+test_message_queue(void *instance)
 {
-    instance_t *inst = instance_get();
-    message_pool_t *message_pool = instance_get_message_pool(inst);
+    message_pool_t *message_pool = instance_get_message_pool((instance_t *)instance);
 
     uint8_t num_of_test_messages = 5;
     message_queue_t message_queue;
@@ -27,7 +26,7 @@ test_message_queue(void)
     message_queue_ctor(&message_queue);
 
     for (int i = 0; i < num_of_test_messages; i++) {
-        msg[i] = message_new(message_pool, 0, 0, 0);
+        msg[i] = message_new(0, 0, 0);
         TEST_VERIFY_OR_EXIT(msg[i] != NULL, "message new failed.\r\n");
     }
 
@@ -188,14 +187,14 @@ test_message_queue(void)
     TEST_VERIFY_OR_EXIT(message_queue_dequeue(&message_queue, msg[0]) == NS_ERROR_NONE,
                         "message queue dequeue failed.\r\n");
 
-    message_priority_queue_get_info(&inst->message_pool.all_queue, &msg_count, &buffer_count);
+    message_priority_queue_get_info(&message_pool->all_queue, &msg_count, &buffer_count);
     TEST_VERIFY_OR_EXIT(msg_count == 0, "num of message in all queue not zero as expected.\r\n");
 
     for (int i = 0; i < num_of_test_messages; i++) {
         message_free(msg[i]);
     }
 
-    TEST_VERIFY_OR_EXIT(inst->message_pool.num_free_buffers == MSG_NUM_BUFFERS,
+    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MSG_NUM_BUFFERS,
                         "num of free buffers did not match the value expected.\r\n");
 
 exit:
