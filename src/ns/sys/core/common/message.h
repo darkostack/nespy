@@ -99,16 +99,13 @@ struct _message_iterator {
 };
 
 void
-message_pool_make_new(void *instance);
+message_queue_ctor(message_queue_t *queue);
 
 void
-message_queue_make_new(message_queue_t *queue);
+message_priority_queue_ctor(priority_queue_t *queue);
 
 void
-message_priority_queue_make_new(priority_queue_t *queue);
-
-void
-message_iterator_make_new(message_iterator_t *iterator);
+message_iterator_ctor(message_iterator_t *iterator);
 
 message_t
 message_new(uint8_t type, uint16_t reserved, uint8_t priority);

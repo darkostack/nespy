@@ -32,7 +32,7 @@ alarm_get_now(void);
 
 // --- timer functions
 void
-timer_scheduler_make_new(void *instance)
+timer_scheduler_ctor(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
     inst->timer_sched.head = NULL;

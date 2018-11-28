@@ -68,8 +68,8 @@ struct _heap {
     } memory;
 };
 
-void
-heap_make_new(heap_t *heap);
+heap_t *
+heap_instance_get(void *instance);
 
 void *
 heap_calloc(heap_t *heap, size_t count, size_t asize);

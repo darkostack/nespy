@@ -22,7 +22,7 @@ test_message_queue(void)
     printf("------------------------- TEST MESSAGE QUEUE\r\n");
 
     // Note: this is a must otherwise it will cause hard-fault
-    message_queue_make_new(&message_queue);
+    message_queue_ctor(&message_queue);
 
     for (int i = 0; i < num_of_test_messages; i++) {
         msg[i] = message_new(0, 0, 0);

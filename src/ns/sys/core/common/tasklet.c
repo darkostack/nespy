@@ -7,7 +7,7 @@ tasklet_pop(instance_t *instance);
 
 // --- tasklet scheduler functions
 void
-tasklet_scheduler_make_new(void *instance)
+tasklet_scheduler_ctor(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
     inst->tasklet_sched.head = NULL;

@@ -2,6 +2,19 @@
 
 static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
 
+// --- extern instance objects constructor functions
+extern void
+timer_scheduler_ctor(void *instance);
+
+extern void
+tasklet_scheduler_ctor(void *instance);
+
+extern void
+message_pool_ctor(void *instance);
+
+extern void
+heap_ctor(void *instance);
+
 // --- instance functions
 instance_t *
 instance_init(void)
@@ -10,9 +23,12 @@ instance_init(void)
 
     VERIFY_OR_EXIT(inst->is_initialized == false);
 
-    timer_scheduler_make_new(inst);
-    tasklet_scheduler_make_new(inst);
-    message_pool_make_new(inst);
+    timer_scheduler_ctor((void *)inst);
+    tasklet_scheduler_ctor((void *)inst);
+    message_pool_ctor((void *)inst);
+    heap_ctor((void *)inst);
+
+    inst->is_initialized = true;
 
     extern ns_error_t test_message_write_read(void);
     test_message_write_read();
@@ -26,13 +42,11 @@ instance_init(void)
     extern ns_error_t test_message_priority_queue(void);
     test_message_priority_queue();
 
-    extern ns_error_t test_heap_allocate_single(void);
-    test_heap_allocate_single();
+    extern ns_error_t test_heap_allocate_single(void *instance);
+    test_heap_allocate_single((void *)inst);
 
-    extern ns_error_t test_heap_allocate_multiple(void);
-    test_heap_allocate_multiple();
-
-    inst->is_initialized = true;
+    extern ns_error_t test_heap_allocate_multiple(void *instance);
+    test_heap_allocate_multiple((void *)inst);
 
 exit:
     return inst;

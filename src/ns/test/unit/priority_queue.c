@@ -207,10 +207,10 @@ test_message_priority_queue(void)
 
     printf("---------------- TEST MESSAGE PRIORITY QUEUE\r\n");
 
-    // initialize objects
-    message_priority_queue_make_new(&queue);
-    message_iterator_make_new(&it);
-    message_queue_make_new(&message_queue);
+    // call objects contructor
+    message_priority_queue_ctor(&queue);
+    message_iterator_ctor(&it);
+    message_queue_ctor(&message_queue);
 
     // use "message_new()" function to allocate messages with different priorities
     for (int i = 0; i < NUM_NEW_PRIORITY_TEST_MESSAGES; i++) {

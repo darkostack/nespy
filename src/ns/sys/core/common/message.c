@@ -33,7 +33,7 @@ msg_iterator_prev(message_iterator_t *iterator);
 
 // --- message pool functions
 void
-message_pool_make_new(void *instance)
+message_pool_ctor(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
 
@@ -54,13 +54,13 @@ message_pool_make_new(void *instance)
 }
 
 void
-message_queue_make_new(message_queue_t *queue)
+message_queue_ctor(message_queue_t *queue)
 {
     queue->tail = NULL;
 }
 
 void
-message_priority_queue_make_new(priority_queue_t *queue)
+message_priority_queue_ctor(priority_queue_t *queue)
 {
     for (int prio = 0; prio < MSG_NUM_PRIORITIES; prio++) {
         queue->tails[prio] = NULL;
@@ -68,7 +68,7 @@ message_priority_queue_make_new(priority_queue_t *queue)
 }
 
 void
-message_iterator_make_new(message_iterator_t *iterator)
+message_iterator_ctor(message_iterator_t *iterator)
 {
     iterator->message = NULL;
 }

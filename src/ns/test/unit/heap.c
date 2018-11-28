@@ -6,50 +6,47 @@
 #include <stdlib.h>
 
 ns_error_t
-test_heap_allocate_single(void)
+test_heap_allocate_single(void *instance)
 {
     ns_error_t error = NS_ERROR_NONE;
-    heap_t heap;
+    heap_t *heap = heap_instance_get(instance);
 
     printf("------------------ TEST HEAP ALLOCATE SINGLE\r\n");
 
-    // heap constructor
-    heap_make_new(&heap);
-
-    TEST_VERIFY_OR_EXIT(heap_is_clean(&heap),
+    TEST_VERIFY_OR_EXIT(heap_is_clean(heap),
                         "heap is not clean as expected.\r\n");
 
-    size_t total_size = heap_get_free_size(&heap);
+    size_t total_size = heap_get_free_size(heap);
 
     {
-        void *p = heap_calloc(&heap, 1, 0);
+        void *p = heap_calloc(heap, 1, 0);
 
         TEST_VERIFY_OR_EXIT(p == NULL &&
-                            total_size == heap_get_free_size(&heap),
+                            total_size == heap_get_free_size(heap),
                             "test heap allocate single allocate 1 x 0 byte failed.\r\n");
 
-        heap_free(&heap, p);
+        heap_free(heap, p);
 
-        p = heap_calloc(&heap, 0, 1);
+        p = heap_calloc(heap, 0, 1);
 
         TEST_VERIFY_OR_EXIT(p == NULL &&
-                            total_size == heap_get_free_size(&heap),
+                            total_size == heap_get_free_size(heap),
                             "test heap allocate single allocate 0 x 1 byte failed.\r\n");
 
-        heap_free(&heap, p);
+        heap_free(heap, p);
     }
 
     for (size_t size = 1; size <= heap_get_capacity(); ++size) {
-        void *p = heap_calloc(&heap, 1, size);
+        void *p = heap_calloc(heap, 1, size);
         //printf("test heap allocate single allocating %lu bytes...\r\n", size);
         TEST_VERIFY_OR_EXIT(p != NULL &&
-                            !heap_is_clean(&heap) &&
-                            heap_get_free_size(&heap) + size <= total_size,
+                            !heap_is_clean(heap) &&
+                            heap_get_free_size(heap) + size <= total_size,
                             "allocating failed.\r\n");
         memset(p, 0xff, size);
-        heap_free(&heap, p);
-        TEST_VERIFY_OR_EXIT(heap_is_clean(&heap) &&
-                            heap_get_free_size(&heap) == total_size,
+        heap_free(heap, p);
+        TEST_VERIFY_OR_EXIT(heap_is_clean(heap) &&
+                            heap_get_free_size(heap) == total_size,
                             "freeing failed.\r\n");
     }
 
@@ -72,26 +69,23 @@ struct _node {
 node_t head;
 
 static ns_error_t
-test_heap_allocate_randomly(size_t size_limit)
+test_heap_allocate_randomly(void *instance, size_t size_limit)
 {
     ns_error_t error = NS_ERROR_NONE;
-    heap_t heap;
+    heap_t *heap = heap_instance_get(instance);
     node_t *last = &head;
     size_t nnodes = 0;
 
     extern uint32_t ns_plat_random_get(void);
 
-    // heap constructor
-    heap_make_new(&heap);
-
-    TEST_VERIFY_OR_EXIT(heap_is_clean(&heap),
+    TEST_VERIFY_OR_EXIT(heap_is_clean(heap),
                         "heap is not clean as expected.\r\n");
 
-    size_t total_size = heap_get_free_size(&heap);
+    size_t total_size = heap_get_free_size(heap);
 
     while (1) {
         size_t size = (size_t)ns_plat_random_get() % size_limit + sizeof(node_t);
-        last->next = (node_t *)heap_calloc(&heap, 1, size);
+        last->next = (node_t *)heap_calloc(heap, 1, size);
         if (last->next == NULL) {
             break;
         }
@@ -112,7 +106,7 @@ test_heap_allocate_randomly(size_t size_limit)
             node_t *curr = prev->next;
             //printf("test heap allocate randomly freeing %lu bytes...\r\n", last->size);
             prev->next = curr->next;
-            heap_free(&heap, curr);
+            heap_free(heap, curr);
             if (last == curr) {
                 last = prev;
             }
@@ -125,13 +119,13 @@ test_heap_allocate_randomly(size_t size_limit)
     while (last) {
         node_t *next = last->next;
         //printf("test heap allocate randomly freeing %lu bytes...\r\n", last->size);
-        heap_free(&heap, last);
+        heap_free(heap, last);
         last = next;
         --nnodes;
     }
 
-    TEST_VERIFY_OR_EXIT(heap_is_clean(&heap) &&
-                        heap_get_free_size(&heap) == total_size &&
+    TEST_VERIFY_OR_EXIT(heap_is_clean(heap) &&
+                        heap_get_free_size(heap) == total_size &&
                         nnodes == 0,
                         "freeing failed.\r\n");
 
@@ -140,13 +134,13 @@ exit:
 }
 
 ns_error_t
-test_heap_allocate_multiple(void)
+test_heap_allocate_multiple(void *instance)
 {
     ns_error_t error = NS_ERROR_NONE;
     printf("---------------- TEST HEAP ALLOCATE MULTIPLE\r\n");
     for (int i = 0; i < 10; i++) {
         size_t size_limit = (1 << i);
-        TEST_VERIFY_OR_EXIT(test_heap_allocate_randomly(size_limit) == NS_ERROR_NONE,
+        TEST_VERIFY_OR_EXIT(test_heap_allocate_randomly(instance, size_limit) == NS_ERROR_NONE,
                             "heap allocate randomly failed\r\n");
     }
 exit:

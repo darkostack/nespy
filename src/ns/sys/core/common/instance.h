@@ -12,6 +12,7 @@
 #include "ns/sys/core/common/timer.h"
 #include "ns/sys/core/common/tasklet.h"
 #include "ns/sys/core/common/message.h"
+#include "ns/sys/core/utils/heap.h"
 
 typedef struct _instance instance_t;
 
@@ -20,6 +21,7 @@ struct _instance {
     timer_scheduler_t timer_sched;
     tasklet_scheduler_t tasklet_sched;
     message_pool_t message_pool;
+    heap_t heap;
 };
 
 instance_t *

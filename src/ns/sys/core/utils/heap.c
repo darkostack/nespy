@@ -1,4 +1,4 @@
-#include "ns/sys/core/utils/heap.h"
+#include "ns/sys/core/common/instance.h"
 #include "ns/sys/core/common/code_utils.h"
 #include <string.h>
 
@@ -56,8 +56,10 @@ heap_block_insert(heap_t *heap, block_t *aprev, block_t *ablock);
 
 // --- heap functions
 void
-heap_make_new(heap_t *heap)
+heap_ctor(void *instance)
 {
+    heap_t *heap = heap_instance_get(instance);
+
     block_t *super = heap_block_at(heap, HEAP_SUPER_BLOCK_OFFSET);
     block_set_size(super, HEAP_SUPER_BLOCK_SIZE);
 
@@ -71,6 +73,13 @@ heap_make_new(heap_t *heap)
     block_set_next(first, heap_block_offset(heap, guard));
 
     heap->memory.free_size = HEAP_FIRST_BLOCK_SIZE;
+}
+
+heap_t *
+heap_instance_get(void *instance)
+{
+    instance_t *inst = (instance_t *)instance;
+    return &inst->heap;
 }
 
 void *

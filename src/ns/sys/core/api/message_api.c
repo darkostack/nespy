@@ -78,7 +78,7 @@ ns_message_write(ns_message_t message, uint16_t offset, const void *buf, uint16_
 void
 ns_message_queue_init(ns_message_queue_t *queue)
 {
-    message_queue_make_new((message_queue_t *)queue);
+    message_queue_ctor((message_queue_t *)queue);
 }
 
 ns_error_t

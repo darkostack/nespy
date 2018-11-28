@@ -16,9 +16,6 @@ typedef struct _tasklet_scheduler {
     tasklet_t *tail;
 } tasklet_scheduler_t;
 
-void
-tasklet_scheduler_make_new(void *instance);
-
 ns_error_t
 tasklet_post(tasklet_t *tasklet);
 
