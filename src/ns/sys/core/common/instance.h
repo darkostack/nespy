@@ -31,7 +31,7 @@ instance_t *
 instance_get(void);
 
 timer_scheduler_t *
-instance_get_timer_scheduler(void);
+instance_get_timer_scheduler(instance_t *instance);
 
 tasklet_scheduler_t *
 instance_get_tasklet_scheduler(void);

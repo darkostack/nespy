@@ -19,6 +19,6 @@ typedef struct _timer_scheduler {
 } timer_scheduler_t;
 
 void
-timer_start(timer_t *timer, uint32_t t0, uint32_t dt);
+timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt);
 
 #endif // NS_CORE_COMMON_TIMER_H_

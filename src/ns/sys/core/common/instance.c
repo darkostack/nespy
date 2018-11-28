@@ -60,10 +60,9 @@ instance_get(void)
 }
 
 timer_scheduler_t *
-instance_get_timer_scheduler(void)
+instance_get_timer_scheduler(instance_t *instance)
 {
-    instance_t *inst = instance_get();
-    return (timer_scheduler_t *)&inst->timer_sched;
+    return (timer_scheduler_t *)&instance->timer_sched;
 }
 
 tasklet_scheduler_t *

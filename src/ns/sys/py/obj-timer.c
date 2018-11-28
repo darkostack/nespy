@@ -94,7 +94,7 @@ py_timer_start(mp_obj_t self_in,
     uint32_t now = ns_plat_alarm_get_now();
     // add this timer to the list & start
     py_timer_list_add(self);
-    timer_start((timer_t *)&self->timer, now, self->interval);
+    timer_start((void *)self->instance, (timer_t *)&self->timer, now, self->interval);
     return mp_const_none;
 }
 
