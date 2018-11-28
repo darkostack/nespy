@@ -196,7 +196,7 @@ test_message_priority_queue(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
-    message_pool_t *message_pool = instance_get_message_pool();
+    message_pool_t *message_pool = instance_get_message_pool(inst);
 
     priority_queue_t queue;
     message_queue_t message_queue;

@@ -10,7 +10,7 @@ test_message_write_read(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
-    message_pool_t *message_pool = instance_get_message_pool();
+    message_pool_t *message_pool = instance_get_message_pool(inst);
 
     printf("-------------------- TEST MESSAGE WRITE READ\r\n");
 
@@ -55,7 +55,7 @@ test_message_utility(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
-    message_pool_t *message_pool = instance_get_message_pool();
+    message_pool_t *message_pool = instance_get_message_pool(inst);
 
     uint8_t ref_buffer[128];
     uint8_t msgref_buffer[sizeof(ref_buffer)];

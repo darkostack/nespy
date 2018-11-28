@@ -13,7 +13,7 @@ ns_error_t
 test_message_queue(void)
 {
     instance_t *inst = instance_get();
-    message_pool_t *message_pool = instance_get_message_pool();
+    message_pool_t *message_pool = instance_get_message_pool(inst);
 
     uint8_t num_of_test_messages = 5;
     message_queue_t message_queue;

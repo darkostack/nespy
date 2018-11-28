@@ -73,10 +73,9 @@ instance_get_tasklet_scheduler(instance_t *instance)
 }
 
 message_pool_t *
-instance_get_message_pool(void)
+instance_get_message_pool(instance_t *instance)
 {
-    instance_t *inst = instance_get();
-    return (message_pool_t *)&inst->message_pool;
+    return (message_pool_t *)&instance->message_pool;
 }
 
 heap_t *

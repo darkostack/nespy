@@ -5,10 +5,10 @@
 
 // --- private functions declarations
 static uint16_t
-msg_get_free_buffer_count(void);
+msg_get_free_buffer_count(message_pool_t *message_pool);
 
 static message_t
-msg_new_buffer(uint8_t priority);
+msg_new_buffer(message_pool_t *message_pool, uint8_t priority);
 
 static bool
 msg_is_in_queue(message_t message);
@@ -71,13 +71,19 @@ message_iterator_ctor(message_iterator_t *iterator)
     iterator->message = NULL;
 }
 
+message_pool_t *
+message_get_message_pool(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.message_pool;
+}
+
 message_t
 message_new(message_pool_t *message_pool, uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
     buffer_t *msgbuf = NULL;
 
-    VERIFY_OR_EXIT((msgbuf = (buffer_t *)msg_new_buffer(priority)) != NULL);
+    VERIFY_OR_EXIT((msgbuf = (buffer_t *)msg_new_buffer(message_pool, priority)) != NULL);
 
     memset(msgbuf, 0, sizeof(*msgbuf));
     msgbuf->buffer.head.info.message_pool = message_pool;
@@ -122,9 +128,9 @@ message_new_set(message_pool_t *message_pool, uint8_t type, uint16_t reserved,
 }
 
 ns_error_t
-message_reclaim_buffers(int num_buffers, uint8_t priority)
+message_reclaim_buffers(message_pool_t *message_pool, int num_buffers, uint8_t priority)
 {
-    uint16_t free_buffer_count = msg_get_free_buffer_count();
+    uint16_t free_buffer_count = msg_get_free_buffer_count(message_pool);
     return (num_buffers < 0 || num_buffers <= free_buffer_count) ? NS_ERROR_NONE : NS_ERROR_NO_BUFS;
 }
 
@@ -150,26 +156,25 @@ ns_error_t
 message_set_priority(message_t message, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
-    buffer_t *msgbuf = (buffer_t *)message;
-    priority_queue_t *prio_queue = NULL;
+    priority_queue_t *priority_queue = NULL;
 
     VERIFY_OR_EXIT(priority < MSG_NUM_PRIORITIES, error = NS_ERROR_INVALID_ARGS);
-    VERIFY_OR_EXIT(msg_is_in_queue((message_t)msgbuf), msgbuf->buffer.head.info.priority = priority);
-    VERIFY_OR_EXIT(msgbuf->buffer.head.info.priority != priority);
+    VERIFY_OR_EXIT(msg_is_in_queue(message), ((buffer_t *)message)->buffer.head.info.priority = priority);
+    VERIFY_OR_EXIT(message_get_priority(message) != priority);
 
-    if (msgbuf->buffer.head.info.in_priority_queue) {
-        prio_queue = msgbuf->buffer.head.info.queue.priority;
-        message_priority_queue_dequeue(prio_queue, (message_t)msgbuf);
+    if (((buffer_t *)message)->buffer.head.info.in_priority_queue) {
+        priority_queue = ((buffer_t *)message)->buffer.head.info.queue.priority;
+        message_priority_queue_dequeue(priority_queue, message);
     } else {
-        message_remove_from_all_queue_list((message_t)msgbuf);
+        message_remove_from_all_queue_list(message);
     }
 
-    msgbuf->buffer.head.info.priority = priority;
+    ((buffer_t *)message)->buffer.head.info.priority = priority;
 
-    if (prio_queue != NULL) {
-        message_priority_queue_enqueue(prio_queue, (message_t)msgbuf);
+    if (priority_queue != NULL) {
+        message_priority_queue_enqueue(priority_queue, message);
     } else {
-        message_add_to_all_queue_list((message_t)msgbuf);
+        message_add_to_all_queue_list(message);
     }
 
 exit:
@@ -189,7 +194,8 @@ message_resize(message_t message, uint16_t length)
 
     while (cur_length < length) {
         if (cur_buffer->next == NULL) {
-            cur_buffer->next = (void *)msg_new_buffer(message_get_priority((message_t)msgbuf));
+            cur_buffer->next = (void *)msg_new_buffer(message_get_message_pool(message),
+                                                      message_get_priority((message_t)msgbuf));
             VERIFY_OR_EXIT(cur_buffer->next != NULL, error = NS_ERROR_NO_BUFS);
         }
         cur_buffer = (buffer_t *)cur_buffer->next;
@@ -228,7 +234,9 @@ message_set_length(message_t message, uint16_t length)
         bufs -= (((total_len_current - MSG_HEAD_BUFFER_DATA_SIZE) - 1) / MSG_BUFFER_DATA_SIZE) + 1;
     }
 
-    error = message_reclaim_buffers(bufs, message_get_priority((message_t)msgbuf));
+    error = message_reclaim_buffers(message_get_message_pool(message),
+                                    bufs,
+                                    message_get_priority((message_t)msgbuf));
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     error = message_resize((message_t)msgbuf, total_len_request);
@@ -541,11 +549,12 @@ ns_error_t
 message_prepend(message_t message, const void *buf, uint16_t length)
 {
     ns_error_t error = NS_ERROR_NONE;
+    message_pool_t *message_pool = message_get_message_pool(message);
     buffer_t *msgbuf = (buffer_t *)message;
     buffer_t *new_buffer = NULL;
 
     while (length < message_get_reserved(message)) {
-        VERIFY_OR_EXIT((new_buffer = (buffer_t *)msg_new_buffer(message_get_priority((message_t)msgbuf))) != NULL, error = NS_ERROR_NO_BUFS);
+        VERIFY_OR_EXIT((new_buffer = (buffer_t *)msg_new_buffer(message_pool, message_get_priority((message_t)msgbuf))) != NULL, error = NS_ERROR_NO_BUFS);
 
         new_buffer->next = (void *)msgbuf->next;
         msgbuf->next = (void *)new_buffer;
@@ -1247,26 +1256,24 @@ message_iterator_get_prev(message_iterator_t *iterator)
 
 // --- private functions
 static uint16_t
-msg_get_free_buffer_count(void)
+msg_get_free_buffer_count(message_pool_t *message_pool)
 {
-    instance_t *inst = instance_get();
-    return inst->message_pool.num_free_buffers;
+    return message_pool->num_free_buffers;
 }
 
 static message_t
-msg_new_buffer(uint8_t priority)
+msg_new_buffer(message_pool_t *message_pool, uint8_t priority)
 {
-    instance_t *inst = instance_get();
     buffer_t *buffer = NULL;
-    buffer_t *free_buffers = inst->message_pool.free_buffers;
+    buffer_t *free_buffers = message_pool->free_buffers;
 
-    VERIFY_OR_EXIT(message_reclaim_buffers(1, priority) == NS_ERROR_NONE);
+    VERIFY_OR_EXIT(message_reclaim_buffers(message_pool, 1, priority) == NS_ERROR_NONE);
 
     if (free_buffers != NULL) {
         buffer = free_buffers;
-        inst->message_pool.free_buffers = (buffer_t *)free_buffers->next;
+        message_pool->free_buffers = (buffer_t *)free_buffers->next;
         buffer->next = NULL;
-        inst->message_pool.num_free_buffers--;
+        message_pool->num_free_buffers--;
     }
 
 exit:

@@ -36,7 +36,7 @@ tasklet_scheduler_t *
 instance_get_tasklet_scheduler(instance_t *instance);
 
 message_pool_t *
-instance_get_message_pool(void);
+instance_get_message_pool(instance_t *instance);
 
 heap_t *
 instance_get_heap(instance_t *instance);
