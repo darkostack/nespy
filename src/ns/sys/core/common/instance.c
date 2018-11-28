@@ -4,16 +4,16 @@ static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
 
 // --- extern instance objects constructor functions
 extern void
-timer_scheduler_ctor(void *instance);
+timer_scheduler_ctor(timer_scheduler_t *timer_scheduler);
 
 extern void
-tasklet_scheduler_ctor(void *instance);
+tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler);
 
 extern void
-message_pool_ctor(void *instance);
+message_pool_ctor(message_pool_t *message_pool);
 
 extern void
-heap_ctor(void *instance);
+heap_ctor(heap_t *heap);
 
 // --- instance functions
 instance_t *
@@ -23,10 +23,10 @@ instance_init(void)
 
     VERIFY_OR_EXIT(inst->is_initialized == false);
 
-    timer_scheduler_ctor((void *)inst);
-    tasklet_scheduler_ctor((void *)inst);
-    message_pool_ctor((void *)inst);
-    heap_ctor((void *)inst);
+    timer_scheduler_ctor((timer_scheduler_t *)&inst->timer_sched);
+    tasklet_scheduler_ctor((tasklet_scheduler_t *)&inst->tasklet_sched);
+    message_pool_ctor((message_pool_t *)&inst->message_pool);
+    heap_ctor((heap_t *)&inst->heap);
 
     inst->is_initialized = true;
 

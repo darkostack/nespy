@@ -33,23 +33,21 @@ msg_iterator_prev(message_iterator_t *iterator);
 
 // --- message pool functions
 void
-message_pool_ctor(void *instance)
+message_pool_ctor(message_pool_t *message_pool)
 {
-    instance_t *inst = (instance_t *)instance;
+    memset(message_pool->buffers, 0, sizeof(message_pool->buffers));
 
-    memset(inst->message_pool.buffers, 0, sizeof(inst->message_pool.buffers));
-
-    inst->message_pool.free_buffers = inst->message_pool.buffers;
+    message_pool->free_buffers = message_pool->buffers;
 
     for (uint16_t i = 0; i < MSG_NUM_BUFFERS - 1; i++) {
-        inst->message_pool.buffers[i].next = (void *)&inst->message_pool.buffers[i + 1];
+        message_pool->buffers[i].next = (void *)&message_pool->buffers[i + 1];
     }
 
-    inst->message_pool.buffers[MSG_NUM_BUFFERS - 1].next = NULL;
-    inst->message_pool.num_free_buffers = MSG_NUM_BUFFERS;
+    message_pool->buffers[MSG_NUM_BUFFERS - 1].next = NULL;
+    message_pool->num_free_buffers = MSG_NUM_BUFFERS;
 
     for (int prio = 0; prio < MSG_NUM_PRIORITIES; prio++) {
-        inst->message_pool.all_queue.tails[prio] = NULL;
+        message_pool->all_queue.tails[prio] = NULL;
     }
 }
 

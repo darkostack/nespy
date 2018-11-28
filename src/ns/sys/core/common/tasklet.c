@@ -7,11 +7,10 @@ tasklet_pop(instance_t *instance);
 
 // --- tasklet scheduler functions
 void
-tasklet_scheduler_ctor(void *instance)
+tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler)
 {
-    instance_t *inst = (instance_t *)instance;
-    inst->tasklet_sched.head = NULL;
-    inst->tasklet_sched.tail = NULL;
+    tasklet_scheduler->head = NULL;
+    tasklet_scheduler->tail = NULL;
 }
 
 ns_error_t

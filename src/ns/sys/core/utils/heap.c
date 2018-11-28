@@ -56,10 +56,8 @@ heap_block_insert(heap_t *heap, block_t *aprev, block_t *ablock);
 
 // --- heap functions
 void
-heap_ctor(void *instance)
+heap_ctor(heap_t *heap)
 {
-    heap_t *heap = heap_instance_get(instance);
-
     block_t *super = heap_block_at(heap, HEAP_SUPER_BLOCK_OFFSET);
     block_set_size(super, HEAP_SUPER_BLOCK_SIZE);
 
