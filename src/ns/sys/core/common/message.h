@@ -108,10 +108,11 @@ void
 message_iterator_ctor(message_iterator_t *iterator);
 
 message_t
-message_new(uint8_t type, uint16_t reserved, uint8_t priority);
+message_new(message_pool_t *message_pool, uint8_t type, uint16_t reserved, uint8_t priority);
 
 message_t
-message_new_set(uint8_t type, uint16_t reserved, const message_settings_t *settings);
+message_new_set(message_pool_t *message_pool, uint8_t type, uint16_t reserved,
+                const message_settings_t *settings);
 
 ns_error_t
 message_reclaim_buffers(int num_buffers, uint8_t priority);
@@ -142,6 +143,9 @@ message_set_offset(message_t message, uint16_t offset);
 
 uint16_t
 message_get_offset(message_t message);
+
+message_pool_t *
+message_get_pool(message_t message);
 
 uint8_t
 message_get_type(message_t message);

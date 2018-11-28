@@ -74,16 +74,15 @@ message_iterator_ctor(message_iterator_t *iterator)
 }
 
 message_t
-message_new(uint8_t type, uint16_t reserved, uint8_t priority)
+message_new(message_pool_t *message_pool, uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
-    instance_t *inst = instance_get();
     buffer_t *msgbuf = NULL;
 
     VERIFY_OR_EXIT((msgbuf = (buffer_t *)msg_new_buffer(priority)) != NULL);
 
     memset(msgbuf, 0, sizeof(*msgbuf));
-    msgbuf->buffer.head.info.message_pool = (message_pool_t *)&inst->message_pool;
+    msgbuf->buffer.head.info.message_pool = message_pool;
     msgbuf->buffer.head.info.type = type;
     msgbuf->buffer.head.info.reserved = reserved;
     msgbuf->buffer.head.info.link_security = false; // TODO: use link security
@@ -100,7 +99,8 @@ exit:
 }
 
 message_t
-message_new_set(uint8_t type, uint16_t reserved, const message_settings_t *settings)
+message_new_set(message_pool_t *message_pool, uint8_t type, uint16_t reserved,
+                const message_settings_t *settings)
 {
     message_t message;
     bool link_security_enabled;
@@ -114,7 +114,7 @@ message_new_set(uint8_t type, uint16_t reserved, const message_settings_t *setti
         priority = settings->priority;
     }
 
-    message = message_new(type, reserved, priority);
+    message = message_new(message_pool, type, reserved, priority);
 
     if (message != NULL) {
         message_set_link_security_enabled(message, link_security_enabled);
@@ -268,6 +268,12 @@ uint16_t
 message_get_offset(message_t message)
 {
     return ((buffer_t *)message)->buffer.head.info.offset;
+}
+
+message_pool_t *
+message_get_pool(message_t message)
+{
+    return ((buffer_t *)message)->buffer.head.info.message_pool;
 }
 
 uint8_t
@@ -691,7 +697,8 @@ message_clone_length(message_t message, uint16_t length)
     ns_error_t error = NS_ERROR_NONE;
     message_t msgcopy;
 
-    msgcopy = message_new(message_get_type(message),
+    msgcopy = message_new(message_get_pool(message),
+                          message_get_type(message),
                           message_get_reserved(message),
                           message_get_priority(message));
 

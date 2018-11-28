@@ -5,7 +5,8 @@
 ns_message_t
 ns_message_new(uint16_t type, uint16_t reserved, uint8_t priority)
 {
-    return message_new(type, reserved, priority);
+    instance_t *inst = instance_get();
+    return message_new(&inst->message_pool, type, reserved, priority);
 }
 
 void

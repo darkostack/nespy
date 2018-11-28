@@ -196,6 +196,8 @@ test_message_priority_queue(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
+    message_pool_t *message_pool = instance_get_message_pool();
+
     priority_queue_t queue;
     message_queue_t message_queue;
     message_iterator_t it;
@@ -214,35 +216,35 @@ test_message_priority_queue(void)
 
     // use "message_new()" function to allocate messages with different priorities
     for (int i = 0; i < NUM_NEW_PRIORITY_TEST_MESSAGES; i++) {
-        msg_net[i] = message_new(0, 0, MSG_PRIO_NET);
+        msg_net[i] = message_new(message_pool, 0, 0, MSG_PRIO_NET);
         TEST_VERIFY_OR_EXIT(msg_net[i] != NULL, "message new failed.\r\n");
-        msg_high[i] = message_new(0, 0, MSG_PRIO_HIGH);
+        msg_high[i] = message_new(message_pool, 0, 0, MSG_PRIO_HIGH);
         TEST_VERIFY_OR_EXIT(msg_high[i] != NULL, "message new failed.\r\n");
-        msg_nor[i] = message_new(0, 0, MSG_PRIO_NORMAL);
+        msg_nor[i] = message_new(message_pool, 0, 0, MSG_PRIO_NORMAL);
         TEST_VERIFY_OR_EXIT(msg_nor[i] != NULL, "message new failed.\r\n");
-        msg_low[i] = message_new(0, 0, MSG_PRIO_LOW);
+        msg_low[i] = message_new(message_pool, 0, 0, MSG_PRIO_LOW);
         TEST_VERIFY_OR_EXIT(msg_low[i] != NULL, "message new failed.\r\n");
     }
 
     // check the failure case for "message_new()" for invalid argument
-    TEST_VERIFY_OR_EXIT(message_new(0, 0, MSG_NUM_PRIORITIES) == NULL,
+    TEST_VERIFY_OR_EXIT(message_new(message_pool, 0, 0, MSG_NUM_PRIORITIES) == NULL,
             "message new with out of range value did not fail as expected.\r\n");
 
     // use the "message_set_priority()" to allocate messages with different priorities
     for (int i = NUM_NEW_PRIORITY_TEST_MESSAGES; i < NUM_TEST_MESSAGES; i++) {
-        msg_net[i] = message_new(0, 0, 0);
+        msg_net[i] = message_new(message_pool, 0, 0, 0);
         TEST_VERIFY_OR_EXIT(msg_net[i] != NULL, "message new failed.\r\n");
         TEST_VERIFY_OR_EXIT(message_set_priority(msg_net[i], MSG_PRIO_NET) == NS_ERROR_NONE,
                             "message set priority failed.\r\n");
-        msg_high[i] = message_new(0, 0, 0);
+        msg_high[i] = message_new(message_pool, 0, 0, 0);
         TEST_VERIFY_OR_EXIT(msg_high[i] != NULL, "message new failed.\r\n");
         TEST_VERIFY_OR_EXIT(message_set_priority(msg_high[i], MSG_PRIO_HIGH) == NS_ERROR_NONE,
                             "message set priority failed.\r\n");
-        msg_nor[i] = message_new(0, 0, 0);
+        msg_nor[i] = message_new(message_pool, 0, 0, 0);
         TEST_VERIFY_OR_EXIT(msg_nor[i] != NULL, "message new failed.\r\n");
         TEST_VERIFY_OR_EXIT(message_set_priority(msg_nor[i], MSG_PRIO_NORMAL) == NS_ERROR_NONE,
                             "message set priority failed.\r\n");
-        msg_low[i] = message_new(0, 0, 0);
+        msg_low[i] = message_new(message_pool, 0, 0, 0);
         TEST_VERIFY_OR_EXIT(msg_low[i] != NULL, "message new failed.\r\n");
         TEST_VERIFY_OR_EXIT(message_set_priority(msg_low[i], MSG_PRIO_LOW) == NS_ERROR_NONE,
                             "message set priority failed.\r\n");

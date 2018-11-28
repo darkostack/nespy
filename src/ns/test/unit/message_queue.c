@@ -13,6 +13,8 @@ ns_error_t
 test_message_queue(void)
 {
     instance_t *inst = instance_get();
+    message_pool_t *message_pool = instance_get_message_pool();
+
     uint8_t num_of_test_messages = 5;
     message_queue_t message_queue;
     message_t msg[num_of_test_messages];
@@ -25,7 +27,7 @@ test_message_queue(void)
     message_queue_ctor(&message_queue);
 
     for (int i = 0; i < num_of_test_messages; i++) {
-        msg[i] = message_new(0, 0, 0);
+        msg[i] = message_new(message_pool, 0, 0, 0);
         TEST_VERIFY_OR_EXIT(msg[i] != NULL, "message new failed.\r\n");
     }
 

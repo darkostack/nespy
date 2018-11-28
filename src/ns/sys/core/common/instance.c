@@ -58,3 +58,10 @@ instance_get(void)
     void *inst = &instance_raw;
     return (instance_t *)inst;
 }
+
+message_pool_t *
+instance_get_message_pool(void)
+{
+    instance_t *inst = instance_get();
+    return (message_pool_t *)&inst->message_pool;
+}

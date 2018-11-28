@@ -30,4 +30,7 @@ instance_init(void);
 instance_t *
 instance_get(void);
 
+message_pool_t *
+instance_get_message_pool(void);
+
 #endif // NS_CORE_COMMON_INSTANCE_H_

@@ -10,6 +10,7 @@ test_message_write_read(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
+    message_pool_t *message_pool = instance_get_message_pool();
 
     printf("-------------------- TEST MESSAGE WRITE READ\r\n");
 
@@ -22,7 +23,7 @@ test_message_write_read(void)
         write_buffer[i] = (uint8_t)ns_plat_random_get();
     }
 
-    message_t message = message_new(0, 0, 0);
+    message_t message = message_new(message_pool, 0, 0, 0);
 
     TEST_VERIFY_OR_EXIT(message != NULL, "failed to create the message.\r\n");
     TEST_VERIFY_OR_EXIT(message_set_length(message, sizeof(write_buffer)) == NS_ERROR_NONE,
@@ -54,6 +55,8 @@ test_message_utility(void)
 {
     ns_error_t error = NS_ERROR_NONE;
     instance_t *inst = instance_get();
+    message_pool_t *message_pool = instance_get_message_pool();
+
     uint8_t ref_buffer[128];
     uint8_t msgref_buffer[sizeof(ref_buffer)];
     uint8_t msgcopy_buffer[sizeof(ref_buffer)];
@@ -61,10 +64,10 @@ test_message_utility(void)
 
     printf("----------------------- TEST MESSAGE UTILITY\r\n");
 
-    message_t msgref = message_new(0, 0, 0);
+    message_t msgref = message_new(message_pool, 0, 0, 0);
     TEST_VERIFY_OR_EXIT(msgref != NULL, "message new failed.\r\n");
 
-    message_t msgcopy = message_new(0, 0, 0);
+    message_t msgcopy = message_new(message_pool, 0, 0, 0);
     TEST_VERIFY_OR_EXIT(msgcopy != NULL, "message new failed.\r\n");
 
     extern uint32_t ns_plat_random_get(void);
