@@ -1,3 +1,4 @@
+#include "ns/include/error.h"
 #include "ns/sys/core/common/instance.h"
 
 static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
@@ -66,10 +67,9 @@ instance_get_timer_scheduler(instance_t *instance)
 }
 
 tasklet_scheduler_t *
-instance_get_tasklet_scheduler(void)
+instance_get_tasklet_scheduler(instance_t *instance)
 {
-    instance_t *inst = instance_get();
-    return (tasklet_scheduler_t *)&inst->tasklet_sched;
+    return (tasklet_scheduler_t *)&instance->tasklet_sched;
 }
 
 message_pool_t *
@@ -80,8 +80,7 @@ instance_get_message_pool(void)
 }
 
 heap_t *
-instance_get_heap(void)
+instance_get_heap(instance_t *instance)
 {
-    instance_t *inst = instance_get();
-    return (heap_t *)&inst->heap;
+    return (heap_t *)&instance->heap;
 }

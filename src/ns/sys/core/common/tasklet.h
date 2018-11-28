@@ -17,7 +17,7 @@ typedef struct _tasklet_scheduler {
 } tasklet_scheduler_t;
 
 ns_error_t
-tasklet_post(tasklet_t *tasklet);
+tasklet_post(void *instance, tasklet_t *tasklet);
 
 bool
 tasklet_are_pending(void *instance);

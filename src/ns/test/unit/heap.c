@@ -1,15 +1,14 @@
 #include "ns/include/error.h"
-#include "ns/sys/core/utils/heap.h"
+#include "ns/sys/core/common/instance.h"
 #include "ns/test/unit/test_util.h"
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 ns_error_t
 test_heap_allocate_single(void *instance)
 {
     ns_error_t error = NS_ERROR_NONE;
-    heap_t *heap = heap_instance_get(instance);
+    heap_t *heap = instance_get_heap((instance_t *)instance);
 
     printf("------------------ TEST HEAP ALLOCATE SINGLE\r\n");
 
@@ -72,7 +71,7 @@ static ns_error_t
 test_heap_allocate_randomly(void *instance, size_t size_limit)
 {
     ns_error_t error = NS_ERROR_NONE;
-    heap_t *heap = heap_instance_get(instance);
+    heap_t *heap = instance_get_heap((instance_t *)instance);
     node_t *last = &head;
     size_t nnodes = 0;
 

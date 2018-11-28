@@ -2,7 +2,6 @@
 #define NS_PY_OBJ_INSTANCE_H_
 
 #include "ns/include/instance.h"
-#include "ns/sys/core/common/code_utils.h"
 #include "ns/sys/core/common/instance.h"
 
 typedef struct _py_instance_obj_t {

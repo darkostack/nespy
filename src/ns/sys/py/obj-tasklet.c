@@ -89,7 +89,7 @@ py_tasklet_post(mp_obj_t self_in)
     py_tasklet_obj_t *self = MP_OBJ_TO_PTR(self_in);
     // add this task to the list & post
     py_tasklet_list_add(self);
-    tasklet_post((tasklet_t *)&self->tasklet);
+    tasklet_post((void *)self->instance, (tasklet_t *)&self->tasklet);
     return mp_const_none;
 }
 

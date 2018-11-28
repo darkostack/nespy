@@ -1,5 +1,4 @@
 #include "ns/sys/core/common/instance.h"
-#include "ns/sys/core/common/code_utils.h"
 #include <string.h>
 
 // --- private functions declarations
@@ -71,13 +70,6 @@ heap_ctor(heap_t *heap)
     block_set_next(first, heap_block_offset(heap, guard));
 
     heap->memory.free_size = HEAP_FIRST_BLOCK_SIZE;
-}
-
-heap_t *
-heap_instance_get(void *instance)
-{
-    instance_t *inst = (instance_t *)instance;
-    return &inst->heap;
 }
 
 void *

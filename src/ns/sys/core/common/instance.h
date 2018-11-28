@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "ns/include/error.h"
 #include "ns/sys/core/core-config.h"
 #include "ns/sys/core/common/code_utils.h"
 #include "ns/sys/core/common/timer.h"
@@ -34,12 +33,12 @@ timer_scheduler_t *
 instance_get_timer_scheduler(instance_t *instance);
 
 tasklet_scheduler_t *
-instance_get_tasklet_scheduler(void);
+instance_get_tasklet_scheduler(instance_t *instance);
 
 message_pool_t *
 instance_get_message_pool(void);
 
 heap_t *
-instance_get_heap(void);
+instance_get_heap(instance_t *instance);
 
 #endif // NS_CORE_COMMON_INSTANCE_H_

@@ -1,9 +1,10 @@
+#include "ns/include/error.h"
 #include "ns/include/tasklet.h"
 #include "ns/sys/core/common/instance.h"
 
 // --- private functions declarations
 static tasklet_t *
-tasklet_pop(instance_t *instance);
+tasklet_pop(tasklet_scheduler_t *tasklet_scheduler);
 
 // --- tasklet scheduler functions
 void
@@ -14,20 +15,20 @@ tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler)
 }
 
 ns_error_t
-tasklet_post(tasklet_t *tasklet)
+tasklet_post(void *instance, tasklet_t *tasklet)
 {
     ns_error_t error = NS_ERROR_NONE;
-    instance_t *inst = instance_get();
-    tasklet_t *tail = inst->tasklet_sched.tail;
+    tasklet_scheduler_t *tasklet_scheduler = instance_get_tasklet_scheduler((instance_t *)instance);
+    tasklet_t *tail = tasklet_scheduler->tail;
     VERIFY_OR_EXIT(tail != tasklet && tasklet->next == NULL,
                    error = NS_ERROR_ALREADY);
     if (tail == NULL) {
-        inst->tasklet_sched.head = tasklet; 
-        inst->tasklet_sched.tail = tasklet;
-        ns_tasklet_signal_pending((void *)inst);
+        tasklet_scheduler->head = tasklet; 
+        tasklet_scheduler->tail = tasklet;
+        ns_tasklet_signal_pending(instance);
     } else {
-        inst->tasklet_sched.tail->next = tasklet;
-        inst->tasklet_sched.tail = tasklet;
+        tasklet_scheduler->tail->next = tasklet;
+        tasklet_scheduler->tail = tasklet;
     }
 exit:
     return error;
@@ -36,23 +37,22 @@ exit:
 bool
 tasklet_are_pending(void *instance)
 {
-    instance_t *inst = (instance_t *)instance;
-    return inst->tasklet_sched.head != NULL;
+    return ((instance_t *)instance)->tasklet_sched.head != NULL;
 }
 
 void
 tasklet_process_queued_task(void *instance)
 {
-    instance_t *inst = (instance_t *)instance;
-    tasklet_t *tail = inst->tasklet_sched.tail;
+    tasklet_scheduler_t *tasklet_scheduler = instance_get_tasklet_scheduler((instance_t *)instance);
+    tasklet_t *tail = tasklet_scheduler->tail;
     tasklet_t *cur;
-    while ((cur = tasklet_pop(inst)) != NULL) {
+    while ((cur = tasklet_pop(tasklet_scheduler)) != NULL) {
         cur->handler(cur);
         // only process tasklets that were queued at the time this method was
         // called
         if (cur == tail) {
-            if (inst->tasklet_sched.head != NULL) {
-                ns_tasklet_signal_pending((void *)inst);
+            if (tasklet_scheduler->head != NULL) {
+                ns_tasklet_signal_pending(instance);
             }
             break;
         }
@@ -61,13 +61,13 @@ tasklet_process_queued_task(void *instance)
 
 // --- private functions
 static tasklet_t *
-tasklet_pop(instance_t *instance)
+tasklet_pop(tasklet_scheduler_t *tasklet_scheduler)
 {
-    tasklet_t *task = instance->tasklet_sched.head;
+    tasklet_t *task = tasklet_scheduler->head;
     if (task != NULL) {
-        instance->tasklet_sched.head = instance->tasklet_sched.head->next;
-        if (instance->tasklet_sched.head == NULL) {
-            instance->tasklet_sched.tail = NULL;
+        tasklet_scheduler->head = tasklet_scheduler->head->next;
+        if (tasklet_scheduler->head == NULL) {
+            tasklet_scheduler->tail = NULL;
         }
         task->next = NULL;
     }
