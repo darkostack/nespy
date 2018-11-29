@@ -266,13 +266,13 @@ block_is_free(block_t *block)
 static block_t *
 heap_block_at(heap_t *heap, uint16_t offset)
 {
-    return (block_t *)(&heap->memory.type16[offset / 2]);
+    return (block_t *)(&heap->memory.m16[offset / 2]);
 }
 
 static block_t *
 heap_block_of(heap_t *heap, void *ptr)
 {
-    uint16_t offset = (uint16_t)((uint8_t *)ptr - heap->memory.type8);
+    uint16_t offset = (uint16_t)((uint8_t *)ptr - heap->memory.m8);
     offset -= sizeof(uint16_t);
     return heap_block_at(heap, offset);
 }
@@ -314,7 +314,7 @@ heap_is_left_free(heap_t *heap, block_t *block)
 static uint16_t
 heap_block_offset(heap_t *heap, block_t *block)
 {
-    return (uint16_t)((uint8_t *)block - heap->memory.type8);
+    return (uint16_t)((uint8_t *)block - heap->memory.m8);
 }
 
 static void

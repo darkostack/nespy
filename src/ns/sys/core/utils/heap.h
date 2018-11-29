@@ -62,9 +62,9 @@ struct _heap {
     union {
         uint16_t free_size;
         // make sure memory is long aligned.
-        long typelong[HEAP_MEMORY_SIZE / sizeof(long)];
-        uint8_t type8[HEAP_MEMORY_SIZE];
-        uint16_t type16[HEAP_MEMORY_SIZE / sizeof(uint16_t)];
+        long mlong[HEAP_MEMORY_SIZE / sizeof(long)];
+        uint8_t m8[HEAP_MEMORY_SIZE];
+        uint16_t m16[HEAP_MEMORY_SIZE / sizeof(uint16_t)];
     } memory;
 };
 
