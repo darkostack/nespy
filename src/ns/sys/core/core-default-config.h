@@ -124,4 +124,10 @@
 #define NS_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
 #endif
 
+// define to 1 if you want to enable microseconds backoff timer implemented in
+// platform
+#ifndef NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#define NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER 0
+#endif
+
 #endif // NS_CORE_DEFAULT_CONFIG_H_

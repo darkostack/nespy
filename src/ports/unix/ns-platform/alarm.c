@@ -1,7 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "ns/include/platform/alarm.h"
+#include "ns/include/platform/alarm-milli.h"
+#include "ns/include/platform/alarm-micro.h"
 #include "platform-unix.h"
 
 #define MS_PER_S 1000
@@ -12,6 +13,11 @@
 
 static bool is_ms_running = false;
 static uint32_t ms_alarm = 0;
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+static bool is_us_running = false;
+static uint32_t us_alarm = 0;
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 static struct timeval start;
 
@@ -31,42 +37,89 @@ plat_alarm_get_now(void)
 }
 
 uint32_t
-ns_plat_alarm_get_now(void)
+ns_plat_alarm_milli_get_now(void)
 {
     return (uint32_t)(plat_alarm_get_now() / US_PER_MS);
 }
 
 void
-ns_plat_alarm_start_at(uint32_t t0, uint32_t dt)
+ns_plat_alarm_milli_start_at(ns_instance_t instance, uint32_t t0, uint32_t dt)
 {
+    (void)instance;
     ms_alarm = t0 + dt;
     is_ms_running = true;
 }
 
 void
-ns_plat_alarm_stop(void)
+ns_plat_alarm_milli_stop(ns_instance_t instance)
 {
+    (void)instance;
     is_ms_running = false;
 }
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+uint32_t
+ns_plat_alarm_micro_get_now(void)
+{
+    return (uint32_t)plat_alarm_get_now();
+}
+
+void
+ns_plat_alarm_micro_start_at(ns_instance_t instance, uint32_t t0, uint32_t dt)
+{
+    (void)instance;
+    us_alarm = t0 + dt;
+    is_us_running = true;
+}
+
+void
+ns_plat_alarm_micro_stop(ns_instance_t instance)
+{
+    (void)instance;
+    is_us_running = false;
+}
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 void
 plat_alarm_update_timeout(struct timeval *timeout)
 {
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    int32_t us_remaining = DEFAULT_TIMEOUT *US_PER_S;
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     int32_t ms_remaining = DEFAULT_TIMEOUT *MS_PER_S;
 
     if (timeout == NULL) {
         return;
     }
 
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    if (is_us_running) {
+        us_remaining = (int32_t)(us_alarm - ns_plat_alarm_micro_get_now());
+    }
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+
     if (is_ms_running) {
-        ms_remaining = (int32_t)(ms_alarm - ns_plat_alarm_get_now());
+        ms_remaining = (int32_t)(ms_alarm - ns_plat_alarm_milli_get_now());
     }
 
-    if (ms_remaining <= 0) {
+    bool is_no_remaining;
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    is_no_remaining = (us_remaining <= 0 || ms_remaining <= 0) ? true : false;
+#else
+    is_no_remaining = (ms_remaining <= 0) ? true : false;
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+
+    if (is_no_remaining) {
         timeout->tv_sec = 0;
         timeout->tv_usec = 0;
     } else {
         int64_t remaining = ((int64_t)ms_remaining) * US_PER_MS;
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        if (us_remaining < remaining) {
+            remaining = us_remaining;
+        }
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
         if (remaining == 0) {
             remaining = 1;
         }
@@ -81,10 +134,19 @@ plat_alarm_process(ns_instance_t instance)
     int32_t remaining;
 
     if (is_ms_running) {
-        remaining = (int32_t)(ms_alarm - ns_plat_alarm_get_now());
+        remaining = (int32_t)(ms_alarm - ns_plat_alarm_milli_get_now());
         if (remaining <= 0) {
             is_ms_running = false;
-            ns_plat_alarm_fired(instance);
+            ns_plat_alarm_milli_fired(instance);
         }
     }
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    if (is_us_running) {
+        remaining = (int32_t)(us_alarm - ns_plat_alarm_micro_get_now());
+        if (remaining <= 0) {
+            is_us_running = false;
+            ns_plat_alarm_micro_fired(instance);
+        }
+    }
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }

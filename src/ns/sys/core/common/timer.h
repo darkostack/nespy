@@ -1,11 +1,16 @@
 #ifndef NS_CORE_COMMON_TIMER_H_
 #define NS_CORE_COMMON_TIMER_H_
 
+#include "ns/sys/core/core-config.h"
+
 enum {
     TIMER_MAX_DT = (1UL << 31) - 1,
 };
 
 typedef struct _timer timer_t;
+typedef struct _timer_scheduler timer_scheduler_t;
+typedef struct _alarm_api alarm_api_t;
+
 typedef void (*timer_handler_t)(timer_t *timer);
 
 struct _timer {
@@ -14,11 +19,34 @@ struct _timer {
     timer_t *next;
 };
 
-typedef struct _timer_scheduler {
+struct _timer_scheduler {
     timer_t *head;
-} timer_scheduler_t;
+};
+
+struct _alarm_api {
+    void (*alarm_start_at)(void *instance, uint32_t t0, uint32_t dt);
+    void (*alarm_stop)(void *instance);
+    uint32_t (*alarm_get_now)(void);
+};
 
 void
-timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt);
+timer_milli_start(void *instance, timer_t *timer, uint32_t dt);
+
+void
+timer_milli_start_at(void *instance, timer_t *timer, uint32_t t0, uint32_t dt);
+
+void
+timer_milli_stop(void *instance, timer_t *timer);
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+void
+timer_micro_start(void *instance, timer_t *timer, uint32_t dt);
+
+void
+timer_micro_start_at(void *instance, timer_t *timer, uint32_t t0, uint32_t dt);
+
+void
+timer_micro_stop(void *instance, timer_t *timer);
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 #endif // NS_CORE_COMMON_TIMER_H_

@@ -1,7 +1,8 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "ns/sys/py/obj-instance.h"
-#include "ns/include/platform/alarm.h"
+#include "ns/include/platform/alarm-milli.h"
+#include "ns/include/platform/alarm-micro.h"
 #include "ns/sys/core/common/timer.h"
 
 // ---- Timer objects
@@ -91,10 +92,9 @@ py_timer_start(mp_obj_t self_in,
 {
     py_timer_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
-    uint32_t now = ns_plat_alarm_get_now();
     // add this timer to the list & start
     py_timer_list_add(self);
-    timer_start((void *)self->instance, (timer_t *)&self->timer, now, self->interval);
+    timer_milli_start((void *)self->instance, (timer_t *)&self->timer, self->interval);
     return mp_const_none;
 }
 

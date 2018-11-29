@@ -24,7 +24,11 @@ instance_init(void)
 
     VERIFY_OR_EXIT(inst->is_initialized == false);
 
-    timer_scheduler_ctor((timer_scheduler_t *)&inst->timer_sched);
+    // objects constructor
+    timer_scheduler_ctor((timer_scheduler_t *)&inst->timer_milli_scheduler);
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    timer_scheduler_ctor((timer_scheduler_t *)&inst->timer_micro_scheduler);
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_ctor((tasklet_scheduler_t *)&inst->tasklet_sched);
     message_pool_ctor((message_pool_t *)&inst->message_pool);
     heap_ctor((heap_t *)&inst->heap);
@@ -61,10 +65,18 @@ instance_get(void)
 }
 
 timer_scheduler_t *
-instance_get_timer_scheduler(instance_t *instance)
+instance_get_timer_milli_scheduler(instance_t *instance)
 {
-    return (timer_scheduler_t *)&instance->timer_sched;
+    return (timer_scheduler_t *)&instance->timer_milli_scheduler;
 }
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+timer_scheduler_t *
+instance_get_timer_micro_scheduler(instance_t *instance)
+{
+    return (timer_scheduler_t *)&instance->timer_micro_scheduler;
+}
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 tasklet_scheduler_t *
 instance_get_tasklet_scheduler(instance_t *instance)

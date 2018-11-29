@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "ns/include/platform/alarm.h"
+#include "ns/include/tasklet.h"
+#include "ns/include/platform/alarm-milli.h"
+#include "ns/include/platform/alarm-micro.h"
 #include "ns/include/platform/system.h"
 #include "platform-unix.h"
 
@@ -55,10 +57,12 @@ ns_plat_sys_process_drivers(ns_instance_t instance)
     // TODO: plat_radio_update_fd_set(&read_fds, &write_fds, &max_fd);
     plat_alarm_update_timeout(&timeout);
 
-    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
-    if ((rval < 0) && (errno != EINTR)) {
-        perror("select");
-        exit(EXIT_FAILURE);
+    if (!ns_tasklet_are_pending(instance)) {
+        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+        if ((rval < 0) && (errno != EINTR)) {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
     }
 
     if (terminate) {

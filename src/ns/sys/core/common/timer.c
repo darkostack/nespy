@@ -1,16 +1,31 @@
 #include "ns/include/nstd.h"
-#include "ns/include/platform/alarm.h"
+#include "ns/include/platform/alarm-milli.h"
+#include "ns/include/platform/alarm-micro.h"
 #include "ns/sys/core/common/instance.h"
+
+const alarm_api_t alarm_milli_api = {
+    &ns_plat_alarm_milli_start_at,
+    &ns_plat_alarm_milli_stop,
+    &ns_plat_alarm_milli_get_now,
+};
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+const alarm_api_t alarm_micro_api = {
+    &ns_plat_alarm_micro_start_at,
+    &ns_plat_alarm_micro_stop,
+    &ns_plat_alarm_micro_get_now,
+};
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 // --- private functions declarations
 static void
-timer_add(instance_t *instance, timer_t *timer);
+timer_add(timer_scheduler_t *timer_scheduler, timer_t *timer, const alarm_api_t *alarm_api);
 
 static void
-timer_remove(instance_t *instance,  timer_t *timer);
+timer_remove(timer_scheduler_t *timer_scheduler,  timer_t *timer, const alarm_api_t *alarm_api);
 
 static void
-timer_process(instance_t *instance);
+timer_process(timer_scheduler_t *timer_scheduler, const alarm_api_t *alarm_api);
 
 static bool
 is_strictly_before(uint32_t time_a, uint32_t time_b);
@@ -19,16 +34,7 @@ static bool
 does_fire_before(timer_t *timer, timer_t *cur, uint32_t now);
 
 static void
-alarm_set(instance_t *instance);
-
-static void
-alarm_start_at(uint32_t t0, uint32_t dt);
-
-static void
-alarm_stop(void);
-
-static uint32_t
-alarm_get_now(void);
+alarm_set(timer_scheduler_t *timer_scheduler, const alarm_api_t *alarm_api);
 
 // --- timer functions
 void
@@ -38,30 +44,93 @@ timer_scheduler_ctor(timer_scheduler_t *timer_scheduler)
 }
 
 void
-timer_start(void *instance, timer_t *timer, uint32_t t0, uint32_t dt)
+timer_milli_start(void *instance, timer_t *timer, uint32_t dt)
+{
+    ns_assert(dt <= TIMER_MAX_DT);
+    timer->firetime = ns_plat_alarm_milli_get_now() + dt;
+    timer_scheduler_t *timer_scheduler = instance_get_timer_milli_scheduler((instance_t *)instance);
+    timer_add(timer_scheduler, timer, &alarm_milli_api);
+}
+
+void
+timer_milli_start_at(void *instance, timer_t *timer, uint32_t t0, uint32_t dt)
 {
     ns_assert(dt <= TIMER_MAX_DT);
     timer->firetime = t0 + dt;
-    timer_add((instance_t *)instance, timer);
+    timer_scheduler_t *timer_scheduler = instance_get_timer_milli_scheduler((instance_t *)instance);
+    timer_add(timer_scheduler, timer, &alarm_milli_api);
 }
+
+void
+timer_milli_stop(void *instance, timer_t *timer)
+{
+    timer_scheduler_t *timer_scheduler = instance_get_timer_milli_scheduler((instance_t *)instance);
+    timer_remove(timer_scheduler, timer, &alarm_milli_api);
+}
+
+void
+ns_plat_alarm_milli_fired(ns_instance_t instance)
+{
+    VERIFY_OR_EXIT(((instance_t *)instance)->is_initialized);
+    timer_scheduler_t *timer_scheduler = instance_get_timer_milli_scheduler((instance_t *)instance);
+    timer_process(timer_scheduler, &alarm_milli_api);
+exit:
+    return;
+}
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+void
+timer_micro_start(void *instance, timer_t *timer, uint32_t dt)
+{
+    ns_assert(dt <= TIMER_MAX_DT);
+    timer->firetime = ns_plat_alarm_micro_get_now() + dt;
+    timer_scheduler_t *timer_scheduler = instance_get_timer_micro_scheduler((instance_t *)instance);
+    timer_add(timer_scheduler, timer, &alarm_micro_api);
+}
+
+void
+timer_micro_start_at(void *instance, timer_t *timer, uint32_t t0, uint32_t dt)
+{
+    ns_assert(dt <= TIMER_MAX_DT);
+    timer->firetime = t0 + dt;
+    timer_scheduler_t *timer_scheduler = instance_get_timer_micro_scheduler((instance_t *)instance);
+    timer_add(timer_scheduler, timer, &alarm_micro_api);
+}
+
+void
+timer_micro_stop(void *instance, timer_t *timer)
+{
+    timer_scheduler_t *timer_scheduler = instance_get_timer_micro_scheduler((instance_t *)instance);
+    timer_remove(timer_scheduler, timer, &alarm_micro_api);
+}
+
+void
+ns_plat_alarm_micro_fired(ns_instance_t instance)
+{
+    VERIFY_OR_EXIT(((instance_t *)instance)->is_initialized);
+    timer_scheduler_t *timer_scheduler = instance_get_timer_micro_scheduler((instance_t *)instance);
+    timer_process(timer_scheduler, &alarm_micro_api);
+exit:
+    return;
+}
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 // --- private functions
 static void
-timer_add(instance_t *instance, timer_t *timer)
+timer_add(timer_scheduler_t *timer_scheduler, timer_t *timer, const alarm_api_t *alarm_api)
 {
-    timer_remove(instance, timer);
-    timer_scheduler_t *timer_scheduler = instance_get_timer_scheduler(instance);
+    timer_remove(timer_scheduler, timer, alarm_api);
     timer_t *head = timer_scheduler->head;
     if (head == NULL) {
         // update timer scheduler head
         timer_scheduler->head = timer;
         timer->next = NULL;
-        alarm_set(instance);
+        alarm_set(timer_scheduler, alarm_api);
     } else {
         timer_t *prev = NULL;
         timer_t *cur;
         for (cur = head; cur; cur = cur->next) {
-            if (does_fire_before(timer, cur, alarm_get_now())) {
+            if (does_fire_before(timer, cur, alarm_api->alarm_get_now())) {
                 if (prev) {
                     timer->next = cur;
                     prev->next = timer;
@@ -69,7 +138,7 @@ timer_add(instance_t *instance, timer_t *timer)
                     timer->next = head;
                     // update timer scheduler head
                     timer_scheduler->head = timer;
-                    alarm_set(instance);
+                    alarm_set(timer_scheduler, alarm_api);
                 }
                 break;
             }
@@ -83,15 +152,14 @@ timer_add(instance_t *instance, timer_t *timer)
 }
 
 static void
-timer_remove(instance_t *instance, timer_t *timer)
+timer_remove(timer_scheduler_t *timer_scheduler, timer_t *timer, const alarm_api_t *alarm_api)
 {
     VERIFY_OR_EXIT(timer->next != timer);
-    timer_scheduler_t *timer_scheduler = instance_get_timer_scheduler(instance);
     timer_t *head = timer_scheduler->head;
     if (head == timer) {
         // update timer scheduler head
         timer_scheduler->head = timer->next;
-        alarm_set(instance);
+        alarm_set(timer_scheduler, alarm_api);
     } else {
         for (timer_t *cur = head; cur; cur = cur->next) {
             if (cur->next == timer) {
@@ -106,19 +174,18 @@ exit:
 }
 
 static void
-timer_process(instance_t *instance)
+timer_process(timer_scheduler_t *timer_scheduler, const alarm_api_t *alarm_api)
 {
-    timer_scheduler_t *timer_scheduler = instance_get_timer_scheduler(instance);
     timer_t *timer = timer_scheduler->head;
     if (timer) {
-        if (!is_strictly_before(alarm_get_now(), timer->firetime)) {
-            timer_remove(instance, timer);
+        if (!is_strictly_before(alarm_api->alarm_get_now(), timer->firetime)) {
+            timer_remove(timer_scheduler, timer, alarm_api);
             timer->handler(timer);
         } else {
-            alarm_set(instance);
+            alarm_set(timer_scheduler, alarm_api);
         }
     } else {
-        alarm_set(instance);
+        alarm_set(timer_scheduler, alarm_api);
     }
 }
 
@@ -167,43 +234,14 @@ does_fire_before(timer_t *timer, timer_t *cur, uint32_t now)
 }
 
 static void
-alarm_set(instance_t *instance)
+alarm_set(timer_scheduler_t *timer_scheduler, const alarm_api_t *alarm_api)
 {
-    timer_scheduler_t *timer_scheduler = instance_get_timer_scheduler(instance);
     timer_t *head = timer_scheduler->head;
     if (head == NULL) {
-        alarm_stop();
+        alarm_api->alarm_stop((void *)instance_get());
     } else {
-        uint32_t now = alarm_get_now();
+        uint32_t now = alarm_api->alarm_get_now();
         uint32_t remaining = is_strictly_before(now, head->firetime) ? (head->firetime - now) : 0;
-        alarm_start_at(now, remaining);
+        alarm_api->alarm_start_at((void *)instance_get(), now, remaining);
     }
-}
-
-static void
-alarm_start_at(uint32_t t0, uint32_t dt)
-{
-    ns_plat_alarm_start_at(t0, dt);
-}
-
-static void
-alarm_stop(void)
-{
-    ns_plat_alarm_stop();
-}
-
-static uint32_t
-alarm_get_now(void)
-{
-    return ns_plat_alarm_get_now();
-}
-
-void
-ns_plat_alarm_fired(ns_instance_t instance)
-{
-    instance_t *inst = (instance_t *)instance;
-    VERIFY_OR_EXIT(inst->is_initialized);
-    timer_process(inst);
-exit:
-    return;
 }
