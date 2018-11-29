@@ -3,24 +3,20 @@ import nespy
 instance = nespy.Instance()
 platform = nespy.Platform(inst=instance, id=1)
 
-def timer1_cb():
-    print("timer1 expired\r")
+def timer_ms_cb():
+    print("milliseconds timer expired\r")
 
-def timer2_cb():
-    print("timer2 expired\r")
+def timer_us_cb():
+    print("microseconds timer expired\r")
 
-def timer3_cb():
-    print("timer3 expired\r");
-
-timer1 = nespy.Timer(inst=instance, cb=timer1_cb)
-timer2 = nespy.Timer(inst=instance, cb=timer2_cb)
-timer3 = nespy.Timer(inst=instance, cb=timer3_cb)
+timer_ms = nespy.TimerMilli(inst=instance, cb=timer_ms_cb)
+timer_us = nespy.TimerMicro(inst=instance, cb=timer_us_cb)
 
 def main():
     platform.system_init()
-    timer1.start(1000)
-    timer2.start(500)
-    timer3.start(700)
+    # Note: this timer should fired at the same time 1 second in the future
+    timer_ms.start(1000)
+    timer_us.start(1000000)
     while True:
         platform.process_drivers()
 

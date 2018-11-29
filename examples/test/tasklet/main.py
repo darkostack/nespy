@@ -19,7 +19,7 @@ def test2_cb():
 def test3_cb():
     print("test3 task executed\r")
 
-timer = nespy.Timer(inst=instance, cb=timer_cb)
+timer = nespy.TimerMilli(inst=instance, cb=timer_cb)
 
 test1_task = nespy.Tasklet(inst=instance, cb=test1_cb)
 test2_task = nespy.Tasklet(inst=instance, cb=test2_cb)

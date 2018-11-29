@@ -7,12 +7,17 @@
 
 // ---- Timer objects
 // # create timer object with it's callback and instance
-// timer = nespy.Timer(inst=instance, cb=timer_cb)
+// timer_ms = nespy.TimerMilli(inst=instance, cb=timer_ms_cb)
+// timer_us = nespy.TimerMicro(inst=instance, cb=timer_us_cb)
 // ----
-// # create timer with 100ms interval
-// timer.start(100)
+// # create timer with 100ms and 1000us interval
+// timer_ms.start(100)
+// timer_us.start(1000)
 
-const mp_obj_type_t py_timer_type;
+const mp_obj_type_t py_timer_milli_type;
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+const mp_obj_type_t py_timer_micro_type;
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 typedef struct _py_timer_obj py_timer_obj_t;
 typedef struct _py_timer_list py_timer_list_obj_t;
@@ -52,7 +57,7 @@ timer_handler(timer_t *timer)
     }
 }
 
-STATIC mp_obj_t
+STATIC py_timer_obj_t *
 py_timer_make_new(const mp_obj_type_t *type,
                   size_t n_args,
                   size_t n_kw,
@@ -78,17 +83,27 @@ py_timer_make_new(const mp_obj_type_t *type,
     // create timer obj
     py_timer_obj_t *tim = m_new_obj(py_timer_obj_t);
     py_instance_obj_t *inst = MP_OBJ_TO_PTR(args[ARG_inst].u_obj);
-    tim->base.type = &py_timer_type;
     tim->callback = args[ARG_cb].u_obj;
     tim->instance = inst->instance;
     tim->interval = 0;
     tim->timer.handler = timer_handler;
-    return MP_OBJ_FROM_PTR(tim);
+    return tim;
 }
 
 STATIC mp_obj_t
-py_timer_start(mp_obj_t self_in,
-               mp_obj_t interval_in)
+py_timer_milli_make_new(const mp_obj_type_t *type,
+                        size_t n_args,
+                        size_t n_kw,
+                        const mp_obj_t *all_args)
+{
+    py_timer_obj_t *timer = py_timer_make_new(type, n_args, n_kw, all_args);
+    timer->base.type = &py_timer_milli_type;
+    return MP_OBJ_FROM_PTR(timer);
+}
+
+STATIC mp_obj_t
+py_timer_milli_start(mp_obj_t self_in,
+                     mp_obj_t interval_in)
 {
     py_timer_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
@@ -98,20 +113,65 @@ py_timer_start(mp_obj_t self_in,
     return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(py_timer_start_obj, py_timer_start);
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+STATIC mp_obj_t
+py_timer_micro_make_new(const mp_obj_type_t *type,
+                        size_t n_args,
+                        size_t n_kw,
+                        const mp_obj_t *all_args)
+{
+    py_timer_obj_t *timer = py_timer_make_new(type, n_args, n_kw, all_args);
+    timer->base.type = &py_timer_micro_type;
+    return MP_OBJ_FROM_PTR(timer);
+}
 
-STATIC const mp_rom_map_elem_t py_timer_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_start), MP_ROM_PTR(&py_timer_start_obj) },
+STATIC mp_obj_t
+py_timer_micro_start(mp_obj_t self_in,
+                     mp_obj_t interval_in)
+{
+    py_timer_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self->interval = (uint32_t)mp_obj_get_int(interval_in);
+    // add this timer to the list & start
+    py_timer_list_add(self);
+    timer_micro_start((void *)self->instance, (timer_t *)&self->timer, self->interval);
+    return mp_const_none;
+}
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(py_timer_milli_start_obj, py_timer_milli_start);
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(py_timer_micro_start_obj, py_timer_micro_start);
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+
+STATIC const mp_rom_map_elem_t py_timer_milli_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_start), MP_ROM_PTR(&py_timer_milli_start_obj) },
 };
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+STATIC const mp_rom_map_elem_t py_timer_micro_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_start), MP_ROM_PTR(&py_timer_micro_start_obj) },
+};
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
-STATIC MP_DEFINE_CONST_DICT(py_timer_locals_dict, py_timer_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(py_timer_milli_locals_dict, py_timer_milli_locals_dict_table);
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+STATIC MP_DEFINE_CONST_DICT(py_timer_micro_locals_dict, py_timer_micro_locals_dict_table);
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
-const mp_obj_type_t py_timer_type = {
+const mp_obj_type_t py_timer_milli_type = {
     { &mp_type_type },
-    .name = MP_QSTR_Timer,
-    .make_new = py_timer_make_new,
-    .locals_dict = (mp_obj_dict_t *)&py_timer_locals_dict,
+    .name = MP_QSTR_TimerMilli,
+    .make_new = py_timer_milli_make_new,
+    .locals_dict = (mp_obj_dict_t *)&py_timer_milli_locals_dict,
 };
+
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+const mp_obj_type_t py_timer_micro_type = {
+    { &mp_type_type },
+    .name = MP_QSTR_TimerMicro,
+    .make_new = py_timer_micro_make_new,
+    .locals_dict = (mp_obj_dict_t *)&py_timer_micro_locals_dict,
+};
+#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 static void
 py_timer_list_add(py_timer_obj_t *timer_obj)
