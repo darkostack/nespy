@@ -7,6 +7,7 @@ SRC_NS_CORE_COMMON += $(addprefix ns/sys/core/common/,\
     message.c \
     encoding.c \
     random.c \
+    string.c \
     )
 
 SRC_NS_CORE_UTILS += $(addprefix ns/sys/core/utils/,\
@@ -35,10 +36,11 @@ SRC_NS_CLI += $(addprefix ns/sys/cli/,\
     )
 
 SRC_NS_TEST += $(addprefix ns/test/unit/,\
-    message.c \
-    message_queue.c \
-    priority_queue.c \
-    heap.c \
+    test_message.c \
+    test_message_queue.c \
+    test_priority_queue.c \
+    test_heap.c \
+    test_string.c \
     )
 
 # compiler flags defintions for build Nespy stack

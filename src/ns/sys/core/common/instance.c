@@ -53,6 +53,9 @@ instance_init(void)
     extern ns_error_t test_heap_allocate_multiple(void *instance);
     test_heap_allocate_multiple((void *)inst);
 
+    extern ns_error_t test_string(void);
+    test_string();
+
 exit:
     return inst;
 }
