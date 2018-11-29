@@ -6,7 +6,7 @@ SRC_NS_CORE += $(addprefix ns/sys/core/,\
     common/tasklet.c \
     common/message.c \
     common/encoding.c \
-    mac/mac_frame.c \
+    common/random.c \
     utils/heap.c \
     api/instance_api.c \
     api/nstd_api.c \
