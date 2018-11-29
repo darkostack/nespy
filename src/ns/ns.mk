@@ -5,6 +5,7 @@ SRC_NS_CORE += $(addprefix ns/sys/core/,\
     common/timer.c \
     common/tasklet.c \
     common/message.c \
+    common/encoding.c \
     mac/mac_frame.c \
     utils/heap.c \
     api/instance_api.c \
