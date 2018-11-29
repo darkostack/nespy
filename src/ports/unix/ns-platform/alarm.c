@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "ns/include/platform/alarm.h"
-#include "ns-platform/platform-unix.h"
+#include "platform-unix.h"
 
 #define MS_PER_S 1000
 #define US_PER_MS 1000

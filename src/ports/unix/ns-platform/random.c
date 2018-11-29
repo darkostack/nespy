@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
-#include "ns-platform/platform-unix.h"
 #include "ns/include/platform/random.h"
+#include "platform-unix.h"
 
 static uint32_t state = 1;
 

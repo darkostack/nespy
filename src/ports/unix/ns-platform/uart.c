@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include "ns-platform/platform-unix.h"
 #include "ns/include/platform/uart.h"
+#include "platform-unix.h"
 
 static uint8_t receive_buffer[128];
 static const uint8_t *write_buffer;

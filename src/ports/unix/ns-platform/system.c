@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "ns-platform/platform-unix.h"
 #include "ns/include/platform/alarm.h"
 #include "ns/include/platform/system.h"
+#include "platform-unix.h"
 
 uint32_t node_id = 1;
 

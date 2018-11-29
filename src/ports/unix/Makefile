@@ -185,8 +185,12 @@ OBJ = $(PY_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(LIB_SRC_C:.c=.o))
 
-# Include ns networking core makefile
+# Include nespy makefile
 include ../../ns/ns.mk
+
+# Include unix config for nespy core module
+CFLAGS += -DNS_PROJECT_CORE_CONFIG_FILE=\"core-unix-config.h\"
+CFLAGS += -Ins-platform
 
 # List of sources for qstr extraction
 SRC_QSTR += $(SRC_C) $(LIB_SRC_C)

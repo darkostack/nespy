@@ -25,6 +25,9 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     heap.c \
     )
 
+# compiler flags defintions for build Nespy stack
+CFLAGS += -DNS_RADIO=1
+
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CORE:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CLI:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_TEST:.c=.o))

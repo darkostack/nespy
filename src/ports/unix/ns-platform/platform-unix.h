@@ -18,7 +18,9 @@
 #include <unistd.h>
 #define POLL poll
 
-#include "ns-platform/platform-config.h"
+#include "ns/sys/core/core-config.h"
+#include "platform-config.h"
+
 #include "ns/include/instance.h"
 
 enum
