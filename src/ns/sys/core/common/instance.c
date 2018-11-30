@@ -56,8 +56,8 @@ instance_init(void)
     extern ns_error_t test_string(void);
     test_string();
 
-    extern ns_error_t test_mac_frame(void);
-    test_mac_frame();
+    extern ns_error_t test_mac_header(void);
+    test_mac_header();
 
 exit:
     return inst;

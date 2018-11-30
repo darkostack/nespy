@@ -6,6 +6,14 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+#define ns_assert(cond)                                                     \
+    do {                                                                    \
+        if (!(cond)) {                                                      \
+            printf("ASSERT FAILED --- %s: %d\r\n", __FUNCTION__, __LINE__); \
+            while (1);                                                      \
+        }                                                                   \
+    } while (false)
+
 int
 ns_tolower(int chr);
 
@@ -32,8 +40,5 @@ ns_strncasecmp(const char *s1, const char *s2, size_t n);
 
 int
 ns_strcasecmp(const char *s1, const char *s2);
-
-void
-ns_assert(int expression);
 
 #endif // NS_NSTD_H_

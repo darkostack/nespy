@@ -6,34 +6,67 @@
 #include <string.h>
 #include <stdio.h>
 
+typedef struct _test_header test_header_t;
+
+struct _test_header {
+    uint16_t fcf;
+    uint8_t sec_ctl;
+    uint8_t header_length;
+};
+
+test_header_t test[] = {
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_NONE | MAC_FRAME_FCF_SRC_ADDR_NONE, 0, 3},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_NONE | MAC_FRAME_FCF_SRC_ADDR_SHORT, 0, 7},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_NONE | MAC_FRAME_FCF_SRC_ADDR_EXT, 0, 13},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_NONE, 0, 7},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_EXT | MAC_FRAME_FCF_SRC_ADDR_NONE, 0, 13},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_SHORT, 0, 11},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_EXT, 0, 17},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_EXT | MAC_FRAME_FCF_SRC_ADDR_SHORT, 0, 17},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_EXT | MAC_FRAME_FCF_SRC_ADDR_EXT, 0, 23},
+
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_SHORT |
+        MAC_FRAME_FCF_PANID_COMPRESSION,
+     0, 9},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_EXT |
+        MAC_FRAME_FCF_PANID_COMPRESSION,
+     0, 15},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_EXT | MAC_FRAME_FCF_SRC_ADDR_SHORT |
+        MAC_FRAME_FCF_PANID_COMPRESSION,
+     0, 15},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_EXT | MAC_FRAME_FCF_SRC_ADDR_EXT |
+        MAC_FRAME_FCF_PANID_COMPRESSION,
+     0, 21},
+
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_SHORT |
+        MAC_FRAME_FCF_PANID_COMPRESSION | MAC_FRAME_FCF_SECURITY_ENABLED,
+     MAC_FRAME_SEC_MIC_32 | MAC_FRAME_KEY_ID_MODE_1, 15},
+    {MAC_FRAME_FCF_FRAME_VERSION_2006 | MAC_FRAME_FCF_DST_ADDR_SHORT | MAC_FRAME_FCF_SRC_ADDR_SHORT |
+        MAC_FRAME_FCF_PANID_COMPRESSION | MAC_FRAME_FCF_SECURITY_ENABLED,
+     MAC_FRAME_SEC_MIC_32 | MAC_FRAME_KEY_ID_MODE_2, 19},
+};
+
 ns_error_t
-test_mac_frame(void)
+test_mac_header(void)
 {
     ns_error_t error = NS_ERROR_NONE;
-    printf("----------------------------- TEST MAC FRAME\r\n");
 
-    mac_addr_t mac_addr_test;
-    ext_addr_t mac_ext_addr_test;
+    printf("---------------------------- TEST MAC HEADER\r\n");
 
-    mac_ext_addr_gen_random(&mac_ext_addr_test);
-    printf("mac random ext addr: %s\r\n",
-           string_as_c_string(mac_ext_addr_to_string(&mac_ext_addr_test)));
-
-    mac_addr_make_new(&mac_addr_test);
-    mac_addr_set_extended(&mac_addr_test, mac_ext_addr_test);
-    TEST_VERIFY_OR_EXIT(mac_addr_type_is_extended(&mac_addr_test),
-                        "mac address type does not match as expected\r\n");
-    printf("mac addr: %s\r\n", string_as_c_string(mac_addr_to_string(&mac_addr_test)));
-
-    header_ie_t header_ie_test;
-
-    mac_header_ie_init(&header_ie_test);
-    mac_header_ie_set_id(&header_ie_test, 0xff);
-    mac_header_ie_set_length(&header_ie_test, 0x12);
-    printf("IE header          : %04x\r\n", header_ie_test.ie);
-    printf("IE header (ID)     : %02x\r\n", mac_header_ie_get_id(&header_ie_test));
-    printf("IE header (length) : %02x\r\n", mac_header_ie_get_length(&header_ie_test));
+    for (unsigned i = 0; i < NS_ARRAY_LENGTH(test); i++) {
+        uint8_t psdu[MAC_FRAME_MTU];
+        mac_frame_t frame;
+        frame.psdu = psdu;
+        mac_frame_init_mac_header(&frame, test[i].fcf, test[i].sec_ctl);
+        TEST_VERIFY_OR_EXIT(mac_frame_get_header_length(&frame) == test[i].header_length,
+                            "mac header test failed.\r\n");
+    }
 
 exit:
+    if (error != NS_ERROR_NONE) {
+        printf("FAILED\r\n");
+    } else {
+        printf("PASSED\r\n");
+    }
     return error;
 }

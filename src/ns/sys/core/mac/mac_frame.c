@@ -286,12 +286,12 @@ mac_frame_init_mac_header(mac_frame_t *frame, uint16_t fcf, uint8_t sec_ctl)
 
     // source address
     switch (fcf & MAC_FRAME_FCF_SRC_ADDR_MASK) {
-    case MAC_FRAME_FCF_DST_ADDR_NONE:
+    case MAC_FRAME_FCF_SRC_ADDR_NONE:
         break;
-    case MAC_FRAME_FCF_DST_ADDR_SHORT:
+    case MAC_FRAME_FCF_SRC_ADDR_SHORT:
         length += sizeof(short_addr_t);
         break;
-    case MAC_FRAME_FCF_DST_ADDR_EXT:
+    case MAC_FRAME_FCF_SRC_ADDR_EXT:
         length += sizeof(ext_addr_t);
         break;
     default:
