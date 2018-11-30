@@ -1071,9 +1071,119 @@ exit:
 }
 #endif // NS_CONFIG_HEADER_IE_SUPPORT
 
+// --- MAC beacon functions
+void
+mac_beacon_init(mac_beacon_t *beacon)
+{
+    beacon->super_frame_spec = encoding_little_endian_swap16(MAC_BEACON_SUPER_FRAME_SPEC);
+    beacon->gts_spec = 0;
+    beacon->pending_addr_spec = 0;
+}
 
-// TODO: BEACON
+bool
+mac_beacon_is_valid(mac_beacon_t *beacon)
+{
+    return (beacon->super_frame_spec == encoding_little_endian_swap16(MAC_BEACON_SUPER_FRAME_SPEC)) &&
+           (beacon->gts_spec == 0) && (beacon->pending_addr_spec == 0);
+}
 
+uint8_t *
+mac_beacon_get_payload(mac_beacon_t *beacon)
+{
+    return (uint8_t *)(beacon + sizeof(*beacon));
+}
+
+// --- MAC beacon payload functions
+void
+mac_beacon_payload_init(mac_beacon_payload_t *beacon_payload)
+{
+    beacon_payload->protocol_id = MAC_BEACON_PAYLOAD_PROTOCOL_ID;
+    beacon_payload->flags = MAC_BEACON_PAYLOAD_PROTOCOL_VERSION << MAC_BEACON_PAYLOAD_VERSION_OFFSET;
+}
+
+bool
+mac_beacon_payload_is_valid(mac_beacon_payload_t *beacon_payload)
+{
+    return (beacon_payload->protocol_id == MAC_BEACON_PAYLOAD_PROTOCOL_ID);
+}
+
+uint8_t
+mac_beacon_payload_get_protocol_id(mac_beacon_payload_t *beacon_payload)
+{
+    return beacon_payload->protocol_id;
+}
+
+uint8_t
+mac_beacon_payload_get_protocol_version(mac_beacon_payload_t *beacon_payload)
+{
+    return (beacon_payload->flags >> MAC_BEACON_PAYLOAD_VERSION_OFFSET);
+}
+
+bool
+mac_beacon_payload_is_native(mac_beacon_payload_t *beacon_payload)
+{
+    return (beacon_payload->flags & MAC_BEACON_PAYLOAD_NATIVE_FLAG) != 0;
+}
+
+void
+mac_beacon_payload_clear_native(mac_beacon_payload_t *beacon_payload)
+{
+    beacon_payload->flags &= ~MAC_BEACON_PAYLOAD_NATIVE_FLAG;
+}
+
+void
+mac_beacon_payload_set_native(mac_beacon_payload_t *beacon_payload)
+{
+    beacon_payload->flags |= MAC_BEACON_PAYLOAD_NATIVE_FLAG;
+}
+
+bool
+mac_beacon_payload_is_joining_permitted(mac_beacon_payload_t *beacon_payload)
+{
+    return (beacon_payload->flags & MAC_BEACON_PAYLOAD_JOINING_FLAG) != 0;
+}
+
+void
+mac_beacon_payload_clear_joining_permitted(mac_beacon_payload_t *beacon_payload)
+{
+    beacon_payload->flags &= ~MAC_BEACON_PAYLOAD_JOINING_FLAG;
+}
+
+void
+mac_beacon_payload_set_joining_permitted(mac_beacon_payload_t *beacon_payload)
+{
+    beacon_payload->flags |= MAC_BEACON_PAYLOAD_JOINING_FLAG;
+#if NS_CONFIG_JOIN_BEACON_VERSION != MAC_BEACON_PAYLOAD_PROTOCOL_VERSION
+    beacon_payload->flags &= ~MAC_BEACON_PAYLOAD_VERSION_MASK;
+    beacon_payload->flags |= NS_CONFIG_JOIN_BEACON_VERSION << MAC_BEACON_PAYLOAD_VERSION_OFFSET;
+#endif
+}
+
+const char *
+mac_beacon_payload_get_network_name(mac_beacon_payload_t *beacon_payload)
+{
+    return beacon_payload->network_name;
+}
+
+void
+mac_beacon_payload_set_network_name(mac_beacon_payload_t *beacon_payload, const char *network_name)
+{
+    size_t length = strnlen(network_name, sizeof(beacon_payload->network_name));
+    memset(beacon_payload->network_name, 0, sizeof(beacon_payload->network_name));
+    memcpy(beacon_payload->network_name, network_name, length);
+}
+
+const uint8_t *
+mac_beacon_payload_get_extended_panid(mac_beacon_payload_t *beacon_payload)
+{
+    return beacon_payload->extended_panid;
+}
+
+void
+mac_beacon_payload_set_extended_panid(mac_beacon_payload_t *beacon_payload, const uint8_t *ext_panid)
+{
+    memcpy(beacon_payload->extended_panid, ext_panid, sizeof(beacon_payload->extended_panid));
+}
 
 #if NS_CONFIG_ENABLE_TIME_SYNC
 // --- MAC vendor ie header functions
