@@ -486,7 +486,7 @@ mac_frame_get_time_sync_seq(mac_frame_t *frame);
 uint64_t
 mac_frame_get_time_stamp(mac_frame_t *frame);
 
-uint8_t
+uint8_t *
 mac_frame_get_time_ie(mac_frame_t *frame);
 #endif // NS_CONFIG_ENABLE_TIME_SYNC
 

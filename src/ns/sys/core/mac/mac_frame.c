@@ -954,40 +954,40 @@ mac_frame_get_footer(mac_frame_t *frame)
 void
 mac_frame_set_time_ie_offset(mac_frame_t *frame, uint8_t offset)
 {
-    frame->ie_info.time_ie_offset = offset;
+    frame->ie_info->time_ie_offset = offset;
 }
 
 void
 mac_frame_set_network_time_offset(mac_frame_t *frame, int64_t network_time_offset)
 {
-    frame->ie_info.network_time_offset = network_time_offset;
+    frame->ie_info->network_time_offset = network_time_offset;
 }
 
 int64_t
 mac_frame_get_network_time_offset(mac_frame_t *frame)
 {
-    return frame->ie_info.network_time_offset;
+    return frame->ie_info->network_time_offset;
 }
 
 void
 mac_frame_set_time_sync_seq(mac_frame_t *frame, uint8_t time_sync_seq)
 {
-    frame->ie_info.time_sync_seq = time_sync_seq;
+    frame->ie_info->time_sync_seq = time_sync_seq;
 }
 
 uint8_t
 mac_frame_get_time_sync_seq(mac_frame_t *frame)
 {
-    return frame->ie_info.time_sync_seq;
+    return frame->ie_info->time_sync_seq;
 }
 
 uint64_t
 mac_frame_get_time_stamp(mac_frame_t *frame)
 {
-    return frame->ie_info.timestamp;
+    return frame->ie_info->timestamp;
 }
 
-uint8_t
+uint8_t *
 mac_frame_get_time_ie(mac_frame_t *frame)
 {
     mac_time_ie_t *time_ie = NULL;
@@ -1031,9 +1031,9 @@ mac_frame_append_header_ie(mac_frame_t *frame, header_ie_t *ie_list, uint8_t ie_
     base = cur;
 
     for (uint8_t i = 0; i < ie_count; i++) {
-        memcpy(cur, &ie_list[i]->ie, sizeof(header_ie_t));
+        memcpy(cur, &ie_list[i].ie, sizeof(header_ie_t));
         cur += sizeof(header_ie_t);
-        cur += mac_header_ie_get_length(ie_list[i]);
+        cur += mac_header_ie_get_length(&ie_list[i]);
     }
 
     mac_frame_set_psdu_length(frame, mac_frame_get_psdu_length(frame) + (uint8_t)(cur - base));
@@ -1111,7 +1111,7 @@ mac_time_ie_init(mac_time_ie_t *mac_time_ie)
         (MAC_FRAME_VENDOR_OUI_NEST >> 16) & 0xff
     };
 
-    mac_vendor_ie_header_set_vendor_oui(&mac_time_ie->vendor_ie_header, &oui);
+    mac_vendor_ie_header_set_vendor_oui(&mac_time_ie->vendor_ie_header, oui);
     mac_vendor_ie_header_set_sub_type(&mac_time_ie->vendor_ie_header, MAC_FRAME_VENDOR_IE_TIME);
 }
 
@@ -1381,7 +1381,7 @@ frame_find_header_ie_index(mac_frame_t *frame)
 {
     uint8_t index;
     VERIFY_OR_EXIT(mac_frame_is_ie_present(frame), index = MAC_FRAME_INVALID_INDEX);
-    index = frame_skip_security_header_index();
+    index = frame_skip_security_header_index(frame);
 exit:
     return index;
 }
