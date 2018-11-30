@@ -3,6 +3,7 @@
 
 #include "ns/sys/core/core-config.h"
 #include "ns/include/platform/radio.h"
+#include "ns/sys/core/common/string.h"
 #include <limits.h>
 
 typedef ns_panid_t panid_t;
@@ -20,6 +21,10 @@ enum {
 enum {
     MAC_EXT_ADDR_GROUP_FLAG = 1 << 0,
     MAC_EXT_ADDR_LOCAL_FLAG = 1 << 1,
+};
+
+enum {
+    MAC_EXT_ADDR_INFO_STRING_SIZE = 17,
 };
 
 typedef enum _mac_addr_type {
@@ -120,6 +125,8 @@ enum {
     MAC_FRAME_VENDOR_OUI_NEST         = 0x18b430,
     MAC_FRAME_VENDOR_OUI_SIZE         = 3,
     MAC_FRAME_VENDOR_IE_TIME          = 0x01,
+
+    MAC_FRAME_INFO_STRING_SIZE = 110,
 };
 
 enum {
@@ -135,6 +142,7 @@ enum {
     MAC_BEACON_PAYLOAD_PROTOCOL_ID = 3,
     MAC_BEACON_PAYLOAD_NETWORK_NAME_SIZE = 16,
     MAC_BEACON_PAYLOAD_EXT_PANID_SIZE = 8,
+    MAC_BEACON_INFO_STRING_SIZE = 92,
 };
 
 enum {
@@ -196,6 +204,9 @@ mac_ext_addr_toggle_local(ext_addr_t *ext_addr);
 bool
 mac_ext_addr_is_equal(ext_addr_t *ext_addr1, ext_addr_t *ext_addr2);
 
+string_t *
+mac_ext_addr_to_string(ext_addr_t *ext_addr);
+
 // --- MAC address functions
 void
 mac_addr_make_new(mac_addr_t *mac_addr);
@@ -215,26 +226,29 @@ mac_addr_type_is_extended(mac_addr_t *mac_addr);
 short_addr_t
 mac_addr_get_short(mac_addr_t *mac_addr);
 
-ext_addr_t
+ext_addr_t *
 mac_addr_get_extended(mac_addr_t *mac_addr);
 
 void
 mac_addr_set_none(mac_addr_t *mac_addr);
 
 void
-mac_addr_set_short(mac_addr_t *mac_addr, short_addr_t *short_addr);
+mac_addr_set_short(mac_addr_t *mac_addr, short_addr_t short_addr);
 
 void
-mac_addr_set_extended(mac_addr_t *mac_addr, ext_addr_t *ext_addr);
+mac_addr_set_extended(mac_addr_t *mac_addr, ext_addr_t ext_addr);
 
 void
 mac_addr_set_extended_from_buf(mac_addr_t *mac_addr, const uint8_t *buf, bool reverse);
 
-void
+bool
 mac_addr_is_broadcast(mac_addr_t *mac_addr);
 
-void
+bool
 mac_addr_is_short_addr_invalid(mac_addr_t *mac_addr);
+
+string_t *
+mac_addr_to_string(mac_addr_t *mac_addr);
 
 // --- MAC header ie functions
 void

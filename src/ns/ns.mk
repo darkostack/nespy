@@ -41,6 +41,7 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     test_priority_queue.c \
     test_heap.c \
     test_string.c \
+    test_mac_frame.c \
     )
 
 # compiler flags defintions for build Nespy stack

@@ -39,4 +39,7 @@ string_set(string_t *str, const char *format, ...);
 ns_error_t
 string_append(string_t *str, const char *format, ...);
 
+void
+string_copy(string_t *str_dest, string_t *str_source, uint16_t length);
+
 #endif // NS_CORE_COMMON_STRING_H_

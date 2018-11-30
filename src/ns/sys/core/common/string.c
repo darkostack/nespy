@@ -47,6 +47,12 @@ string_append(string_t *str, const char *format, ...)
     return error;
 }
 
+void
+string_copy(string_t *str_dest, string_t *str_source, uint16_t length)
+{
+    memcpy(str_dest->buffer, str_source->buffer, length);
+}
+
 // --- private functions
 static ns_error_t
 str_write(string_t *str, const char *format, va_list args)
