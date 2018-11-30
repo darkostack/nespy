@@ -35,12 +35,14 @@ typedef enum _mac_addr_type {
 
 enum {
     MAC_HEADER_IE_ID_OFFSET = 7,
-    MAC_HEADER_IE_MASK = 0xff << MAC_HEADER_IE_ID_OFFSET,
+    MAC_HEADER_IE_ID_MASK = 0xff << MAC_HEADER_IE_ID_OFFSET,
     MAC_HEADER_IE_LENGTH_OFFSET = 0,
     MAC_HEADER_IE_LENGTH_MASK = 0x7f << MAC_HEADER_IE_LENGTH_OFFSET,
 };
 
-typedef uint16_t header_ie_t;
+typedef struct _header_ie {
+    uint16_t ie;
+} header_ie_t;
 
 struct _mac_addr {
     union {
@@ -258,13 +260,13 @@ uint16_t
 mac_header_ie_get_id(header_ie_t *header_ie);
 
 void
-mac_header_ie_set_id(header_ie_t *header_ie);
+mac_header_ie_set_id(header_ie_t *header_ie, uint16_t id);
 
-void
+uint16_t
 mac_header_ie_get_length(header_ie_t *header_ie);
 
 void
-mac_header_ie_set_length(header_ie_t *header_ie);
+mac_header_ie_set_length(header_ie_t *header_ie, uint16_t length);
 
 // --- MAC frame functions
 ns_error_t

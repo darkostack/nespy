@@ -1,6 +1,7 @@
 #include "ns/include/error.h"
 #include "ns/sys/core/common/instance.h"
 #include "ns/sys/core/common/random.h"
+#include "ns/sys/core/common/encoding.h"
 #include "ns/sys/core/mac/mac_frame.h"
 #include <string.h>
 
@@ -182,4 +183,39 @@ mac_addr_to_string(mac_addr_t *mac_addr)
         }
     }
     return &mac_addr_info_string;
+}
+
+// --- MAC header ie functions
+void
+mac_header_ie_init(header_ie_t *header_ie)
+{
+    header_ie->ie = 0;
+}
+
+uint16_t
+mac_header_ie_get_id(header_ie_t *header_ie)
+{
+    return (encoding_little_endian_swap16(header_ie->ie) & MAC_HEADER_IE_ID_MASK) >> MAC_HEADER_IE_ID_OFFSET;
+}
+
+void
+mac_header_ie_set_id(header_ie_t *header_ie, uint16_t id)
+{
+    header_ie->ie = encoding_little_endian_swap16(
+            (encoding_little_endian_swap16(header_ie->ie) & ~MAC_HEADER_IE_ID_MASK) |
+            ((id << MAC_HEADER_IE_ID_OFFSET) & MAC_HEADER_IE_ID_MASK));
+}
+
+uint16_t
+mac_header_ie_get_length(header_ie_t *header_ie)
+{
+    return (encoding_little_endian_swap16(header_ie->ie) & MAC_HEADER_IE_LENGTH_MASK) >> MAC_HEADER_IE_LENGTH_OFFSET;
+}
+
+void
+mac_header_ie_set_length(header_ie_t *header_ie, uint16_t length)
+{
+    header_ie->ie = encoding_little_endian_swap16(
+            (encoding_little_endian_swap16(header_ie->ie) & ~MAC_HEADER_IE_LENGTH_MASK) |
+            ((length << MAC_HEADER_IE_LENGTH_OFFSET) & MAC_HEADER_IE_LENGTH_MASK));
 }
