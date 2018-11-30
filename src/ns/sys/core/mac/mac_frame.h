@@ -66,7 +66,7 @@ enum {
     MAC_FRAME_FCF_FRAME_ACK              = 2 << 0,
     MAC_FRAME_FCF_FRAME_MAC_CMD          = 3 << 0,
     MAC_FRAME_FCF_FRAME_TYPE_MASK        = 7 << 0,
-    MAC_FRAME_FCF_FRAME_SECURITY_ENABLED = 1 << 3,
+    MAC_FRAME_FCF_SECURITY_ENABLED       = 1 << 3,
     MAC_FRAME_FCF_FRAME_PENDING          = 1 << 4,
     MAC_FRAME_FCF_ACK_REQUEST            = 1 << 5,
     MAC_FRAME_FCF_PANID_COMPRESSION      = 1 << 6,
@@ -241,7 +241,7 @@ void
 mac_addr_set_extended(mac_addr_t *mac_addr, ext_addr_t ext_addr);
 
 void
-mac_addr_set_extended_from_buf(mac_addr_t *mac_addr, const uint8_t *buf, bool reverse);
+mac_addr_set_extended_from_buffer(mac_addr_t *mac_addr, const uint8_t *buffer, bool reverse);
 
 bool
 mac_addr_is_broadcast(mac_addr_t *mac_addr);
@@ -315,10 +315,10 @@ ns_error_t
 mac_frame_get_dst_addr(mac_frame_t *frame, mac_addr_t *mac_addr);
 
 ns_error_t
-mac_frame_set_dst_short_addr(mac_frame_t *frame, short_addr_t short_addr);
+mac_frame_set_dst_addr_short(mac_frame_t *frame, short_addr_t short_addr);
 
 ns_error_t
-mac_frame_set_dst_ext_addr(mac_frame_t *frame, ext_addr_t *ext_addr);
+mac_frame_set_dst_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr);
 
 bool
 mac_frame_is_src_panid_present(mac_frame_t *frame, uint16_t fcf);
@@ -327,19 +327,19 @@ ns_error_t
 mac_frame_get_src_panid(mac_frame_t *frame, panid_t *panid);
 
 ns_error_t
-mac_frame_set_src_panid(mac_frame_t *frame, panid_t *panid);
+mac_frame_set_src_panid(mac_frame_t *frame, panid_t panid);
 
 ns_error_t
 mac_frame_get_src_addr(mac_frame_t *frame, mac_addr_t *mac_addr);
 
 ns_error_t
-mac_frame_set_src_short_addr(mac_frame_t *frame, short_addr_t short_addr);
+mac_frame_set_src_addr_short(mac_frame_t *frame, short_addr_t short_addr);
 
 ns_error_t
-mac_frame_set_src_ext_addr(mac_frame_t *frame, ext_addr_t *ext_addr);
+mac_frame_set_src_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr);
 
 ns_error_t
-mac_frame_set_src_addr(mac_frame_t *frame, mac_addr_t *macaddr);
+mac_frame_set_src_addr(mac_frame_t *frame, mac_addr_t *mac_addr);
 
 ns_error_t
 mac_frame_get_security_level(mac_frame_t *frame, uint8_t *security_level);
@@ -356,6 +356,9 @@ mac_frame_set_frame_counter(mac_frame_t *frame, uint32_t frame_counter);
 const uint8_t *
 mac_frame_get_key_source(mac_frame_t *frame);
 
+uint8_t
+mac_frame_get_key_source_length(mac_frame_t *frame, uint8_t key_id_mode);
+
 void
 mac_frame_set_key_source(mac_frame_t *frame, const uint8_t *key_source);
 
@@ -366,10 +369,10 @@ ns_error_t
 mac_frame_set_key_id(mac_frame_t *frame, uint8_t key_id);
 
 ns_error_t
-mac_frame_get_command_id(mac_frame_t *frame, uint8_t command_id);
+mac_frame_get_command_id(mac_frame_t *frame, uint8_t *command_id);
 
 ns_error_t
-mac_frame_set_command_id(mac_frame_t *frame, uint8_t *command_id);
+mac_frame_set_command_id(mac_frame_t *frame, uint8_t command_id);
 
 bool
 mac_frame_is_data_request_command(mac_frame_t *frame);
@@ -420,7 +423,7 @@ void
 mac_frame_set_max_csma_backoffs(mac_frame_t *frame, uint8_t max_csma_backoffs);
 
 uint8_t
-mac_frame_max_frame_retries(mac_frame_t *frame);
+mac_frame_get_max_frame_retries(mac_frame_t *frame);
 
 void
 mac_frame_set_max_frame_retries(mac_frame_t *frame, uint8_t max_frame_retries);
@@ -432,7 +435,7 @@ void
 mac_frame_set_is_a_retransmission(mac_frame_t *frame, bool is_a_retx);
 
 void
-mac_frame_set_did_tx(mac_frame_t *frame, bool did_tx);
+mac_frame_set_did_tx(mac_frame_t *frame, bool didtx);
 
 void
 mac_frame_set_csma_ca_enabled(mac_frame_t *frame, bool csma_ca_enabled);
@@ -444,13 +447,13 @@ const uint8_t *
 mac_frame_get_aes_key(mac_frame_t *frame);
 
 void
-mac_frame_set_aes_key(const uint8_t *aes_key);
+mac_frame_set_aes_key(mac_frame_t *frame, const uint8_t *aes_key);
 
 uint8_t
 mac_frame_get_psdu_length(mac_frame_t *frame);
 
 void
-mac_frame_set_psdu_length(uint8_t length);
+mac_frame_set_psdu_length(mac_frame_t *frame, uint8_t length);
 
 uint8_t *
 mac_frame_get_psdu(mac_frame_t *frame);
@@ -489,7 +492,7 @@ mac_frame_get_time_ie(mac_frame_t *frame);
 
 #if NS_CONFIG_HEADER_IE_SUPPORT
 ns_error_t
-mac_frame_append_header_ie(mac_frame_t *frame, header_ie_t *header_ie, uint8_t ie_count);
+mac_frame_append_header_ie(mac_frame_t *frame, header_ie_t *ie_list, uint8_t ie_count);
 
 uint8_t *
 mac_frame_get_header_ie(mac_frame_t *frame, uint8_t ie_id);
