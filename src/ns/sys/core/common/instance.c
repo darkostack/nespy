@@ -59,6 +59,9 @@ instance_init(void)
     extern ns_error_t test_mac_header(void);
     test_mac_header();
 
+    extern ns_error_t test_mac_channel_mask(void);
+    test_mac_channel_mask();
+
 exit:
     return inst;
 }

@@ -101,10 +101,11 @@ mac_ext_addr_is_equal(ext_addr_t *ext_addr1, ext_addr_t *ext_addr2)
 string_t *
 mac_ext_addr_to_string(ext_addr_t *ext_addr)
 {
-    string_set(&mac_ext_addr_info_string, "%02x%02x%02x%02x%02x%02x%02x%02x",
+    string_t *ext_addr_string = &mac_ext_addr_info_string;
+    string_set(ext_addr_string, "%02x%02x%02x%02x%02x%02x%02x%02x",
                ext_addr->m8[0], ext_addr->m8[1], ext_addr->m8[2], ext_addr->m8[3],
                ext_addr->m8[4], ext_addr->m8[5], ext_addr->m8[6], ext_addr->m8[7]);
-    return &mac_ext_addr_info_string;
+    return ext_addr_string;
 }
 
 // --- MAC address functions
@@ -200,20 +201,21 @@ mac_addr_is_short_addr_invalid(mac_addr_t *mac_addr)
 string_t *
 mac_addr_to_string(mac_addr_t *mac_addr)
 {
-    string_clear(&mac_addr_info_string);
+    string_t *mac_addr_string = &mac_addr_info_string;
+    string_clear(mac_addr_string);
     if (mac_addr->type == MAC_ADDR_TYPE_EXTENDED) {
         string_t *ext_addr_string = mac_ext_addr_to_string(mac_addr_get_extended(mac_addr));
-        string_copy(&mac_addr_info_string,
+        string_copy(mac_addr_string,
                     ext_addr_string,
                     string_get_length(ext_addr_string));
     } else {
         if (mac_addr->type == MAC_ADDR_TYPE_NONE) {
-            string_set(&mac_addr_info_string, "None");
+            string_set(mac_addr_string, "None");
         } else {
-            string_set(&mac_addr_info_string, "0x%04x", mac_addr_get_short(mac_addr));
+            string_set(mac_addr_string, "0x%04x", mac_addr_get_short(mac_addr));
         }
     }
-    return &mac_addr_info_string;
+    return mac_addr_string;
 }
 
 // --- MAC header ie functions

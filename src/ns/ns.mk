@@ -16,6 +16,7 @@ SRC_NS_CORE_UTILS += $(addprefix ns/sys/core/utils/,\
 
 SRC_NS_CORE_MAC += $(addprefix ns/sys/core/mac/,\
     mac_frame.c \
+    channel_mask.c \
     )
 
 SRC_NS_CORE_API += $(addprefix ns/sys/core/api/,\
