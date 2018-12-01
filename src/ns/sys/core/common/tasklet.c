@@ -16,11 +16,12 @@ tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler)
 }
 
 void
-tasklet_ctor(void *instance, tasklet_t *tasklet, tasklet_handler_t handler)
+tasklet_ctor(void *instance, tasklet_t *tasklet, tasklet_handler_func_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
     tasklet->instance = instance;
-    tasklet->handler = handler;
+    tasklet->handler.func = handler;
+    tasklet->handler.arg = handler_arg;
     tasklet->next = NULL;
 }
 
@@ -57,7 +58,7 @@ tasklet_process_queued_task(void *instance)
     tasklet_t *tail = tasklet_scheduler->tail;
     tasklet_t *cur;
     while ((cur = tasklet_pop(tasklet_scheduler)) != NULL) {
-        cur->handler(cur);
+        cur->handler.func(cur);
         // only process tasklets that were queued at the time this method was
         // called
         if (cur == tail) {

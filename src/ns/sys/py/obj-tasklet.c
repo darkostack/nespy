@@ -14,40 +14,18 @@
 const mp_obj_type_t py_tasklet_type;
 
 typedef struct _py_tasklet_obj py_tasklet_obj_t;
-typedef struct _py_tasklet_list py_tasklet_list_obj_t;
-
 struct _py_tasklet_obj {
     mp_obj_base_t base;
     mp_obj_t callback;
     ns_instance_t *instance;
     tasklet_t tasklet;
-    py_tasklet_obj_t *next;
 };
 
-struct _py_tasklet_list {
-    py_tasklet_obj_t *head;
-};
-
-static py_tasklet_list_obj_t py_tasklet_list;
-
 static void
-py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj);
-
-static void
-py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj);
-
-static void
-tasklet_handler(tasklet_t *tasklet)
+tasklet_handler_func(tasklet_t *tasklet)
 {
-    py_tasklet_obj_t *head = py_tasklet_list.head;
-    py_tasklet_obj_t *cur;
-    for (cur = head; cur; cur = cur->next) {
-        if ((tasklet_t *)&cur->tasklet == tasklet) {
-            py_tasklet_list_remove(cur);
-            mp_call_function_0(cur->callback);
-            break;
-        }
-    }
+    mp_obj_t callback = *((mp_obj_t *)tasklet->handler.arg);
+    mp_call_function_0(callback);
 }
 
 STATIC mp_obj_t
@@ -79,7 +57,13 @@ py_tasklet_make_new(const mp_obj_type_t *type,
     tasklet->base.type = &py_tasklet_type;
     tasklet->callback = args[ARG_cb].u_obj;
     tasklet->instance = inst->instance;
-    tasklet_ctor((void *)tasklet->instance, &tasklet->tasklet, &tasklet_handler);
+
+    // tasklet contructor
+    tasklet_ctor((void *)tasklet->instance,
+                 &tasklet->tasklet,
+                 &tasklet_handler_func,
+                 (void *)&tasklet->callback);
+
     return MP_OBJ_FROM_PTR(tasklet);
 }
 
@@ -87,8 +71,6 @@ STATIC mp_obj_t
 py_tasklet_post(mp_obj_t self_in)
 {
     py_tasklet_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    // add this task to the list & post
-    py_tasklet_list_add(self);
     tasklet_post(&self->tasklet);
     return mp_const_none;
 }
@@ -107,45 +89,3 @@ const mp_obj_type_t py_tasklet_type = {
     .make_new = py_tasklet_make_new,
     .locals_dict = (mp_obj_dict_t *)&py_tasklet_locals_dict,
 };
-
-static void
-py_tasklet_list_add(py_tasklet_obj_t *tasklet_obj)
-{
-    py_tasklet_list_remove(tasklet_obj);
-    py_tasklet_obj_t *head = py_tasklet_list.head;
-    if (head == NULL) {
-        // update tasklet list head
-        py_tasklet_list.head = tasklet_obj;
-        tasklet_obj->next = NULL;
-    } else {
-        py_tasklet_obj_t *cur;
-        for (cur = head; cur; cur = cur->next) {
-            if (cur->next == NULL) {
-                cur->next = tasklet_obj;
-                tasklet_obj->next = NULL;
-                break;
-            }
-        }
-    }
-}
-
-static void
-py_tasklet_list_remove(py_tasklet_obj_t *tasklet_obj)
-{
-    VERIFY_OR_EXIT(tasklet_obj->next != tasklet_obj);
-    py_tasklet_obj_t *head = py_tasklet_list.head;
-    if (head == tasklet_obj) {
-        // update tasklet list head
-        py_tasklet_list.head = tasklet_obj->next;
-    } else {
-        for (py_tasklet_obj_t *cur = head; cur; cur = cur->next) {
-            if (cur->next == tasklet_obj) {
-                cur->next = tasklet_obj->next;
-                break;
-            }
-        }
-    }
-    tasklet_obj->next = tasklet_obj;
-exit:
-    return;
-}
