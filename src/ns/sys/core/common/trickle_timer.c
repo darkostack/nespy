@@ -12,16 +12,18 @@ trickle_handle_end_of_time_in_interval(trickle_timer_t *trickle_timer);
 static void
 trickle_handle_end_of_interval(trickle_timer_t *trickle_timer);
 
+static void
+trickle_handle_timer(timer_t *timer);
 
 void
-trickle_timer_ctor(trickle_timer_t *trickle_timer,
+trickle_timer_ctor(void *instance,
+                   trickle_timer_t *trickle_timer,
                    trickle_timer_handler_t *transmit_handler,
                    trickle_timer_handler_t *interval_expired_handler)
 {
     ns_assert(transmit_handler != NULL);
-    // timer contructor
-    trickle_timer->timer.firetime = 0;
-    trickle_timer->timer.next = NULL;
+
+    timer_milli_ctor(instance, &trickle_timer->timer, &trickle_handle_timer);
 
     trickle_timer->interval_min = 0;
     trickle_timer->interval_max = 0;

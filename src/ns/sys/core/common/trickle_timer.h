@@ -29,6 +29,7 @@ struct _trickle_timer {
 
 void
 trickle_timer_ctor(void *instance,
+                   trickle_timer_t *trickle_timer,
                    trickle_timer_handler_t *transmit_handler,
                    trickle_timer_handler_t *interval_expired_handler);
 

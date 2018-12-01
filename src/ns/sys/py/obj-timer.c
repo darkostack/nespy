@@ -20,41 +20,19 @@ const mp_obj_type_t py_timer_micro_type;
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 typedef struct _py_timer_obj py_timer_obj_t;
-typedef struct _py_timer_list py_timer_list_obj_t;
-
 struct _py_timer_obj {
     mp_obj_base_t base;
     mp_obj_t callback;
     ns_instance_t *instance;
     timer_t timer;
     uint32_t interval;
-    py_timer_obj_t *next;
 };
-
-struct _py_timer_list {
-    py_timer_obj_t *head;
-};
-
-static py_timer_list_obj_t py_timer_list;
-
-static void
-py_timer_list_add(py_timer_obj_t *timer_obj);
-
-static void
-py_timer_list_remove(py_timer_obj_t *timer_obj);
 
 void
 timer_handler(timer_t *timer)
 {
-    py_timer_obj_t *head = py_timer_list.head;
-    py_timer_obj_t *cur;
-    for (cur = head; cur; cur = cur->next) {
-        if ((timer_t *)&cur->timer == timer) {
-            py_timer_list_remove(cur);
-            mp_call_function_0(cur->callback);
-            break;
-        }
-    }
+    mp_obj_t callback = *(mp_obj_t *)timer->handler_arg;
+    mp_call_function_0(callback);
 }
 
 STATIC py_timer_obj_t *
@@ -97,7 +75,7 @@ py_timer_milli_make_new(const mp_obj_type_t *type,
 {
     py_timer_obj_t *self = py_timer_make_new(type, n_args, n_kw, all_args);
     self->base.type = &py_timer_milli_type;
-    timer_milli_ctor((void *)self->instance, &self->timer, &timer_handler);
+    timer_milli_ctor((void *)self->instance, &self->timer, &timer_handler, (void *)&self->callback);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -107,8 +85,6 @@ py_timer_milli_start(mp_obj_t self_in,
 {
     py_timer_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
-    // add this timer to the list & start
-    py_timer_list_add(self);
     timer_milli_start(&self->timer, self->interval);
     return mp_const_none;
 }
@@ -122,7 +98,7 @@ py_timer_micro_make_new(const mp_obj_type_t *type,
 {
     py_timer_obj_t *self = py_timer_make_new(type, n_args, n_kw, all_args);
     self->base.type = &py_timer_micro_type;
-    timer_micro_ctor((void *)self->instance, &self->timer, &timer_handler);
+    timer_micro_ctor((void *)self->instance, &self->timer, &timer_handler, (void *)&self->callback);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -132,8 +108,6 @@ py_timer_micro_start(mp_obj_t self_in,
 {
     py_timer_obj_t *self = MP_OBJ_TO_PTR(self_in);
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
-    // add this timer to the list & start
-    py_timer_list_add(self);
     timer_micro_start(&self->timer, self->interval);
     return mp_const_none;
 }
@@ -173,45 +147,3 @@ const mp_obj_type_t py_timer_micro_type = {
     .locals_dict = (mp_obj_dict_t *)&py_timer_micro_locals_dict,
 };
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-
-static void
-py_timer_list_add(py_timer_obj_t *timer_obj)
-{
-    py_timer_list_remove(timer_obj);
-    py_timer_obj_t *head = py_timer_list.head;
-    if (head == NULL) {
-        // update timer list head
-        py_timer_list.head = timer_obj;
-        timer_obj->next = NULL;
-    } else {
-        py_timer_obj_t *cur;
-        for (cur = head; cur; cur = cur->next) {
-            if (cur->next == NULL) {
-                cur->next = timer_obj;
-                timer_obj->next = NULL;
-                break;
-            }
-        }
-    }
-}
-
-static void
-py_timer_list_remove(py_timer_obj_t *timer_obj)
-{
-    VERIFY_OR_EXIT(timer_obj->next != timer_obj);
-    py_timer_obj_t *head = py_timer_list.head;
-    if (head == timer_obj) {
-        // update timer list head
-        py_timer_list.head = timer_obj->next;
-    } else {
-        for (py_timer_obj_t *cur = head; cur; cur = cur->next) {
-            if (cur->next == timer_obj) {
-                cur->next = timer_obj->next;
-                break;
-            }
-        }
-    }
-    timer_obj->next = timer_obj;
-exit:
-    return;
-}

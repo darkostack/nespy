@@ -44,11 +44,12 @@ timer_scheduler_ctor(timer_scheduler_t *timer_scheduler)
 }
 
 void
-timer_milli_ctor(void *instance, timer_t *timer, timer_handler_t handler)
+timer_milli_ctor(void *instance, timer_t *timer, timer_handler_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
     timer->instance = instance;
     timer->handler = handler;
+    timer->handler_arg = handler_arg;
     timer->firetime = 0;
     timer->next = NULL;
 }
@@ -86,11 +87,12 @@ exit:
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_t *timer, timer_handler_t handler)
+timer_micro_ctor(void *instance, timer_t *timer, timer_handler_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
     timer->instance = instance;
     timer->handler = handler;
+    timer->handler_arg = handler_arg;
     timer->firetime = 0;
     timer->next = NULL;
 }
