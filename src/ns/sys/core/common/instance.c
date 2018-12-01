@@ -5,9 +5,6 @@ static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
 
 // --- extern instance objects constructor functions
 extern void
-timer_scheduler_ctor(timer_scheduler_t *timer_scheduler);
-
-extern void
 tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler);
 
 extern void
@@ -18,16 +15,16 @@ heap_ctor(heap_t *heap);
 
 // --- instance functions
 instance_t *
-instance_init(void)
+instance_ctor(void)
 {
     instance_t *inst = instance_get();
 
     VERIFY_OR_EXIT(inst->is_initialized == false);
 
     // objects constructor
-    timer_scheduler_ctor((timer_scheduler_t *)&inst->timer_milli_scheduler);
+    timer_scheduler_ctor((void *)inst, (timer_scheduler_t *)&inst->timer_milli_scheduler);
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    timer_scheduler_ctor((timer_scheduler_t *)&inst->timer_micro_scheduler);
+    timer_scheduler_ctor((void *)inst, (timer_scheduler_t *)&inst->timer_micro_scheduler);
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_ctor((tasklet_scheduler_t *)&inst->tasklet_sched);
     message_pool_ctor((message_pool_t *)&inst->message_pool);
@@ -72,20 +69,6 @@ instance_get(void)
     void *inst = &instance_raw;
     return (instance_t *)inst;
 }
-
-timer_scheduler_t *
-instance_get_timer_milli_scheduler(instance_t *instance)
-{
-    return (timer_scheduler_t *)&instance->timer_milli_scheduler;
-}
-
-#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-timer_scheduler_t *
-instance_get_timer_micro_scheduler(instance_t *instance)
-{
-    return (timer_scheduler_t *)&instance->timer_micro_scheduler;
-}
-#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 tasklet_scheduler_t *
 instance_get_tasklet_scheduler(instance_t *instance)

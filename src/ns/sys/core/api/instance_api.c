@@ -6,7 +6,7 @@
 ns_instance_t
 ns_instance_init(void)
 {
-    ns_instance_t instance = (ns_instance_t)instance_init();
+    ns_instance_t instance = (ns_instance_t)instance_ctor();
 
     // --- initialize nespy module
     cli_uart_init();

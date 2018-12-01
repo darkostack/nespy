@@ -27,18 +27,10 @@ struct _instance {
 };
 
 instance_t *
-instance_init(void);
+instance_ctor(void);
 
 instance_t *
 instance_get(void);
-
-timer_scheduler_t *
-instance_get_timer_milli_scheduler(instance_t *instance);
-
-#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-timer_scheduler_t *
-instance_get_timer_micro_scheduler(instance_t *instance);
-#endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 tasklet_scheduler_t *
 instance_get_tasklet_scheduler(instance_t *instance);

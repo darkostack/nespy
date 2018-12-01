@@ -86,7 +86,6 @@ py_timer_make_new(const mp_obj_type_t *type,
     tim->callback = args[ARG_cb].u_obj;
     tim->instance = inst->instance;
     tim->interval = 0;
-    tim->timer.handler = timer_handler;
     return tim;
 }
 
@@ -96,9 +95,10 @@ py_timer_milli_make_new(const mp_obj_type_t *type,
                         size_t n_kw,
                         const mp_obj_t *all_args)
 {
-    py_timer_obj_t *timer = py_timer_make_new(type, n_args, n_kw, all_args);
-    timer->base.type = &py_timer_milli_type;
-    return MP_OBJ_FROM_PTR(timer);
+    py_timer_obj_t *self = py_timer_make_new(type, n_args, n_kw, all_args);
+    self->base.type = &py_timer_milli_type;
+    timer_milli_ctor((void *)self->instance, (timer_t *)&self->timer, &timer_handler);
+    return MP_OBJ_FROM_PTR(self);
 }
 
 STATIC mp_obj_t
@@ -109,7 +109,7 @@ py_timer_milli_start(mp_obj_t self_in,
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
     // add this timer to the list & start
     py_timer_list_add(self);
-    timer_milli_start((void *)self->instance, (timer_t *)&self->timer, self->interval);
+    timer_milli_start((timer_t *)&self->timer, self->interval);
     return mp_const_none;
 }
 
@@ -120,9 +120,10 @@ py_timer_micro_make_new(const mp_obj_type_t *type,
                         size_t n_kw,
                         const mp_obj_t *all_args)
 {
-    py_timer_obj_t *timer = py_timer_make_new(type, n_args, n_kw, all_args);
-    timer->base.type = &py_timer_micro_type;
-    return MP_OBJ_FROM_PTR(timer);
+    py_timer_obj_t *self = py_timer_make_new(type, n_args, n_kw, all_args);
+    self->base.type = &py_timer_micro_type;
+    timer_micro_ctor((void *)self->instance, (timer_t *)&self->timer, &timer_handler);
+    return MP_OBJ_FROM_PTR(self);
 }
 
 STATIC mp_obj_t
@@ -133,7 +134,7 @@ py_timer_micro_start(mp_obj_t self_in,
     self->interval = (uint32_t)mp_obj_get_int(interval_in);
     // add this timer to the list & start
     py_timer_list_add(self);
-    timer_micro_start((void *)self->instance, (timer_t *)&self->timer, self->interval);
+    timer_micro_start((timer_t *)&self->timer, self->interval);
     return mp_const_none;
 }
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
