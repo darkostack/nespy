@@ -79,7 +79,7 @@ py_tasklet_make_new(const mp_obj_type_t *type,
     tasklet->base.type = &py_tasklet_type;
     tasklet->callback = args[ARG_cb].u_obj;
     tasklet->instance = inst->instance;
-    tasklet->tasklet.handler = tasklet_handler;
+    tasklet_ctor((void *)tasklet->instance, &tasklet->tasklet, &tasklet_handler);
     return MP_OBJ_FROM_PTR(tasklet);
 }
 
@@ -89,7 +89,7 @@ py_tasklet_post(mp_obj_t self_in)
     py_tasklet_obj_t *self = MP_OBJ_TO_PTR(self_in);
     // add this task to the list & post
     py_tasklet_list_add(self);
-    tasklet_post((void *)self->instance, (tasklet_t *)&self->tasklet);
+    tasklet_post(&self->tasklet);
     return mp_const_none;
 }
 

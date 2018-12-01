@@ -7,6 +7,7 @@ typedef struct _tasklet tasklet_t;
 typedef void (*tasklet_handler_t)(tasklet_t *taklet);
 
 struct _tasklet {
+    void *instance;
     tasklet_handler_t handler;
     tasklet_t *next;
 };
@@ -16,8 +17,14 @@ typedef struct _tasklet_scheduler {
     tasklet_t *tail;
 } tasklet_scheduler_t;
 
+void
+tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler);
+
+void
+tasklet_ctor(void *instance, tasklet_t *tasklet, tasklet_handler_t handler);
+
 ns_error_t
-tasklet_post(void *instance, tasklet_t *tasklet);
+tasklet_post(tasklet_t *tasklet);
 
 bool
 tasklet_are_pending(void *instance);

@@ -21,7 +21,7 @@ struct _instance {
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     timer_scheduler_t timer_micro_scheduler;
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    tasklet_scheduler_t tasklet_sched;
+    tasklet_scheduler_t tasklet_scheduler;
     message_pool_t message_pool;
     heap_t heap;
 };
@@ -31,9 +31,6 @@ instance_ctor(void);
 
 instance_t *
 instance_get(void);
-
-tasklet_scheduler_t *
-instance_get_tasklet_scheduler(instance_t *instance);
 
 message_pool_t *
 instance_get_message_pool(instance_t *instance);
