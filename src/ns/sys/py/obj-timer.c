@@ -29,7 +29,7 @@ struct _py_timer_obj {
 };
 
 void
-timer_handler(timer_t *timer)
+timer_handler_func(timer_t *timer)
 {
     mp_obj_t callback = *(mp_obj_t *)timer->handler.arg;
     mp_call_function_0(callback);
@@ -75,7 +75,7 @@ py_timer_milli_make_new(const mp_obj_type_t *type,
 {
     py_timer_obj_t *self = py_timer_make_new(type, n_args, n_kw, all_args);
     self->base.type = &py_timer_milli_type;
-    timer_milli_ctor((void *)self->instance, &self->timer, &timer_handler, (void *)&self->callback);
+    timer_milli_ctor((void *)self->instance, &self->timer, &timer_handler_func, (void *)&self->callback);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -98,7 +98,7 @@ py_timer_micro_make_new(const mp_obj_type_t *type,
 {
     py_timer_obj_t *self = py_timer_make_new(type, n_args, n_kw, all_args);
     self->base.type = &py_timer_micro_type;
-    timer_micro_ctor((void *)self->instance, &self->timer, &timer_handler, (void *)&self->callback);
+    timer_micro_ctor((void *)self->instance, &self->timer, &timer_handler_func, (void *)&self->callback);
     return MP_OBJ_FROM_PTR(self);
 }
 
