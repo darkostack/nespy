@@ -44,12 +44,12 @@ timer_scheduler_ctor(timer_scheduler_t *timer_scheduler)
 }
 
 void
-timer_milli_ctor(void *instance, timer_t *timer, timer_handler_t handler, void *handler_arg)
+timer_milli_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
     timer->instance = instance;
-    timer->handler = handler;
-    timer->handler_arg = handler_arg;
+    timer->handler.func = handler;
+    timer->handler.arg = handler_arg;
     timer->firetime = 0;
     timer->next = NULL;
 }
@@ -87,12 +87,12 @@ exit:
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_t *timer, timer_handler_t handler, void *handler_arg)
+timer_micro_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
     timer->instance = instance;
-    timer->handler = handler;
-    timer->handler_arg = handler_arg;
+    timer->handler.func = handler;
+    timer->handler.arg = handler_arg;
     timer->firetime = 0;
     timer->next = NULL;
 }
@@ -194,7 +194,7 @@ timer_process(timer_scheduler_t *timer_scheduler, const alarm_api_t *alarm_api)
     if (timer) {
         if (!is_strictly_before(alarm_api->alarm_get_now(), timer->firetime)) {
             timer_remove(timer_scheduler, timer, alarm_api);
-            timer->handler(timer);
+            timer->handler.func(timer);
         } else {
             alarm_set(timer_scheduler, alarm_api);
         }

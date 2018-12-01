@@ -31,7 +31,7 @@ struct _py_timer_obj {
 void
 timer_handler(timer_t *timer)
 {
-    mp_obj_t callback = *(mp_obj_t *)timer->handler_arg;
+    mp_obj_t callback = *(mp_obj_t *)timer->handler.arg;
     mp_call_function_0(callback);
 }
 

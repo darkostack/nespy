@@ -8,23 +8,26 @@ enum {
 };
 
 typedef struct _timer timer_t;
-typedef struct _timer_scheduler timer_scheduler_t;
-typedef struct _alarm_api alarm_api_t;
 
-typedef void (*timer_handler_t)(timer_t *timer);
+typedef void (*timer_handler_func_t)(timer_t *timer);
+typedef struct _timer_handler {
+    timer_handler_func_t func;
+    void *arg;
+} timer_handler_t;
 
 struct _timer {
     void *instance;
     timer_handler_t handler;
-    void *handler_arg;
     uint32_t firetime;
     timer_t *next;
 };
 
+typedef struct _timer_scheduler timer_scheduler_t;
 struct _timer_scheduler {
     timer_t *head;
 };
 
+typedef struct _alarm_api alarm_api_t;
 struct _alarm_api {
     void (*alarm_start_at)(void *instance, uint32_t t0, uint32_t dt);
     void (*alarm_stop)(void *instance);
@@ -35,7 +38,7 @@ void
 timer_scheduler_ctor(timer_scheduler_t *timer_scheduler);
 
 void
-timer_milli_ctor(void *instance, timer_t *timer, timer_handler_t handler, void *handler_arg);
+timer_milli_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg);
 
 void
 timer_milli_start(timer_t *timer, uint32_t dt);
@@ -48,7 +51,7 @@ timer_milli_stop(timer_t *timer);
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_t *timer, timer_handler_t handler, void *handler_arg);
+timer_micro_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg);
 
 void
 timer_micro_start(timer_t *timer, uint32_t dt);
