@@ -12,7 +12,7 @@ verify_message_queue_content(message_queue_t *queue, int expected_length, ...);
 ns_error_t
 test_message_queue(void *instance)
 {
-    message_pool_t *message_pool = instance_get_message_pool((instance_t *)instance);
+    message_pool_t *message_pool = &((instance_t *)instance)->message_pool;
 
     uint8_t num_of_test_messages = 5;
     message_queue_t message_queue;

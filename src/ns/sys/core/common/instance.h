@@ -32,10 +32,4 @@ instance_ctor(void);
 instance_t *
 instance_get(void);
 
-message_pool_t *
-instance_get_message_pool(instance_t *instance);
-
-heap_t *
-instance_get_heap(instance_t *instance);
-
 #endif // NS_CORE_COMMON_INSTANCE_H_

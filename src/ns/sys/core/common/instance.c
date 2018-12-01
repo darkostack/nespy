@@ -3,13 +3,6 @@
 
 static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
 
-// --- extern instance objects constructor functions
-extern void
-message_pool_ctor(message_pool_t *message_pool);
-
-extern void
-heap_ctor(heap_t *heap);
-
 // --- instance functions
 instance_t *
 instance_ctor(void)
@@ -65,16 +58,4 @@ instance_get(void)
 {
     void *inst = &instance_raw;
     return (instance_t *)inst;
-}
-
-message_pool_t *
-instance_get_message_pool(instance_t *instance)
-{
-    return (message_pool_t *)&instance->message_pool;
-}
-
-heap_t *
-instance_get_heap(instance_t *instance)
-{
-    return (heap_t *)&instance->heap;
 }

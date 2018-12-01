@@ -78,7 +78,7 @@ message_t
 message_new(uint8_t type, uint16_t reserved, uint8_t priority)
 {
     ns_error_t error = NS_ERROR_NONE;
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
     buffer_t *msgbuf = NULL;
 
     VERIFY_OR_EXIT((msgbuf = (buffer_t *)msg_new_buffer(message_pool, priority)) != NULL);
@@ -216,7 +216,7 @@ message_set_length(message_t message, uint16_t length)
     // buffers in message pool because their buffer pointer isn't valid anymore.
 
     ns_error_t error = NS_ERROR_NONE;
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
 
     uint16_t total_len_request = message_get_reserved(message) + length;
     uint16_t total_len_current = message_get_reserved(message) + message_get_length(message);
@@ -785,7 +785,7 @@ exit:
 void
 message_free(message_t message)
 {
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
     msg_free_buffers(message_pool, message);
 }
 
@@ -884,7 +884,7 @@ message_remove_from_all_queue_list(message_t message)
 {
     uint8_t priority;
     buffer_t *tail;
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
 
     uint8_t list = MSG_INFO_LIST_ALL;
 
@@ -971,7 +971,7 @@ message_add_to_all_queue_list(message_t message)
     uint8_t priority;
     buffer_t *tail;
     buffer_t *next;
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
 
     uint8_t list = MSG_INFO_LIST_ALL;
 
@@ -1167,7 +1167,7 @@ message_iterator_get_all_messages_head(message_iterator_t *iterator)
 {
     message_t head;
     message_t tail;
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
 
     tail = message_priority_queue_get_tail(&message_pool->all_queue);
 
@@ -1185,7 +1185,7 @@ message_iterator_get_all_messages_head(message_iterator_t *iterator)
 message_iterator_t *
 message_iterator_get_all_messages_tail(message_iterator_t *iterator)
 {
-    message_pool_t *message_pool = instance_get_message_pool(instance_get());
+    message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
     message_t tail = message_priority_queue_get_tail(&message_pool->all_queue);
     iterator->message = tail;
     return iterator;

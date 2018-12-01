@@ -68,6 +68,9 @@ struct _heap {
     } memory;
 };
 
+void
+heap_ctor(heap_t *heap);
+
 void *
 heap_calloc(heap_t *heap, size_t count, size_t asize);
 

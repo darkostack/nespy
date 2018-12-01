@@ -99,6 +99,9 @@ struct _message_iterator {
 };
 
 void
+message_pool_ctor(message_pool_t *message_pool);
+
+void
 message_queue_ctor(message_queue_t *queue);
 
 void
