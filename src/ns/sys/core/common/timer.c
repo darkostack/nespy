@@ -38,9 +38,8 @@ alarm_set(timer_scheduler_t *timer_scheduler, const alarm_api_t *alarm_api);
 
 // --- timer functions
 void
-timer_scheduler_ctor(void *instance, timer_scheduler_t *timer_scheduler)
+timer_scheduler_ctor(timer_scheduler_t *timer_scheduler)
 {
-    timer_scheduler->instance = instance;
     timer_scheduler->head = NULL;
 }
 

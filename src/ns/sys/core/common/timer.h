@@ -21,7 +21,6 @@ struct _timer {
 };
 
 struct _timer_scheduler {
-    void *instance;
     timer_t *head;
 };
 
@@ -32,7 +31,7 @@ struct _alarm_api {
 };
 
 void
-timer_scheduler_ctor(void *instance, timer_scheduler_t *timer_scheduler);
+timer_scheduler_ctor(timer_scheduler_t *timer_scheduler);
 
 void
 timer_milli_ctor(void *instance, timer_t *timer, timer_handler_t handler);

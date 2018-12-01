@@ -19,9 +19,9 @@ instance_ctor(void)
     VERIFY_OR_EXIT(inst->is_initialized == false);
 
     // objects constructor
-    timer_scheduler_ctor((void *)inst, &inst->timer_milli_scheduler);
+    timer_scheduler_ctor(&inst->timer_milli_scheduler);
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    timer_scheduler_ctor((void *)inst, &inst->timer_micro_scheduler);
+    timer_scheduler_ctor(&inst->timer_micro_scheduler);
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_ctor(&inst->tasklet_scheduler);
     message_pool_ctor(&inst->message_pool);
