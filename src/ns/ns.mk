@@ -8,6 +8,7 @@ SRC_NS_CORE_COMMON += $(addprefix ns/sys/core/common/,\
     encoding.c \
     random.c \
     string.c \
+    trickle_timer.c \
     )
 
 SRC_NS_CORE_UTILS += $(addprefix ns/sys/core/utils/,\

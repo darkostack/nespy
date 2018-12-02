@@ -20,8 +20,8 @@ struct _trickle_timer {
     uint32_t interval_max;
     uint32_t interval;
     uint32_t time_in_interval;
-    trickle_timer_handler_t *transmit_handler;
-    trickle_timer_handler_t *interval_expired_handler;
+    trickle_timer_handler_t transmit_handler;
+    trickle_timer_handler_t interval_expired_handler;
     trickle_timer_mode_t mode;
     bool is_running : 1;
     bool in_transmit_phase : 1;
@@ -30,8 +30,8 @@ struct _trickle_timer {
 void
 trickle_timer_ctor(void *instance,
                    trickle_timer_t *trickle_timer,
-                   trickle_timer_handler_t *transmit_handler,
-                   trickle_timer_handler_t *interval_expired_handler);
+                   trickle_timer_handler_t transmit_handler,
+                   trickle_timer_handler_t interval_expired_handler);
 
 bool
 trickle_timer_is_running(trickle_timer_t *trickle_timer);
