@@ -44,9 +44,10 @@ timer_scheduler_ctor(timer_scheduler_t *timer_scheduler)
 }
 
 void
-timer_milli_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg)
+timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
+    timer_t *timer = (timer_t *)milli;
     timer->instance = instance;
     timer->handler.func = handler;
     timer->handler.arg = handler_arg;
@@ -55,24 +56,27 @@ timer_milli_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, v
 }
 
 void
-timer_milli_start(timer_t *timer, uint32_t dt)
+timer_milli_start(timer_milli_t *milli, uint32_t dt)
 {
     ns_assert(dt <= TIMER_MAX_DT);
+    timer_t *timer = (timer_t *)milli;
     timer->firetime = ns_plat_alarm_milli_get_now() + dt;
     timer_add(&((instance_t *)timer->instance)->timer_milli_scheduler, timer, &alarm_milli_api);
 }
 
 void
-timer_milli_start_at(timer_t *timer, uint32_t t0, uint32_t dt)
+timer_milli_start_at(timer_milli_t *milli, uint32_t t0, uint32_t dt)
 {
     ns_assert(dt <= TIMER_MAX_DT);
+    timer_t *timer = (timer_t *)milli;
     timer->firetime = t0 + dt;
     timer_add(&((instance_t *)timer->instance)->timer_milli_scheduler, timer, &alarm_milli_api);
 }
 
 void
-timer_milli_stop(timer_t *timer)
+timer_milli_stop(timer_milli_t *milli)
 {
+    timer_t *timer = (timer_t *)milli;
     timer_remove(&((instance_t *)timer->instance)->timer_milli_scheduler, timer, &alarm_milli_api);
 }
 
@@ -87,9 +91,10 @@ exit:
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg)
+timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *handler_arg)
 {
     ns_assert(handler != NULL);
+    timer_t *timer = (timer_t *)micro;
     timer->instance = instance;
     timer->handler.func = handler;
     timer->handler.arg = handler_arg;
@@ -98,24 +103,27 @@ timer_micro_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, v
 }
 
 void
-timer_micro_start(timer_t *timer, uint32_t dt)
+timer_micro_start(timer_micro_t *micro, uint32_t dt)
 {
     ns_assert(dt <= TIMER_MAX_DT);
+    timer_t *timer = (timer_t *)micro;
     timer->firetime = ns_plat_alarm_micro_get_now() + dt;
     timer_add(&((instance_t *)timer->instance)->timer_micro_scheduler, timer, &alarm_micro_api);
 }
 
 void
-timer_micro_start_at(timer_t *timer, uint32_t t0, uint32_t dt)
+timer_micro_start_at(timer_micro_t *micro, uint32_t t0, uint32_t dt)
 {
     ns_assert(dt <= TIMER_MAX_DT);
+    timer_t *timer = (timer_t *)micro;
     timer->firetime = t0 + dt;
     timer_add(&((instance_t *)timer->instance)->timer_micro_scheduler, timer, &alarm_micro_api);
 }
 
 void
-timer_micro_stop(timer_t *timer)
+timer_micro_stop(timer_micro_t *micro)
 {
+    timer_t *timer = (timer_t *)micro;
     timer_remove(&((instance_t *)timer->instance)->timer_micro_scheduler, timer, &alarm_micro_api);
 }
 

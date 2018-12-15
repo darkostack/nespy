@@ -8,8 +8,12 @@ enum {
 };
 
 typedef struct _timer timer_t;
+typedef timer_t timer_milli_t;
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+typedef timer_t timer_micro_t;
+#endif
 
-typedef void (*timer_handler_func_t)(timer_t *timer);
+typedef void (*timer_handler_func_t)(void *timer);
 typedef struct _timer_handler {
     timer_handler_func_t func;
     void *arg;
@@ -38,29 +42,29 @@ void
 timer_scheduler_ctor(timer_scheduler_t *timer_scheduler);
 
 void
-timer_milli_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg);
+timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *handler_arg);
 
 void
-timer_milli_start(timer_t *timer, uint32_t dt);
+timer_milli_start(timer_milli_t *milli, uint32_t dt);
 
 void
-timer_milli_start_at(timer_t *timer, uint32_t t0, uint32_t dt);
+timer_milli_start_at(timer_milli_t *milli, uint32_t t0, uint32_t dt);
 
 void
-timer_milli_stop(timer_t *timer);
+timer_milli_stop(timer_milli_t *milli);
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_t *timer, timer_handler_func_t handler, void *handler_arg);
+timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *handler_arg);
 
 void
-timer_micro_start(timer_t *timer, uint32_t dt);
+timer_micro_start(timer_micro_t *micro, uint32_t dt);
 
 void
-timer_micro_start_at(timer_t *timer, uint32_t t0, uint32_t dt);
+timer_micro_start_at(timer_micro_t *micro, uint32_t t0, uint32_t dt);
 
 void
-timer_micro_stop(timer_t *timer);
+timer_micro_stop(timer_micro_t *micro);
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 #endif // NS_CORE_COMMON_TIMER_H_

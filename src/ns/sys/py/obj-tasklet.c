@@ -22,9 +22,9 @@ struct _py_tasklet_obj {
 };
 
 static void
-tasklet_handler_func(tasklet_t *tasklet)
+tasklet_handler_func(void *tasklet)
 {
-    mp_obj_t callback = *((mp_obj_t *)tasklet->handler.arg);
+    mp_obj_t callback = *((mp_obj_t *)((tasklet_t *)tasklet)->handler.arg);
     mp_call_function_0(callback);
 }
 
@@ -59,10 +59,10 @@ py_tasklet_make_new(const mp_obj_type_t *type,
     tasklet->instance = inst->instance;
 
     // tasklet contructor
-    tasklet_ctor((void *)tasklet->instance,
+    tasklet_ctor(tasklet->instance,
                  &tasklet->tasklet,
                  &tasklet_handler_func,
-                 (void *)&tasklet->callback);
+                 &tasklet->callback);
 
     return MP_OBJ_FROM_PTR(tasklet);
 }

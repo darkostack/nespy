@@ -8,7 +8,7 @@ static void
 trickle_timer_start_new_interval(trickle_timer_t *trickle_timer);
 
 static void
-trickle_timer_handle_timer(timer_t *timer);
+trickle_timer_handle_timer(void *timer);
 
 static void
 trickle_timer_handle_end_of_time_in_interval(trickle_timer_t *trickle_timer);
@@ -20,12 +20,12 @@ trickle_timer_handle_end_of_interval(trickle_timer_t *trickle_timer);
 void
 trickle_timer_ctor(void *instance,
                    trickle_timer_t *trickle_timer,
-                   trickle_timer_handler_t transmit_handler,
-                   trickle_timer_handler_t interval_expired_handler)
+                   trickle_timer_handler_func_t transmit_handler,
+                   trickle_timer_handler_func_t interval_expired_handler)
 {
     ns_assert(transmit_handler != NULL);
 
-    timer_milli_ctor(instance, &trickle_timer->timer, &trickle_timer_handle_timer, (void *)trickle_timer);
+    timer_milli_ctor(instance, &trickle_timer->milli, &trickle_timer_handle_timer, (void *)trickle_timer);
 
     trickle_timer->interval_min = 0;
     trickle_timer->interval_max = 0;
@@ -74,7 +74,7 @@ void
 trickle_timer_stop(trickle_timer_t *trickle_timer)
 {
     trickle_timer->is_running = false;
-    timer_milli_stop(&trickle_timer->timer);
+    timer_milli_stop(&trickle_timer->milli);
 }
 
 void
@@ -115,13 +115,13 @@ trickle_timer_start_new_interval(trickle_timer_t *trickle_timer)
     }
 
 exit:
-    timer_milli_start(&trickle_timer->timer, trickle_timer->time_in_interval);
+    timer_milli_start(&trickle_timer->milli, trickle_timer->time_in_interval);
 }
 
 static void
-trickle_timer_handle_timer(timer_t *timer)
+trickle_timer_handle_timer(void *timer)
 {
-    trickle_timer_t *trickle_timer = (trickle_timer_t *)timer->handler.arg;
+    trickle_timer_t *trickle_timer = (trickle_timer_t *)((timer_t *)timer)->handler.arg;
     if (trickle_timer->in_transmit_phase) {
         trickle_timer_handle_end_of_time_in_interval(trickle_timer);
     } else {
@@ -133,7 +133,7 @@ static void
 trickle_timer_handle_end_of_time_in_interval(trickle_timer_t *trickle_timer)
 {
     bool should_continue = trickle_timer->transmit_handler(trickle_timer);
-    VERIFY_OR_EXIT(should_continue, timer_milli_stop(&trickle_timer->timer));
+    VERIFY_OR_EXIT(should_continue, timer_milli_stop(&trickle_timer->milli));
 
     switch (trickle_timer->mode) {
     case TRICKLE_TIMER_MODE_PLAIN_TIMER:
@@ -146,7 +146,7 @@ trickle_timer_handle_end_of_time_in_interval(trickle_timer_t *trickle_timer)
     case TRICKLE_TIMER_MODE_MPL:
         // waiting for the rest of the interval to elapse
         trickle_timer->in_transmit_phase = false;
-        timer_milli_start(&trickle_timer->timer, trickle_timer->interval - trickle_timer->time_in_interval);
+        timer_milli_start(&trickle_timer->milli, trickle_timer->interval - trickle_timer->time_in_interval);
         break;
     }
 
@@ -168,7 +168,7 @@ trickle_timer_handle_end_of_interval(trickle_timer_t *trickle_timer)
 
     if (trickle_timer->interval_expired_handler) {
         bool should_continue = trickle_timer->interval_expired_handler(trickle_timer);
-        VERIFY_OR_EXIT(should_continue, timer_milli_stop(&trickle_timer->timer));
+        VERIFY_OR_EXIT(should_continue, timer_milli_stop(&trickle_timer->milli));
     }
 
     trickle_timer_start_new_interval(trickle_timer);

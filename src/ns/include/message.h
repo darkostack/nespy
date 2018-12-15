@@ -68,10 +68,10 @@ ns_error_t
 ns_message_queue_enqueue(ns_message_queue_t *queue, ns_message_t message);
 
 ns_error_t
-ns_message_queue_enqueue_at_head(ns_message_t *queue, ns_message_t message);
+ns_message_queue_enqueue_at_head(ns_message_queue_t *queue, ns_message_t message);
 
 ns_error_t
-ns_message_queue_dequeue(ns_message_t *queue, ns_message_t message);
+ns_message_queue_dequeue(ns_message_queue_t *queue, ns_message_t message);
 
 ns_message_t
 ns_message_queue_get_head(ns_message_queue_t *queue);

@@ -5,7 +5,7 @@
 
 typedef struct _tasklet tasklet_t;
 
-typedef void (*tasklet_handler_func_t)(tasklet_t *taklet);
+typedef void (*tasklet_handler_func_t)(void *tasklet);
 typedef struct _tasklet_handler {
     tasklet_handler_func_t func;
     void *arg;

@@ -6,7 +6,7 @@
 #include "ns/sys/core/common/timer.h"
 
 typedef struct _trickle_timer trickle_timer_t;
-typedef bool (*trickle_timer_handler_t)(trickle_timer_t *trickle_timer);
+typedef bool (*trickle_timer_handler_func_t)(void *trickle_timer);
 
 typedef enum _trickle_timer_mode {
     TRICKLE_TIMER_MODE_NORMAL,
@@ -15,13 +15,13 @@ typedef enum _trickle_timer_mode {
 } trickle_timer_mode_t;
 
 struct _trickle_timer {
-    timer_t timer;
+    timer_milli_t milli;
     uint32_t interval_min;
     uint32_t interval_max;
     uint32_t interval;
     uint32_t time_in_interval;
-    trickle_timer_handler_t transmit_handler;
-    trickle_timer_handler_t interval_expired_handler;
+    trickle_timer_handler_func_t transmit_handler;
+    trickle_timer_handler_func_t interval_expired_handler;
     trickle_timer_mode_t mode;
     bool is_running : 1;
     bool in_transmit_phase : 1;
@@ -30,8 +30,8 @@ struct _trickle_timer {
 void
 trickle_timer_ctor(void *instance,
                    trickle_timer_t *trickle_timer,
-                   trickle_timer_handler_t transmit_handler,
-                   trickle_timer_handler_t interval_expired_handler);
+                   trickle_timer_handler_func_t transmit_handler,
+                   trickle_timer_handler_func_t interval_expired_handler);
 
 bool
 trickle_timer_is_running(trickle_timer_t *trickle_timer);
