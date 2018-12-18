@@ -22,7 +22,6 @@ SRC_NS_CORE_MAC += $(addprefix ns/sys/core/mac/,\
 
 SRC_NS_CORE_API += $(addprefix ns/sys/core/api/,\
     instance_api.c \
-    nstd_api.c \
     tasklet_api.c \
     message_api.c \
     )

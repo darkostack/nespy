@@ -1,6 +1,6 @@
 #include "ns/include/error.h"
-#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
+#include "ns/sys/core/common/debug.h"
 #include "ns/sys/core/common/random.h"
 #include "ns/sys/core/common/encoding.h"
 #include "ns/sys/core/mac/mac_frame.h"
@@ -278,7 +278,7 @@ mac_frame_init_mac_header(mac_frame_t *frame, uint16_t fcf, uint8_t sec_ctl)
         length += sizeof(panid_t) + sizeof(ext_addr_t);
         break;
     default:
-        ns_assert(false);
+        assert(false);
     }
 
     // source PAN
@@ -297,7 +297,7 @@ mac_frame_init_mac_header(mac_frame_t *frame, uint16_t fcf, uint8_t sec_ctl)
         length += sizeof(ext_addr_t);
         break;
     default:
-        ns_assert(false);
+        assert(false);
     }
 
     // security header
@@ -427,7 +427,7 @@ ns_error_t
 mac_frame_set_dst_panid(mac_frame_t *frame, panid_t panid)
 {
     uint8_t index = frame_find_dst_panid_index(frame);
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     encoding_little_endian_write_uint16(panid, mac_frame_get_psdu(frame) + index);
     return NS_ERROR_NONE;
 }
@@ -456,7 +456,7 @@ exit:
 ns_error_t
 mac_frame_set_dst_addr_short(mac_frame_t *frame, short_addr_t short_addr)
 {
-    ns_assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_DST_ADDR_MASK) == MAC_FRAME_FCF_DST_ADDR_SHORT);
+    assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_DST_ADDR_MASK) == MAC_FRAME_FCF_DST_ADDR_SHORT);
     encoding_little_endian_write_uint16(short_addr, mac_frame_get_psdu(frame) + frame_find_dst_addr_index(frame));
     return NS_ERROR_NONE;
 }
@@ -466,8 +466,8 @@ mac_frame_set_dst_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr)
 {
     uint8_t index = frame_find_dst_addr_index(frame);
     uint8_t *buf = mac_frame_get_psdu(frame) + index;
-    ns_assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_DST_ADDR_MASK) == MAC_FRAME_FCF_DST_ADDR_EXT);
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_DST_ADDR_MASK) == MAC_FRAME_FCF_DST_ADDR_EXT);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     for (unsigned int i = 0; i < sizeof(ext_addr_t); i++) {
         buf[i] = ext_addr->m8[sizeof(ext_addr_t) - 1 - i];
     }
@@ -550,8 +550,8 @@ ns_error_t
 mac_frame_set_src_addr_short(mac_frame_t *frame, short_addr_t short_addr)
 {
     uint8_t index = frame_find_src_addr_index(frame);
-    ns_assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_SRC_ADDR_MASK) == MAC_FRAME_FCF_SRC_ADDR_SHORT);
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_SRC_ADDR_MASK) == MAC_FRAME_FCF_SRC_ADDR_SHORT);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     encoding_little_endian_write_uint16(short_addr, mac_frame_get_psdu(frame) + index);
     return NS_ERROR_NONE;
 }
@@ -561,8 +561,8 @@ mac_frame_set_src_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr)
 {
     uint8_t index = frame_find_src_addr_index(frame);
     uint8_t *buf = mac_frame_get_psdu(frame) + index;
-    ns_assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_SRC_ADDR_MASK) == MAC_FRAME_FCF_SRC_ADDR_EXT);
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_SRC_ADDR_MASK) == MAC_FRAME_FCF_SRC_ADDR_EXT);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     for (unsigned int i = 0; i < sizeof(ext_addr_t); i++) {
         buf[i] = ext_addr->m8[sizeof(ext_addr_t) - 1 - i];
     }
@@ -581,7 +581,7 @@ mac_frame_set_src_addr(mac_frame_t *frame, mac_addr_t *mac_addr)
         error = mac_frame_set_src_addr_ext(frame, mac_addr_get_extended(mac_addr));
         break;
     default:
-        ns_assert(false);
+        assert(false);
         break;
     }
     return error;
@@ -626,7 +626,7 @@ ns_error_t
 mac_frame_set_frame_counter(mac_frame_t *frame, uint32_t frame_counter)
 {
     uint8_t index = frame_find_security_header_index(frame);
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     // security control
     index += MAC_FRAME_SECURITY_CONTROL_SIZE;
     encoding_little_endian_write_uint32(frame_counter, mac_frame_get_psdu(frame) + index);
@@ -638,7 +638,7 @@ mac_frame_get_key_source(mac_frame_t *frame)
 {
     uint8_t index = frame_find_security_header_index(frame);
     const uint8_t *buf = mac_frame_get_psdu(frame) + index;
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     // security control
     buf += MAC_FRAME_SECURITY_CONTROL_SIZE + MAC_FRAME_FRAME_COUNTER_SIZE;
     return buf;
@@ -672,7 +672,7 @@ mac_frame_set_key_source(mac_frame_t *frame, const uint8_t *key_source)
     uint8_t key_source_length;
     uint8_t index = frame_find_security_header_index(frame);
     uint8_t *buf = mac_frame_get_psdu(frame) + index;
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     key_source_length = mac_frame_get_key_source_length(frame, buf[0] & MAC_FRAME_KEY_ID_MODE_MASK);
     buf += MAC_FRAME_SECURITY_CONTROL_SIZE + MAC_FRAME_FRAME_COUNTER_SIZE;
     memcpy(buf, key_source, key_source_length);
@@ -699,7 +699,7 @@ mac_frame_set_key_id(mac_frame_t *frame, uint8_t key_id)
     uint8_t key_source_length;
     uint8_t index = frame_find_security_header_index(frame);
     uint8_t *buf = mac_frame_get_psdu(frame) + index;
-    ns_assert(index != MAC_FRAME_INVALID_INDEX);
+    assert(index != MAC_FRAME_INVALID_INDEX);
     key_source_length = mac_frame_get_key_source_length(frame, buf[0] & MAC_FRAME_KEY_ID_MODE_MASK);
     buf += MAC_FRAME_SECURITY_CONTROL_SIZE + MAC_FRAME_FRAME_COUNTER_SIZE + key_source_length;
     buf[0] = key_id;

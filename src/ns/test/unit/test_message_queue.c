@@ -1,9 +1,9 @@
 #include "ns/include/error.h"
-#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
 #include "ns/test/unit/test_util.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 // this function verifies the content of the message queue to match the passed in messages
 static ns_error_t

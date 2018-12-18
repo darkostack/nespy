@@ -1,5 +1,4 @@
 #include "ns/include/error.h"
-#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
 #include "ns/test/unit/test_util.h"
 #include <string.h>

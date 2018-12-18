@@ -1,7 +1,9 @@
 #include "ns/sys/cli/cli.h"
 #include "ns/sys/cli/cli-uart.h"
 #include "ns/include/platform/uart.h"
-#include "ns/include/nstd.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static char     s_cli_rx_buffer[CLI_UART_RX_BUF_SIZE];
 static uint16_t s_cli_rx_length;
@@ -127,7 +129,7 @@ output_format(const char *fmt, va_list ap)
 {
     char buf[CLI_UART_CLI_MAX_LINE_LEN];
     vsnprintf(buf, sizeof(buf), fmt, ap);
-    output(buf, (uint16_t)ns_strlen(buf));
+    output(buf, (uint16_t)strlen(buf));
 }
 
 static int

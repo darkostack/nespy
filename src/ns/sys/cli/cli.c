@@ -1,7 +1,8 @@
 #include "ns/sys/cli/cli.h"
 #include "ns/sys/cli/cli-uart.h"
-#include "ns/include/nstd.h"
 #include "genhdr/mpversion.h"
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 // commands
@@ -64,7 +65,7 @@ cli_process_line(char *buf, uint16_t buf_len)
     cmd = buf;
 
     for (i = 0; i < sizeof(commands) / sizeof(commands[0]); i++) {
-        if (ns_strcmp(cmd, commands[i].name) == 0) {
+        if (strcmp(cmd, commands[i].name) == 0) {
             (*commands[i].command)(argc, argv);
             break;
         }

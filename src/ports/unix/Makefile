@@ -172,6 +172,7 @@ LIB_SRC_C += $(addprefix ns-platform/,\
     random.c \
     uart.c \
     radio.c \
+    misc.c \
     )
 
 LIB_SRC_C += $(addprefix ns/sys/py/,\

@@ -1,6 +1,6 @@
 #include "ns/include/error.h"
-#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
+#include "ns/sys/core/common/debug.h"
 #include <string.h>
 
 // --- private functions declarations
@@ -253,7 +253,7 @@ message_set_offset(message_t message, uint16_t offset)
 {
     ns_error_t  error = NS_ERROR_NONE;
 
-    ns_assert(offset <= message_get_length(message));
+    assert(offset <= message_get_length(message));
     VERIFY_OR_EXIT(offset <= message_get_length(message),
                    error = NS_ERROR_INVALID_ARGS);
 
@@ -311,13 +311,13 @@ message_move_offset(message_t message, int delta)
 {
     ns_error_t error = NS_ERROR_NONE;
 
-    ns_assert(message_get_offset(message) + delta <= message_get_length(message));
+    assert(message_get_offset(message) + delta <= message_get_length(message));
 
     VERIFY_OR_EXIT(message_get_offset(message) + delta <= message_get_length(message),
                    error = NS_ERROR_INVALID_ARGS);
 
     ((buffer_t *)message)->buffer.head.info.offset += (int16_t)delta;
-    ns_assert(((buffer_t *)message)->buffer.head.info.offset <= message_get_length(message));
+    assert(((buffer_t *)message)->buffer.head.info.offset <= message_get_length(message));
 
 exit:
     return error;
@@ -380,21 +380,21 @@ message_set_datagram_tag(message_t message, uint16_t tag)
 bool
 message_get_child_mask(message_t message, uint8_t child_index)
 {
-    ns_assert(child_index < sizeof(((buffer_t *)message)->buffer.head.info.child_mask) * 8);
+    assert(child_index < sizeof(((buffer_t *)message)->buffer.head.info.child_mask) * 8);
     return (((buffer_t *)message)->buffer.head.info.child_mask[child_index / 8] & (0x80 >> (child_index % 8))) != 0;
 }
 
 void
 message_clear_child_mask(message_t message, uint8_t child_index)
 {
-    ns_assert(child_index < sizeof(((buffer_t *)message)->buffer.head.info.child_mask) * 8);
+    assert(child_index < sizeof(((buffer_t *)message)->buffer.head.info.child_mask) * 8);
     ((buffer_t *)message)->buffer.head.info.child_mask[child_index / 8] &= ~(0x80 >> (child_index % 8));
 }
 
 void
 message_set_child_mask(message_t message, uint8_t child_index)
 {
-    ns_assert(child_index < sizeof(((buffer_t *)message)->buffer.head.info.child_mask) * 8);
+    assert(child_index < sizeof(((buffer_t *)message)->buffer.head.info.child_mask) * 8);
     ((buffer_t *)message)->buffer.head.info.child_mask[child_index / 8] |= (0x80 >> (child_index % 8));
 }
 
@@ -486,7 +486,7 @@ message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, u
     uint16_t bytes_covered = 0;
     uint16_t bytes_to_cover;
 
-    ns_assert(offset + length <= message_get_length(message));
+    assert(offset + length <= message_get_length(message));
 
     offset += message_get_reserved(message);
 
@@ -510,14 +510,14 @@ message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, u
     cur_buffer = (buffer_t *)((buffer_t *)message)->next;
 
     while (offset >= MSG_BUFFER_DATA_SIZE) {
-        ns_assert(cur_buffer != NULL);
+        assert(cur_buffer != NULL);
         cur_buffer = (buffer_t *)cur_buffer->next;
         offset -= MSG_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
-        ns_assert(cur_buffer != NULL);
+        assert(cur_buffer != NULL);
         bytes_to_cover = MSG_BUFFER_DATA_SIZE - offset;
 
         if (bytes_to_cover > length) {
@@ -574,7 +574,7 @@ exit:
 ns_error_t
 message_remove_header(message_t message, uint16_t length)
 {
-    ns_assert(length <= message_get_length(message));
+    assert(length <= message_get_length(message));
 
     ((buffer_t *)message)->buffer.head.info.reserved += length;
     ((buffer_t *)message)->buffer.head.info.length -= length;
@@ -600,7 +600,7 @@ message_append(message_t message, const void *buf, uint16_t length)
 
     bytes_written = message_write(message, old_length, buf, length);
 
-    ns_assert(bytes_written == (int)length);
+    assert(bytes_written == (int)length);
     (void)bytes_written;
 
 exit:
@@ -614,7 +614,7 @@ message_write(message_t message, uint16_t offset, const void *buf, uint16_t leng
     uint16_t bytes_copied = 0;
     uint16_t bytes_to_copy;
 
-    ns_assert(offset + length <= message_get_length(message));
+    assert(offset + length <= message_get_length(message));
 
     if (offset + length >= message_get_length(message)) {
         length = message_get_length(message) - offset;
@@ -641,14 +641,14 @@ message_write(message_t message, uint16_t offset, const void *buf, uint16_t leng
     cur_buffer = (buffer_t *)((buffer_t *)message)->next;
 
     while (offset >= MSG_BUFFER_DATA_SIZE) {
-        ns_assert(cur_buffer != NULL);
+        assert(cur_buffer != NULL);
         cur_buffer = (buffer_t *)cur_buffer->next;
         offset -= MSG_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
-        ns_assert(cur_buffer != NULL);
+        assert(cur_buffer != NULL);
         bytes_to_copy = MSG_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
@@ -757,14 +757,14 @@ message_read(message_t message, uint16_t offset, void *buf, uint16_t length)
     cur_buffer = (buffer_t *)((buffer_t *)message)->next;
 
     while (offset >= MSG_BUFFER_DATA_SIZE) {
-        ns_assert(cur_buffer != NULL);
+        assert(cur_buffer != NULL);
         cur_buffer = (buffer_t *)cur_buffer->next;
         offset -= MSG_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
-        ns_assert(cur_buffer != NULL);
+        assert(cur_buffer != NULL);
         bytes_to_copy = MSG_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
@@ -829,7 +829,7 @@ message_remove_from_message_queue_list(message_t message, message_queue_t *queue
     // this list maintained by message queue interface
     uint8_t list = MSG_INFO_LIST_INTERFACE;
 
-    ns_assert((((buffer_t *)message)->buffer.head.info.next[list] != NULL) &&
+    assert((((buffer_t *)message)->buffer.head.info.next[list] != NULL) &&
               (((buffer_t *)message)->buffer.head.info.prev[list] != NULL));
 
     if (message == (message_t)queue->tail) {
@@ -916,7 +916,7 @@ message_add_to_message_queue_list(message_t message, message_queue_t *queue, que
     // this list maintained by message queue interface
     uint8_t list = MSG_INFO_LIST_INTERFACE;
 
-    ns_assert((((buffer_t *)message)->buffer.head.info.next[list] == NULL) &&
+    assert((((buffer_t *)message)->buffer.head.info.next[list] == NULL) &&
               (((buffer_t *)message)->buffer.head.info.prev[list] == NULL));
 
     if (queue->tail == NULL) {
@@ -1130,7 +1130,7 @@ message_priority_queue_get_head_for_priority(priority_queue_t *queue, uint8_t pr
 
     if (queue->tails[priority] != NULL) {
         previous_tail = msg_find_first_non_null_tail(queue, msg_prev_priority(priority));
-        ns_assert(previous_tail != NULL);
+        assert(previous_tail != NULL);
         head = ((buffer_t *)previous_tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
     } else {
         head = NULL;

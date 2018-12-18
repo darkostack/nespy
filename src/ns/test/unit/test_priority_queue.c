@@ -1,9 +1,9 @@
 #include "ns/include/error.h"
-#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
 #include "ns/test/unit/test_util.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #define NUM_NEW_PRIORITY_TEST_MESSAGES 2
 #define NUM_SET_PRIORITY_TEST_MESSAGES 2

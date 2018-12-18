@@ -106,6 +106,11 @@
 #define NS_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
 #define NS_CONFIG_LOG_OUTPUT_NCP_SPINEL 4
 
+// assert is managed by platform defined logic when this flag is set
+#ifndef NS_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+#define NS_CONFIG_PLATFORM_ASSERT_MANAGEMENT 0
+#endif
+
 // only applicable only if raw link layer API is enabled
 // (i.e., `NS_ENABLE_RAW_LINK_API` is set)
 #ifndef NS_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT

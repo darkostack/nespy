@@ -1,5 +1,5 @@
-#include "ns/include/nstd.h"
 #include "ns/sys/core/common/instance.h"
+#include "ns/sys/core/common/debug.h"
 #include "ns/sys/core/common/random.h"
 #include "ns/sys/core/common/trickle_timer.h"
 
@@ -23,7 +23,7 @@ trickle_timer_ctor(void *instance,
                    trickle_timer_handler_func_t transmit_handler,
                    trickle_timer_handler_func_t interval_expired_handler)
 {
-    ns_assert(transmit_handler != NULL);
+    assert(transmit_handler != NULL);
 
     timer_milli_ctor(instance, &trickle_timer->milli, &trickle_timer_handle_timer, (void *)trickle_timer);
 

@@ -1,7 +1,7 @@
 #include "ns/include/error.h"
-#include "ns/include/nstd.h"
 #include "ns/include/tasklet.h"
 #include "ns/sys/core/common/instance.h"
+#include "ns/sys/core/common/debug.h"
 
 // --- private functions declarations
 static tasklet_t *
@@ -18,7 +18,7 @@ tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler)
 void
 tasklet_ctor(void *instance, tasklet_t *tasklet, tasklet_handler_func_t handler, void *handler_arg)
 {
-    ns_assert(handler != NULL);
+    assert(handler != NULL);
     tasklet->instance = instance;
     tasklet->handler.func = handler;
     tasklet->handler.arg = handler_arg;
