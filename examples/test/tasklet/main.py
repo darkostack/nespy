@@ -19,7 +19,7 @@ def test2_cb():
 def test3_cb():
     print("test3 task executed\r")
 
-timer = nespy.TimerMilli(inst=instance, cb=timer_cb)
+milli = nespy.TimerMilli(inst=instance, cb=timer_cb)
 
 test1_task = nespy.Tasklet(inst=instance, cb=test1_cb)
 test2_task = nespy.Tasklet(inst=instance, cb=test2_cb)
@@ -27,7 +27,7 @@ test3_task = nespy.Tasklet(inst=instance, cb=test3_cb)
 
 def main():
     platform.system_init()
-    timer.start(1000)
+    milli.start(1000)
     while True:
         platform.tasklet_run()
         platform.process_drivers()
