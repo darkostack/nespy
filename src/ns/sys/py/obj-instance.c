@@ -10,7 +10,7 @@
 // instance.is_initialized()
 
 const mp_obj_type_t py_instance_type;
-static bool instance_obj_is_created = false;
+static bool s_instance_obj_is_created = false;
 
 STATIC mp_obj_t
 py_instance_make_new(const mp_obj_type_t *type,
@@ -19,7 +19,7 @@ py_instance_make_new(const mp_obj_type_t *type,
                      const mp_obj_t *all_args)
 {
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
-    if (instance_obj_is_created) {
+    if (s_instance_obj_is_created) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: can't create more than one instance object"));
 
@@ -28,7 +28,7 @@ py_instance_make_new(const mp_obj_type_t *type,
     py_instance_obj_t *instance = m_new_obj(py_instance_obj_t);
     instance->base.type = &py_instance_type;
     instance->instance = ns_instance_init();
-    instance_obj_is_created = true;
+    s_instance_obj_is_created = true;
     return MP_OBJ_FROM_PTR(instance);
 }
 

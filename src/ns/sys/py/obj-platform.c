@@ -18,7 +18,7 @@
 // platform.tasklet_run()
 
 const mp_obj_type_t py_platform_type;
-static bool platform_obj_is_created = false;
+static bool s_platform_obj_is_created = false;
 
 typedef struct _py_platform_obj_t {
     mp_obj_base_t base;
@@ -36,7 +36,7 @@ py_platform_make_new(const mp_obj_type_t *type,
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: invalid number of argument!"));
     }
-    if (platform_obj_is_created) {
+    if (s_platform_obj_is_created) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
                   "ns: can't create more than one instance object"));
     }
