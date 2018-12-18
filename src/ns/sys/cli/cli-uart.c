@@ -3,16 +3,16 @@
 #include "ns/include/platform/uart.h"
 #include "ns/include/nstd.h"
 
-static char cli_rx_buffer[CLI_UART_RX_BUF_SIZE];
-static uint16_t cli_rx_length;
-static char cli_tx_buffer[CLI_UART_TX_BUF_SIZE];
-static uint16_t cli_tx_head;
-static uint16_t cli_tx_length;
-static uint16_t cli_send_length;
+static char     s_cli_rx_buffer[CLI_UART_RX_BUF_SIZE];
+static uint16_t s_cli_rx_length;
+static char     s_cli_tx_buffer[CLI_UART_TX_BUF_SIZE];
+static uint16_t s_cli_tx_head;
+static uint16_t s_cli_tx_length;
+static uint16_t s_cli_send_length;
 
-static const char cli_command_prompt[] = {'>', '>', '>', ' '};
-static const char cli_erase_str[] = {'\b', ' ', '\b'};
-static const char CRNL[] = {'\r', '\n'};
+static const char s_cli_command_prompt[] = {'>', '>', '>', ' '};
+static const char s_cli_erase_str[] = {'\b', ' ', '\b'};
+static const char s_crnl[] = {'\r', '\n'};
 
 static void
 process_command(void);
@@ -70,13 +70,13 @@ cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
         switch (*buf) {
         case '\r':
         case '\n':
-            output(CRNL, sizeof(CRNL));
-            if (cli_rx_length > 0) {
-                cli_rx_buffer[cli_rx_length] = '\0';
+            output(s_crnl, sizeof(s_crnl));
+            if (s_cli_rx_length > 0) {
+                s_cli_rx_buffer[s_cli_rx_length] = '\0';
                 process_command();
             }
 
-            output(cli_command_prompt, sizeof(cli_command_prompt));
+            output(s_cli_command_prompt, sizeof(s_cli_command_prompt));
             break;
 #if defined(UNIX)
         case 0x04: // ASCII for CTRL-D
@@ -85,15 +85,15 @@ cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
 #endif
         case '\b':
         case 127:
-            if (cli_rx_length > 0) {
-                output(cli_erase_str, sizeof(cli_erase_str));
-                cli_rx_buffer[--cli_rx_length] = '\0';
+            if (s_cli_rx_length > 0) {
+                output(s_cli_erase_str, sizeof(s_cli_erase_str));
+                s_cli_rx_buffer[--s_cli_rx_length] = '\0';
             }
             break;
         default:
-            if (cli_rx_length < CLI_UART_RX_BUF_SIZE) {
+            if (s_cli_rx_length < CLI_UART_RX_BUF_SIZE) {
                 output((const char *)buf, 1);
-                cli_rx_buffer[cli_rx_length++] = (char)*buf;
+                s_cli_rx_buffer[s_cli_rx_length++] = (char)*buf;
             }
             break;
         }
@@ -103,23 +103,23 @@ cli_uart_receive_task(const uint8_t *buf, uint16_t buf_len)
 void
 cli_uart_send_done_task(void)
 {
-    cli_tx_head = (cli_tx_head + cli_send_length) % CLI_UART_TX_BUF_SIZE;
-    cli_tx_length -= cli_send_length;
-    cli_send_length = 0;
+    s_cli_tx_head = (s_cli_tx_head + s_cli_send_length) % CLI_UART_TX_BUF_SIZE;
+    s_cli_tx_length -= s_cli_send_length;
+    s_cli_send_length = 0;
     send();
 }
 
 static void
 process_command(void)
 {
-    if (cli_rx_buffer[cli_rx_length - 1] == '\n') {
-        cli_rx_buffer[--cli_rx_length] = '\0';
+    if (s_cli_rx_buffer[s_cli_rx_length - 1] == '\n') {
+        s_cli_rx_buffer[--s_cli_rx_length] = '\0';
     }
-    if (cli_rx_buffer[cli_rx_length - 1] == '\r') {
-        cli_rx_buffer[--cli_rx_length] = '\0';
+    if (s_cli_rx_buffer[s_cli_rx_length - 1] == '\r') {
+        s_cli_rx_buffer[--s_cli_rx_length] = '\0';
     }
-    cli_process_line(cli_rx_buffer, cli_rx_length);
-    cli_rx_length = 0;
+    cli_process_line(s_cli_rx_buffer, s_cli_rx_length);
+    s_cli_rx_length = 0;
 }
 
 static void
@@ -133,15 +133,15 @@ output_format(const char *fmt, va_list ap)
 static int
 output(const char *buf, uint16_t buf_len)
 {
-    uint16_t remaining = CLI_UART_TX_BUF_SIZE - cli_tx_length;
+    uint16_t remaining = CLI_UART_TX_BUF_SIZE - s_cli_tx_length;
     uint16_t tail;
     if (buf_len > remaining) {
         buf_len = remaining;
     }
     for (int i = 0; i < buf_len; i++) {
-        tail = (cli_tx_head + cli_tx_length) % CLI_UART_TX_BUF_SIZE;
-        cli_tx_buffer[tail] = *buf++;
-        cli_tx_length++;
+        tail = (s_cli_tx_head + s_cli_tx_length) % CLI_UART_TX_BUF_SIZE;
+        s_cli_tx_buffer[tail] = *buf++;
+        s_cli_tx_length++;
     }
     send();
     return buf_len;
@@ -150,15 +150,15 @@ output(const char *buf, uint16_t buf_len)
 static void
 send(void)
 {
-    if (cli_send_length != 0) {
+    if (s_cli_send_length != 0) {
         return;
     }
-    if (cli_tx_length > CLI_UART_TX_BUF_SIZE - cli_tx_head) {
-        cli_send_length = CLI_UART_TX_BUF_SIZE - cli_tx_head;
+    if (s_cli_tx_length > CLI_UART_TX_BUF_SIZE - s_cli_tx_head) {
+        s_cli_send_length = CLI_UART_TX_BUF_SIZE - s_cli_tx_head;
     } else {
-        cli_send_length = cli_tx_length;
+        s_cli_send_length = s_cli_tx_length;
     }
-    if (cli_send_length > 0) {
-        ns_plat_uart_send((uint8_t *)&cli_tx_buffer[cli_tx_head], cli_send_length);
+    if (s_cli_send_length > 0) {
+        ns_plat_uart_send((uint8_t *)&s_cli_tx_buffer[s_cli_tx_head], s_cli_send_length);
     }
 }
