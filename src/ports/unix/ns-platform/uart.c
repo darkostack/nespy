@@ -10,24 +10,24 @@
 #include "ns/include/platform/uart.h"
 #include "platform-unix.h"
 
-static uint8_t receive_buffer[128];
-static const uint8_t *write_buffer;
-static uint16_t write_length;
-static int in_fd;
-static int out_fd;
-static struct termios original_stdin_termios;
-static struct termios original_stdout_termios;
+static uint8_t        s_receive_buffer[128];
+static const uint8_t *s_write_buffer;
+static uint16_t       s_write_length;
+static int            s_in_fd;
+static int            s_out_fd;
+static struct termios s_original_stdin_termios;
+static struct termios s_original_stdout_termios;
 
 static void
 restore_stdin_termios(void)
 {
-    tcsetattr(in_fd, TCSAFLUSH, &original_stdin_termios);
+    tcsetattr(s_in_fd, TCSAFLUSH, &s_original_stdin_termios);
 }
 
 static void
 restore_stdout_termios(void)
 {
-    tcsetattr(out_fd, TCSAFLUSH, &original_stdout_termios);
+    tcsetattr(s_out_fd, TCSAFLUSH, &s_original_stdout_termios);
 }
 
 void
@@ -35,7 +35,7 @@ plat_uart_restore(void)
 {
     restore_stdin_termios();
     restore_stdout_termios();
-    dup2(out_fd, STDOUT_FILENO);
+    dup2(s_out_fd, STDOUT_FILENO);
 }
 
 ns_error_t
@@ -44,27 +44,27 @@ ns_plat_uart_enable(void)
     ns_error_t error = NS_ERROR_NONE;
     struct termios termios;
 
-    in_fd = dup(STDIN_FILENO);
-    out_fd = dup(STDOUT_FILENO);
+    s_in_fd = dup(STDIN_FILENO);
+    s_out_fd = dup(STDOUT_FILENO);
     dup2(STDERR_FILENO, STDOUT_FILENO);
 
     // we need this signal to make sure that this process terminates properly
     signal(SIGPIPE, SIG_DFL);
 
-    if (isatty(in_fd)) {
-        tcgetattr(in_fd, &original_stdin_termios);
+    if (isatty(s_in_fd)) {
+        tcgetattr(s_in_fd, &s_original_stdin_termios);
         atexit(&restore_stdin_termios);
     }
 
-    if (isatty(out_fd)) {
-        tcgetattr(out_fd, &original_stdout_termios);
+    if (isatty(s_out_fd)) {
+        tcgetattr(s_out_fd, &s_original_stdout_termios);
         atexit(&restore_stdout_termios);
     }
 
-    if (isatty(in_fd))
+    if (isatty(s_in_fd))
     {
         // get current configuration
-        if (tcgetattr(in_fd, &termios) != 0) {
+        if (tcgetattr(s_in_fd, &termios) != 0) {
             perror("tcgetattr");
             error = NS_ERROR_GENERIC;
             goto exit;
@@ -91,17 +91,17 @@ ns_plat_uart_enable(void)
         }
 
         // set configuration
-        if (tcsetattr(in_fd, TCSANOW, &termios) != 0) {
+        if (tcsetattr(s_in_fd, TCSANOW, &termios) != 0) {
             perror("tcsetattr");
             error = NS_ERROR_GENERIC;
             goto exit;
         }
     }
 
-    if (isatty(out_fd))
+    if (isatty(s_out_fd))
     {
         // get current configuration
-        if (tcgetattr(out_fd, &termios) != 0) {
+        if (tcgetattr(s_out_fd, &termios) != 0) {
             perror("tcgetattr");
             error = NS_ERROR_GENERIC;
             goto exit;
@@ -125,7 +125,7 @@ ns_plat_uart_enable(void)
         }
 
         // set configuration
-        if (tcsetattr(out_fd, TCSANOW, &termios) != 0) {
+        if (tcsetattr(s_out_fd, TCSANOW, &termios) != 0) {
             perror("tcsetattr");
             error = NS_ERROR_GENERIC;
             goto exit;
@@ -135,16 +135,16 @@ ns_plat_uart_enable(void)
     return error;
 
 exit:
-    close(in_fd);
-    close(out_fd);
+    close(s_in_fd);
+    close(s_out_fd);
     return error;
 }
 
 ns_error_t
 ns_plat_uart_disable(void)
 {
-    close(in_fd);
-    close(out_fd);
+    close(s_in_fd);
+    close(s_out_fd);
     return NS_ERROR_NONE;
 }
 
@@ -152,12 +152,12 @@ ns_error_t
 ns_plat_uart_send(const uint8_t *buf, uint16_t buf_length)
 {
     ns_error_t error = NS_ERROR_NONE;
-    if (write_length != 0) {
+    if (s_write_length != 0) {
         error = NS_ERROR_BUSY;
         goto exit;
     }
-    write_buffer = buf;
-    write_length = buf_length;
+    s_write_buffer = buf;
+    s_write_length = buf_length;
 exit:
     return error;
 }
@@ -166,21 +166,21 @@ void
 plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd, int *max_fd)
 {
     if (read_fd != NULL) {
-        FD_SET(in_fd, read_fd);
+        FD_SET(s_in_fd, read_fd);
         if (error_fd != NULL) {
-            FD_SET(in_fd, error_fd);
+            FD_SET(s_in_fd, error_fd);
         }
-        if (max_fd != NULL && *max_fd < in_fd) {
-            *max_fd = in_fd;
+        if (max_fd != NULL && *max_fd < s_in_fd) {
+            *max_fd = s_in_fd;
         }
     }
     if (write_fd != NULL) {
-        FD_SET(out_fd, write_fd);
+        FD_SET(s_out_fd, write_fd);
         if (error_fd != NULL) {
-            FD_SET(out_fd, error_fd);
+            FD_SET(s_out_fd, error_fd);
         }
-        if (max_fd != NULL && *max_fd < out_fd) {
-            *max_fd = out_fd;
+        if (max_fd != NULL && *max_fd < s_out_fd) {
+            *max_fd = s_out_fd;
         }
     }
 }
@@ -191,8 +191,8 @@ plat_uart_process(void)
     ssize_t rval;
     const int error_flags = POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd[] = {
-        { in_fd, POLLIN | error_flags, 0 },
-        { out_fd, POLLOUT | error_flags, 0 },
+        { s_in_fd, POLLIN | error_flags, 0 },
+        { s_out_fd, POLLOUT | error_flags, 0 },
     };
 
     errno = 0;
@@ -206,30 +206,30 @@ plat_uart_process(void)
 
     if (rval > 0) {
         if ((pollfd[0].revents & error_flags) != 0) {
-            perror("in_fd");
+            perror("s_in_fd");
             exit(EXIT_FAILURE);
         }
         if ((pollfd[1].revents & error_flags) != 0) {
-            perror("out_fd");
+            perror("s_out_fd");
             exit(EXIT_FAILURE);
         }
         if (pollfd[0].revents & POLLIN) {
-            rval = read(in_fd, receive_buffer, sizeof(receive_buffer));
+            rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
             if (rval <= 0) {
                 perror("read");
                 exit(EXIT_FAILURE);
             }
-            ns_plat_uart_received(receive_buffer, (uint16_t)rval);
+            ns_plat_uart_received(s_receive_buffer, (uint16_t)rval);
         }
-        if ((write_length > 0) && (pollfd[1].revents & POLLOUT)) {
-            rval = write(out_fd, write_buffer, write_length);
+        if ((s_write_length > 0) && (pollfd[1].revents & POLLOUT)) {
+            rval = write(s_out_fd, s_write_buffer, s_write_length);
             if (rval <= 0) {
                 perror("write");
                 exit(EXIT_FAILURE);
             }
-            write_buffer += (uint16_t)rval;
-            write_length -= (uint16_t)rval;
-            if (write_length == 0) {
+            s_write_buffer += (uint16_t)rval;
+            s_write_length -= (uint16_t)rval;
+            if (s_write_length == 0) {
                 ns_plat_uart_send_done();
             }
         }

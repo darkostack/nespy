@@ -10,15 +10,15 @@
 #include "ns/include/platform/system.h"
 #include "platform-unix.h"
 
-uint32_t node_id = 1;
+uint32_t g_node_id = 1;
 
-static volatile bool terminate = false;
+static volatile bool s_terminate = false;
 
 static void
 handle_signal(int signal)
 {
     (void)signal;
-    terminate = true;
+    s_terminate = true;
 }
 
 void
@@ -27,9 +27,9 @@ ns_plat_sys_init(uint32_t id)
     signal(SIGTERM, &handle_signal);
     signal(SIGHUP, &handle_signal);
 
-    node_id = id;
+    g_node_id = id;
 
-    if (node_id >= WELLKNOWN_NODE_ID) {
+    if (g_node_id >= WELLKNOWN_NODE_ID) {
         fprintf(stderr, "Invalid node id: %u\n", id);
         exit(EXIT_FAILURE);
     }
@@ -65,7 +65,7 @@ ns_plat_sys_process_drivers(ns_instance_t instance)
         }
     }
 
-    if (terminate) {
+    if (s_terminate) {
         exit(0);
     }
 

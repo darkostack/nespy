@@ -28,7 +28,7 @@ enum
     WELLKNOWN_NODE_ID = 34,
 };
 
-extern uint32_t node_id;
+extern uint32_t g_node_id;
 
 void
 plat_alarm_init(void);

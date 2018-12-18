@@ -27,4 +27,19 @@
         goto exit;    \
     } while (false)
 
+#define EXPECT(condition)   \
+    do {                    \
+        if (!(condition)) { \
+            goto exit;      \
+        }                   \
+    } while (0)
+
+#define EXPECT_ACTION(condition, action) \
+    do {                                 \
+        if (!(condition)) {              \
+            action;                      \
+            goto exit;                   \
+        }                                \
+    } while (0)
+
 #endif // NS_CORE_COMMON_CODE_UTILS_H

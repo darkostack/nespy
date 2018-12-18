@@ -130,4 +130,9 @@
 #define NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER 0
 #endif
 
+// maximum number of children
+#ifndef NS_CONFIG_MAX_CHILDREN
+#define NS_CONFIG_MAX_CHILDREN 10
+#endif
+
 #endif // NS_CORE_DEFAULT_CONFIG_H_

@@ -3,12 +3,12 @@
 #include "ns/include/platform/random.h"
 #include "platform-unix.h"
 
-static uint32_t state = 1;
+static uint32_t s_state = 1;
 
 void
 plat_random_init(void)
 {
-    state = (uint32_t)time(NULL) + (3600 * node_id);
+    s_state = (uint32_t)time(NULL) + (3600 * g_node_id);
 }
 
 uint32_t
@@ -16,7 +16,7 @@ ns_plat_random_get(void)
 {
     uint32_t mlcg, p, q;
     uint64_t tmpstate;
-    tmpstate = (uint64_t)33614 * (uint64_t)state;
+    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
     q = tmpstate & 0xffffffff;
     q = q >> 1;
     p = tmpstate >> 32;
@@ -25,7 +25,7 @@ ns_plat_random_get(void)
         mlcg &= 0x7fffffff;
         mlcg++;
     }
-    state = mlcg;
+    s_state = mlcg;
     return mlcg;
 }
 
