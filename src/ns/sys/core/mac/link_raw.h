@@ -68,69 +68,69 @@ struct _mac_link_raw {
 };
 
 void
-mac_link_raw_ctor(mac_link_raw_t *mac_link_raw);
+mac_link_raw_ctor(mac_link_raw_t *link_raw);
 
 bool
-mac_link_raw_is_enabled(mac_link_raw_t *mac_link_raw);
+mac_link_raw_is_enabled(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_set_enabled(mac_link_raw_t *mac_link_raw, bool enabled);
+mac_link_raw_set_enabled(mac_link_raw_t *link_raw, bool enabled);
 
 ns_radio_caps_t
-mac_link_raw_get_caps(mac_link_raw_t *mac_link_raw);
+mac_link_raw_get_caps(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_receive(mac_link_raw_t *mac_link_raw, ns_link_raw_receive_done_func_t callback);
+mac_link_raw_receive(mac_link_raw_t *link_raw, ns_link_raw_receive_done_func_t callback);
 
 void
-mac_link_raw_invoke_receive_done(mac_link_raw_t *mac_link_raw, ns_radio_frame_t *frame, ns_error_t error);
+mac_link_raw_invoke_receive_done(mac_link_raw_t *link_raw, ns_radio_frame_t *frame, ns_error_t error);
 
 ns_error_t
-mack_link_raw_transmit(mac_link_raw_t *mac_link_raw, ns_link_raw_transmit_done_func_t callback);
+mack_link_raw_transmit(mac_link_raw_t *link_raw, ns_link_raw_transmit_done_func_t callback);
 
 void
-mac_link_raw_invoke_transmit_done(mac_link_raw_t *mac_link_raw,
+mac_link_raw_invoke_transmit_done(mac_link_raw_t *link_raw,
                                   ns_radio_frame_t *frame,
                                   ns_radio_frame_t *ack_frame,
                                   ns_error_t error);
 
 ns_error_t
-mac_link_raw_energy_scan(mac_link_raw_t *mac_link_raw,
+mac_link_raw_energy_scan(mac_link_raw_t *link_raw,
                          uint8_t scan_channel,
                          uint16_t scan_duration,
                          ns_link_raw_energy_scan_done_func_t callback);
 
 void
-mac_link_raw_invoke_energy_scan_done(mac_link_raw_t *mac_link_raw, int8_t energy_scan_max_rssi);
+mac_link_raw_invoke_energy_scan_done(mac_link_raw_t *link_raw, int8_t energy_scan_max_rssi);
 
 void
-mac_link_raw_transmit_started(mac_link_raw_t *mac_link_raw, ns_radio_frame_t *frame);
+mac_link_raw_transmit_started(mac_link_raw_t *link_raw, ns_radio_frame_t *frame);
 
 uint16_t
-mac_link_raw_get_short_addr(mac_link_raw_t *mac_link_raw);
+mac_link_raw_get_short_addr(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_set_short_addr(mac_link_raw_t *mac_link_raw, uint16_t short_addr);
+mac_link_raw_set_short_addr(mac_link_raw_t *link_raw, uint16_t short_addr);
 
 uint16_t
-mac_link_raw_get_panid(mac_link_raw_t *mac_link_raw);
+mac_link_raw_get_panid(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_set_panid(mac_link_raw_t *mac_link_raw, uint16_t panid);
+mac_link_raw_set_panid(mac_link_raw_t *link_raw, uint16_t panid);
 
 uint8_t
-mac_link_raw_get_channel(mac_link_raw_t *mac_link_raw);
+mac_link_raw_get_channel(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_set_channel(mac_link_raw_t *mac_link_raw, uint8_t channel);
+mac_link_raw_set_channel(mac_link_raw_t *link_raw, uint8_t channel);
 
 const ns_ext_addr_t *
-mac_link_raw_get_ext_addr(mac_link_raw_t *mac_link_raw);
+mac_link_raw_get_ext_addr(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_set_ext_addr(mac_link_raw_t *mac_link_raw, const ns_ext_addr_t *ext_addr);
+mac_link_raw_set_ext_addr(mac_link_raw_t *link_raw, const ns_ext_addr_t *ext_addr);
 
 ns_radio_frame_t *
-mac_link_raw_get_transmit_frame(mac_link_raw_t *mac_link_raw);
+mac_link_raw_get_transmit_frame(mac_link_raw_t *link_raw);
 
 #endif // NS_CORE_MAC_LINK_RAW_H_
