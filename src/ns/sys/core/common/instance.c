@@ -1,7 +1,7 @@
 #include "ns/include/error.h"
 #include "ns/sys/core/common/instance.h"
 
-static NS_DEFINE_ALIGNED_VAR(instance_raw, sizeof(instance_t), uint64_t);
+static NS_DEFINE_ALIGNED_VAR(s_instance_raw, sizeof(instance_t), uint64_t);
 
 // --- instance functions
 instance_t *
@@ -56,6 +56,6 @@ exit:
 instance_t *
 instance_get(void)
 {
-    void *inst = &instance_raw;
+    void *inst = &s_instance_raw;
     return (instance_t *)inst;
 }
