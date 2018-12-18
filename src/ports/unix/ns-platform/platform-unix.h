@@ -54,4 +54,16 @@ plat_uart_update_fd_set(fd_set *read_fd, fd_set *write_fd, fd_set *error_fd, int
 void
 plat_uart_process(void);
 
+void
+plat_radio_init(void);
+
+void
+plat_radio_deinit(void);
+
+void
+plat_radio_update_fd_set(fd_set *read_fd, fd_set *write_fd, int *max_fd);
+
+void
+plat_radio_process(ns_instance_t instance);
+
 #endif // NS_PLATFORM_UNIX_H_

@@ -7,6 +7,7 @@
 #include "ns/include/tasklet.h"
 #include "ns/include/platform/alarm-milli.h"
 #include "ns/include/platform/alarm-micro.h"
+#include "ns/include/platform/radio.h"
 #include "ns/include/platform/system.h"
 #include "platform-unix.h"
 
@@ -35,7 +36,7 @@ ns_plat_sys_init(uint32_t id)
     }
 
     plat_alarm_init();
-    // TODO: plat_radio_init();
+    plat_radio_init();
     plat_random_init();
 }
 
@@ -54,7 +55,7 @@ ns_plat_sys_process_drivers(ns_instance_t instance)
     FD_ZERO(&error_fds);
 
     plat_uart_update_fd_set(&read_fds, &write_fds, &error_fds, &max_fd);
-    // TODO: plat_radio_update_fd_set(&read_fds, &write_fds, &max_fd);
+    plat_radio_update_fd_set(&read_fds, &write_fds, &max_fd);
     plat_alarm_update_timeout(&timeout);
 
     if (!ns_tasklet_are_pending(instance)) {
@@ -70,6 +71,6 @@ ns_plat_sys_process_drivers(ns_instance_t instance)
     }
 
     plat_uart_process();
-    // TODO: plat_radio_process(instance);
+    plat_radio_process(instance);
     plat_alarm_process(instance);
 }

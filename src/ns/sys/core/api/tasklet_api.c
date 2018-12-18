@@ -22,6 +22,7 @@ exit:
     return retval;
 }
 
-__attribute__((weak)) void ns_tasklet_signal_pending(ns_instance_t instance)
+__attribute__((weak)) void
+ns_tasklet_signal_pending(ns_instance_t instance)
 {
 }

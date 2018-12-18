@@ -96,105 +96,108 @@ typedef enum _ns_radio_state {
  */
 
 ns_radio_caps_t
-ns_plat_radio_get_caps(ns_instance_t *instance);
+ns_plat_radio_get_caps(ns_instance_t instance);
 
 const char *
-ns_plat_radio_get_version_string(ns_instance_t *instance);
+ns_plat_radio_get_version_string(ns_instance_t instance);
 
 int8_t
-ns_plat_radio_get_receive_sensitivity(ns_instance_t *instance);
+ns_plat_radio_get_receive_sensitivity(ns_instance_t instance);
 
 void
-ns_plat_radio_get_ieee_eui64(ns_instance_t *instance, uint8_t *ieee_eui64);
+ns_plat_radio_get_ieee_eui64(ns_instance_t instance, uint8_t *ieee_eui64);
 
 void
-ns_plat_radio_set_panid(ns_instance_t *instance, ns_panid_t panid);
+ns_plat_radio_set_panid(ns_instance_t instance, ns_panid_t panid);
 
 void
-ns_plat_radio_set_extended_addr(ns_instance_t *instance, const ns_ext_addr_t *ext_addr);
+ns_plat_radio_set_extended_addr(ns_instance_t instance, const ns_ext_addr_t *ext_addr);
 
 void
-ns_plat_radio_set_short_addr(ns_instance_t *instance, ns_short_addr_t short_addr);
+ns_plat_radio_set_short_addr(ns_instance_t instance, ns_short_addr_t short_addr);
 
 ns_error_t
-ns_plat_radio_get_transmit_power(ns_instance_t *instance, int8_t *power);
+ns_plat_radio_get_transmit_power(ns_instance_t instance, int8_t *power);
+
+ns_error_t
+ns_plat_radio_set_transmit_power(ns_instance_t instance, int8_t power);
 
 bool
-ns_plat_radio_get_promiscuous(ns_instance_t *instance);
+ns_plat_radio_get_promiscuous(ns_instance_t instance);
 
 void
-ns_plat_radio_set_promiscuous(ns_instance_t *instance, bool enable);
+ns_plat_radio_set_promiscuous(ns_instance_t instance, bool enable);
 
 ns_radio_state_t
-ns_plat_radio_get_state(ns_instance_t *instance);
+ns_plat_radio_get_state(ns_instance_t instance);
 
 ns_error_t
-ns_plat_radio_enable(ns_instance_t *instance);
+ns_plat_radio_enable(ns_instance_t instance);
 
 ns_error_t
-ns_plat_radio_disable(ns_instance_t *instance);
+ns_plat_radio_disable(ns_instance_t instance);
 
 bool
-ns_plat_radio_is_enabled(ns_instance_t *instance);
+ns_plat_radio_is_enabled(ns_instance_t instance);
 
 ns_error_t
-ns_plat_radio_sleep(ns_instance_t *instance);
+ns_plat_radio_sleep(ns_instance_t instance);
 
 ns_error_t
-ns_plat_radio_receive(ns_instance_t *instance, uint8_t channel);
+ns_plat_radio_receive(ns_instance_t instance, uint8_t channel);
 
 extern void
-ns_plat_radio_receive_done(ns_instance_t *instance, ns_radio_frame_t *frame, ns_error_t error);
+ns_plat_radio_receive_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_error_t error);
 
 extern void
-ns_plat_diag_radio_receive_done(ns_instance_t *instance, ns_radio_frame_t *frame, ns_error_t error);
+ns_plat_diag_radio_receive_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_error_t error);
 
 ns_radio_frame_t *
-ns_plat_radio_get_transmit_buffer(ns_instance_t *instance);
+ns_plat_radio_get_transmit_buffer(ns_instance_t instance);
 
 ns_error_t
-ns_plat_radio_transmit(ns_instance_t *instance, ns_radio_frame_t *frame);
+ns_plat_radio_transmit(ns_instance_t instance, ns_radio_frame_t *frame);
 
 extern void
-ns_plat_radio_tx_started(ns_instance_t *instance, ns_radio_frame_t *frame);
+ns_plat_radio_tx_started(ns_instance_t instance, ns_radio_frame_t *frame);
 
 extern void
-ns_plat_radio_tx_done(ns_instance_t *instance, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error);
+ns_plat_radio_tx_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error);
 
 extern void
-ns_plat_diag_radio_transmit_done(ns_instance_t *instance, ns_radio_frame_t *frame, ns_error_t error);
+ns_plat_diag_radio_transmit_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_error_t error);
 
 extern void
-ns_plat_radio_frame_updated(ns_instance_t *instance, ns_radio_frame_t *frame);
+ns_plat_radio_frame_updated(ns_instance_t instance, ns_radio_frame_t *frame);
 
 int8_t
-ns_plat_radio_get_rssi(ns_instance_t *instance);
+ns_plat_radio_get_rssi(ns_instance_t instance);
 
 ns_error_t
-ns_plat_radio_energy_scan(ns_instance_t *instance, uint8_t scan_channel, uint16_t scan_duration);
+ns_plat_radio_energy_scan(ns_instance_t instance, uint8_t scan_channel, uint16_t scan_duration);
 
 extern void
-ns_plat_radio_energy_scan_done(ns_instance_t *instance, int8_t energy_scan_max_rssi);
+ns_plat_radio_energy_scan_done(ns_instance_t instance, int8_t energy_scan_max_rssi);
 
 void
-ns_plat_radio_enable_src_match(ns_instance_t *instance, bool enable);
+ns_plat_radio_enable_src_match(ns_instance_t instance, bool enable);
 
 ns_error_t
-ns_plat_radio_add_src_match_short_entry(ns_instance_t *instance, ns_short_addr_t short_addr);
+ns_plat_radio_add_src_match_short_entry(ns_instance_t instance, ns_short_addr_t short_addr);
 
 ns_error_t
-ns_plat_radio_add_src_match_ext_entry(ns_instance_t *instance, const ns_ext_addr_t *ext_addr);
+ns_plat_radio_add_src_match_ext_entry(ns_instance_t instance, const ns_ext_addr_t *ext_addr);
 
 ns_error_t
-ns_plat_radio_clear_src_match_short_entry(ns_instance_t *instance, ns_short_addr_t short_addr);
+ns_plat_radio_clear_src_match_short_entry(ns_instance_t instance, ns_short_addr_t short_addr);
 
 ns_error_t
-ns_plat_radio_clear_src_match_ext_entry(ns_instance_t *instance, const ns_ext_addr_t *ext_addr);
+ns_plat_radio_clear_src_match_ext_entry(ns_instance_t instance, const ns_ext_addr_t *ext_addr);
 
 void
-ns_plat_radio_clear_src_match_short_entries(ns_instance_t *instance);
+ns_plat_radio_clear_src_match_short_entries(ns_instance_t instance);
 
 void
-ns_plat_radio_clear_src_match_ext_entries(ns_instance_t *instance);
+ns_plat_radio_clear_src_match_ext_entries(ns_instance_t instance);
 
 #endif // NS_PLATFORM_RADIO_H_

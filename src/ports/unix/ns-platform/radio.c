@@ -119,7 +119,7 @@ static uint8_t
 get_dsn(const uint8_t *frame);
 
 static ns_panid_t
-get_dsn_pan(const uint8_t *frame);
+get_dst_pan(const uint8_t *frame);
 
 static ns_short_addr_t
 get_short_addr(const uint8_t *frame);
@@ -131,7 +131,10 @@ static uint16_t
 crc16_citt(uint16_t fcs, uint8_t byte);
 
 static void
-radio_transmit(struct _radio_message *msg, const struct _ns_radio_frame *pkt);
+radio_compute_crc(struct _radio_message *message, uint16_t length);
+
+static void
+radio_transmit(struct _radio_message *message, const struct _ns_radio_frame *frame);
 
 static void
 radio_send_message(ns_instance_t instance);
@@ -164,29 +167,409 @@ ns_plat_radio_set_panid(ns_instance_t instance, uint16_t panid)
     s_panid = panid;
 }
 
+void
+ns_plat_radio_set_extended_addr(ns_instance_t instance, const ns_ext_addr_t *ext_addr)
+{
+    (void)instance;
+    for (size_t i = 0; i < sizeof(s_extended_addr); i++) {
+        s_extended_addr[i] = ext_addr->m8[sizeof(s_extended_addr) - 1 - i];
+    }
+}
+
+void
+ns_plat_radio_set_short_addr(ns_instance_t instance, uint16_t addr)
+{
+    (void)instance;
+    s_short_addr = addr;
+}
+
+void
+ns_plat_radio_set_promiscuous(ns_instance_t instance, bool enabled)
+{
+    (void)instance;
+    s_promiscuous = enabled;
+}
+
+void
+plat_radio_init(void)
+{
+    struct sockaddr_in sockaddr;
+    char *offset;
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+
+    offset = getenv("PORT_OFFSET");
+
+    if (offset) {
+        char *endptr;
+        s_port_offset = (uint16_t)strtol(offset, &endptr, 0);
+        if (*endptr != '\0') {
+            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
+            exit(EXIT_FAILURE);
+        }
+        s_port_offset *= WELLKNOWN_NODE_ID;
+    }
+
+    if (s_promiscuous) {
+        sockaddr.sin_port = htons(9000 + s_port_offset + WELLKNOWN_NODE_ID);
+    } else {
+        sockaddr.sin_port = htons(9000 + s_port_offset + g_node_id);
+    }
+
+    sockaddr.sin_addr.s_addr = INADDR_ANY;
+
+    s_sock_fd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (s_sock_fd == -1) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    if (bind(s_sock_fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1) {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+
+    s_receive_frame.psdu = s_receive_message.psdu;
+    s_transmit_frame.psdu = s_transmit_message.psdu;
+    s_ack_frame.psdu = s_ack_message.psdu;
+
+#if NS_CONFIG_HEADER_IE_SUPPORT
+    s_transmit_frame.ie_info = &s_transmit_ie_info;
+    s_receive_frame.ie_info = &s_received_ie_info;
+#else
+    s_transmit_frame.ie_info = NULL;
+    s_receive_frame.ie_info = NULL;
+#endif
+}
+
+void
+plat_radio_deinit(void)
+{
+    close(s_sock_fd);
+}
+
+bool
+ns_plat_radio_is_enabled(ns_instance_t instance)
+{
+    (void)instance;
+    return (s_state != NS_RADIO_STATE_DISABLED) ? true : false;
+}
+
+ns_error_t
+ns_plat_radio_enable(ns_instance_t instance)
+{
+    if (!ns_plat_radio_is_enabled(instance)) {
+        s_state = NS_RADIO_STATE_SLEEP;
+    }
+    return NS_ERROR_NONE;
+}
+
+ns_error_t
+ns_plat_radio_disable(ns_instance_t instance)
+{
+    if (ns_plat_radio_is_enabled(instance)) {
+        s_state = NS_RADIO_STATE_DISABLED;
+    }
+    return NS_ERROR_NONE;
+}
+
+ns_error_t
+ns_plat_radio_sleep(ns_instance_t instance)
+{
+    (void)instance;
+    ns_error_t error = NS_ERROR_INVALID_STATE;
+    if (s_state == NS_RADIO_STATE_SLEEP || s_state == NS_RADIO_STATE_RECEIVE) {
+        error = NS_ERROR_NONE;
+        s_state = NS_RADIO_STATE_SLEEP;
+    }
+    return error;
+}
+
+ns_error_t
+ns_plat_radio_receive(ns_instance_t instance, uint8_t channel)
+{
+    (void)instance;
+    ns_error_t error = NS_ERROR_INVALID_STATE;
+    if (s_state != NS_RADIO_STATE_DISABLED) {
+        error = NS_ERROR_NONE;
+        s_state = NS_RADIO_STATE_RECEIVE;
+        s_ack_wait = false;
+        s_receive_frame.channel = channel;
+    }
+    return error;
+}
+
+ns_error_t
+ns_plat_radio_transmit(ns_instance_t instance, ns_radio_frame_t *frame)
+{
+    (void)instance;
+    (void)frame;
+    ns_error_t error = NS_ERROR_INVALID_STATE;
+    if (s_state == NS_RADIO_STATE_RECEIVE) {
+        error = NS_ERROR_NONE;
+        s_state = NS_RADIO_STATE_TRANSMIT;
+    }
+    return error;
+}
+
+ns_radio_frame_t *
+ns_plat_radio_get_transmit_buffer(ns_instance_t instance)
+{
+    (void)instance;
+    return &s_transmit_frame;
+}
+
+int8_t ns_plat_radio_get_rssi(ns_instance_t instance)
+{
+    (void)instance;
+
+    int8_t rssi = UNIX_LOW_RSSI_SAMPLE;
+    uint8_t channel = s_receive_frame.channel;
+    uint32_t probability_threshold;
+
+    EXPECT((NS_RADIO_CHANNEL_MIN <= channel) && channel <= (NS_RADIO_CHANNEL_MAX));
+
+    // To emulate a simple interference model, we return either a high or
+    // a low  RSSI value with a fixed probability per each channel. The
+    // probability is increased per channel by a constant.
+
+    probability_threshold = (channel - NS_RADIO_CHANNEL_MIN) * UNIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+
+    if ((ns_plat_random_get() & 0xffff) < (probability_threshold * 0xffff / 100)) {
+        rssi = UNIX_HIGH_RSSI_SAMPLE;
+    }
+
+exit:
+    return rssi;
+}
+
+ns_radio_caps_t
+ns_plat_radio_get_caps(ns_instance_t instance)
+{
+    (void)instance;
+    return NS_RADIO_CAPS_NONE;
+}
+
+bool
+ns_plat_radio_get_promiscuous(ns_instance_t instance)
+{
+    (void)instance;
+    return s_promiscuous;
+}
+
+void
+radio_receive(ns_instance_t instance)
+{
+    bool is_ack;
+
+    ssize_t rval = recvfrom(s_sock_fd, (char *)&s_receive_message, sizeof(s_receive_message), 0, NULL, NULL);
+
+    if (rval < 0) {
+        perror("recvfrom");
+        exit(EXIT_FAILURE);
+    }
+
+    if (ns_plat_radio_get_promiscuous(instance)) {
+        // timestamp
+        s_receive_frame.info.rx_info.msec = ns_plat_alarm_milli_get_now();
+        s_receive_frame.info.rx_info.usec = 0; // don't support microsecond timer for now.
+    }
+
+#if NS_CONFIG_ENABLE_TIME_SYNC
+    s_receive_frame.ie_info->timestamp = ns_plat_time_get();
+#endif
+
+    s_receive_frame.length = (uint8_t)(rval - 1);
+
+    is_ack = is_frame_type_ack(s_receive_frame.psdu);
+
+    if (s_ack_wait && s_transmit_frame.channel == s_receive_message.channel && is_ack &&
+        get_dsn(s_receive_frame.psdu) == get_dsn(s_transmit_frame.psdu)) {
+        s_state = NS_RADIO_STATE_RECEIVE;
+        s_ack_wait = false;
+        ns_plat_radio_tx_done(instance, &s_transmit_frame, &s_receive_frame, NS_ERROR_NONE);
+    } else if ((s_state == NS_RADIO_STATE_RECEIVE || s_state == NS_RADIO_STATE_TRANSMIT) &&
+               (s_receive_frame.channel == s_receive_message.channel) && (!is_ack || s_promiscuous)) {
+        radio_process_frame(instance);
+    }
+}
+
+void
+plat_radio_update_fd_set(fd_set *read_fd, fd_set *write_fd, int *max_fd)
+{
+    if (read_fd != NULL && (s_state != NS_RADIO_STATE_TRANSMIT || s_ack_wait)) {
+        FD_SET(s_sock_fd, read_fd);
+        if (max_fd != NULL && *max_fd < s_sock_fd) {
+            *max_fd = s_sock_fd;
+        }
+    }
+    if (write_fd != NULL && s_state == NS_RADIO_STATE_TRANSMIT && !s_ack_wait) {
+        FD_SET(s_sock_fd, write_fd);
+        if (max_fd != NULL && *max_fd < s_sock_fd) {
+            *max_fd = s_sock_fd;
+        }
+    }
+}
+
+void
+plat_radio_process(ns_instance_t instance)
+{
+    const int flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd = {s_sock_fd, flags, 0};
+
+    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    {
+        radio_receive(instance);
+    }
+
+    if (s_state == NS_RADIO_STATE_TRANSMIT && !s_ack_wait)
+    {
+        radio_send_message(instance);
+    }
+}
+
+void
+ns_plat_radio_enable_src_match(ns_instance_t instance, bool enable)
+{
+    (void)instance;
+    s_src_match_enabled = enable;
+}
+
+ns_error_t
+ns_plat_radio_add_src_match_short_entry(ns_instance_t instance, const uint16_t short_addr)
+{
+    (void)instance;
+    ns_error_t error = NS_ERROR_NONE;
+    EXPECT_ACTION(s_short_addr_match_table_count < sizeof(s_short_addr_match_table) / sizeof(uint16_t),
+                  error = NS_ERROR_NO_BUFS);
+    for (uint8_t i = 0; i < s_short_addr_match_table_count; ++i) {
+        EXPECT_ACTION(s_short_addr_match_table[i] != short_addr, error = NS_ERROR_DUPLICATED);
+    }
+    s_short_addr_match_table[s_short_addr_match_table_count++] = short_addr;
+exit:
+    return error;
+}
+
+ns_error_t
+ns_plat_radio_add_src_match_ext_entry(ns_instance_t instance, const ns_ext_addr_t *ext_addr)
+{
+    (void)instance;
+    ns_error_t error = NS_ERROR_NONE;
+    EXPECT_ACTION(s_ext_addr_match_table_count < sizeof(s_ext_addr_match_table) / sizeof(ns_ext_addr_t),
+                  error = NS_ERROR_NO_BUFS);
+    for (uint8_t i = 0; i < s_ext_addr_match_table_count; ++i) {
+        EXPECT_ACTION(memcmp(&s_ext_addr_match_table[i], ext_addr, sizeof(ns_ext_addr_t)),
+                      error = NS_ERROR_DUPLICATED);
+    }
+    s_ext_addr_match_table[s_ext_addr_match_table_count++] = *ext_addr;
+exit:
+    return error;
+}
+
+ns_error_t
+ns_plat_radio_clear_src_match_short_entry(ns_instance_t instance, const uint16_t short_addr)
+{
+    (void)instance;
+    ns_error_t error = NS_ERROR_NOT_FOUND;
+    EXPECT(s_short_addr_match_table_count > 0);
+    for (uint8_t i = 0; i < s_short_addr_match_table_count; ++i) {
+        if (s_short_addr_match_table[i] == short_addr) {
+            s_short_addr_match_table[i] = s_short_addr_match_table[--s_short_addr_match_table_count];
+            error = NS_ERROR_NONE;
+            goto exit;
+        }
+    }
+exit:
+    return error;
+}
+
+ns_error_t
+ns_plat_radio_clear_src_match_ext_entry(ns_instance_t instance, const ns_ext_addr_t *ext_addr)
+{
+    (void)instance;
+    ns_error_t error = NS_ERROR_NOT_FOUND;
+    EXPECT(s_ext_addr_match_table_count > 0);
+    for (uint8_t i = 0; i < s_ext_addr_match_table_count; ++i) {
+        if (!memcmp(&s_ext_addr_match_table[i], ext_addr, sizeof(ns_ext_addr_t))) {
+            s_ext_addr_match_table[i] = s_ext_addr_match_table[--s_ext_addr_match_table_count];
+            error = NS_ERROR_NONE;
+            goto exit;
+        }
+    }
+exit:
+    return error;
+}
+
+void
+ns_plat_radio_clear_src_match_short_entries(ns_instance_t instance)
+{
+    (void)instance;
+    s_short_addr_match_table_count = 0;
+}
+
+void
+ns_plat_radio_clear_src_match_ext_entries(ns_instance_t instance)
+{
+    (void)instance;
+    s_ext_addr_match_table_count = 0;
+}
+
+ns_error_t
+ns_plat_radio_energy_scan(ns_instance_t instance, uint8_t scan_channel, uint16_t scan_duration)
+{
+    (void)instance;
+    (void)scan_channel;
+    (void)scan_duration;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ns_error_t
+ns_plat_radio_get_transmit_power(ns_instance_t instance, int8_t *power)
+{
+    (void)instance;
+    *power = s_tx_power;
+    return NS_ERROR_NONE;
+}
+
+ns_error_t
+ns_plat_radio_set_transmit_power(ns_instance_t instance, int8_t power)
+{
+    (void)instance;
+    s_tx_power = power;
+    return NS_ERROR_NONE;
+}
+
+int8_t
+ns_plat_radio_get_receive_sensitivity(ns_instance_t instance)
+{
+    (void)instance;
+    return UNIX_RECEIVE_SENSITIVITY;
+}
+
 // --- private functions
 static bool
 find_short_address(uint16_t short_addr)
 {
     uint8_t i;
-    for (i = 0; i < short_addr_match_table_count; ++i) {
-        if (short_addr_match_table[i] == short_addr) {
+    for (i = 0; i < s_short_addr_match_table_count; ++i) {
+        if (s_short_addr_match_table[i] == short_addr) {
             break;
         }
     }
-    return i < short_addr_match_table_count;
+    return i < s_short_addr_match_table_count;
 }
 
 static bool
 find_ext_address(const ns_ext_addr_t *ext_addr)
 {
     uint8_t i;
-    for (i = 0; i < ext_addr_match_table_count; ++i) {
-        if (!memcmp(&ext_addr_match_table[i], ext_addr, sizeof(ns_ext_addr_t))) {
+    for (i = 0; i < s_ext_addr_match_table_count; ++i) {
+        if (!memcmp(&s_ext_addr_match_table[i], ext_addr, sizeof(ns_ext_addr_t))) {
             break;
         }
     }
-    return i < ext_addr_match_table_count;
+    return i < s_ext_addr_match_table_count;
 }
 
 static bool
@@ -250,7 +633,7 @@ is_data_request_and_has_frame_pending(const uint8_t *frame)
         if (!is_panid_compressed(frame)) {
             cur += sizeof(ns_panid_t);
         }
-        if (src_match_enabled) {
+        if (s_src_match_enabled) {
             has_frame_pending = find_short_address((uint16_t)(cur[1] << 8 | cur[0]));
         }
         cur += sizeof(ns_short_addr_t);
@@ -259,7 +642,7 @@ is_data_request_and_has_frame_pending(const uint8_t *frame)
         if (!is_panid_compressed(frame)) {
             cur += sizeof(ns_panid_t);
         }
-        if (src_match_enabled) {
+        if (s_src_match_enabled) {
             has_frame_pending = find_ext_address((const ns_ext_addr_t *)cur);
         }
         cur += sizeof(ns_ext_addr_t);
@@ -304,7 +687,7 @@ get_dsn(const uint8_t *frame)
 }
 
 static ns_panid_t
-get_dsn_pan(const uint8_t *frame)
+get_dst_pan(const uint8_t *frame)
 {
     return (ns_panid_t)((frame[IEEE802154_DSTPAN_OFFSET + 1] << 8) | frame[IEEE802154_DSTPAN_OFFSET]);
 }
@@ -351,4 +734,199 @@ crc16_citt(uint16_t fcs, uint8_t byte)
         0x0e70, 0x1ff9, 0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330, 0x7bc7, 0x6a4e, 0x58d5, 0x495c,
         0x3de3, 0x2c6a, 0x1ef1, 0x0f78};
     return (fcs >> 8) ^ fcs_table[(fcs ^ byte) & 0xff];
+}
+
+static void
+radio_compute_crc(struct _radio_message *message, uint16_t length)
+{
+    uint16_t crc = 0;
+    uint16_t crc_offset = length - sizeof(uint16_t);
+    for (uint16_t i = 0; i < crc_offset; i++) {
+        crc = crc16_citt(crc, message->psdu[i]);
+    }
+    message->psdu[crc_offset] = crc & 0xff;
+    message->psdu[crc_offset + 1] = crc >> 8;
+}
+
+static void
+radio_transmit(struct _radio_message *message, const struct _ns_radio_frame *frame)
+{
+    uint32_t i;
+    struct sockaddr_in sockaddr;
+
+    if (!s_promiscuous) {
+        radio_compute_crc(message, frame->length);
+    }
+
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
+
+    for (i = 1; i <= WELLKNOWN_NODE_ID; i++) {
+        ssize_t rval;
+        if (g_node_id == i) {
+            continue;
+        }
+        sockaddr.sin_port = htons(9000 + s_port_offset + i);
+        rval = sendto(s_sock_fd, (const char *)message, 1 + frame->length, 0, (struct sockaddr *)&sockaddr,
+                      sizeof(sockaddr));
+        if (rval < 0) {
+            perror("sendto");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void
+radio_send_message(ns_instance_t instance)
+{
+#if NS_CONFIG_HEADER_IE_SUPPORT
+    bool notify_frame_updated = false;
+#if NS_CONFIG_ENABLE_TIME_SYNC
+    if (s_transmit_frame.ie_info->time_ie_offset != 0) {
+        uint8_t *time_ie = s_transmit_frame.psdu + s_transmit_frame.ie_info->time_ie_offset;
+        uint64_t time = (uint64_t)((int64_t)ns_plat_time_get() + s_transmit_frame.ie_info->network_time_offset);
+        *time_ie = s_transmit_frame.ie_info->time_sync_seq;
+        *(++time_ie) = (uint8_t)(time & 0xff);
+        for (uint8_t i = 1; i < sizeof(uint64_t); i++) {
+            time = time >> 8;
+            *(++time_ie) = (uint8_t)(time & 0xff);
+        }
+        notify_frame_updated = true;
+    }
+#endif // NS_CONFIG_ENABLE_TIME_SYNC
+    if (notify_frame_updated) {
+        ns_plat_radio_frame_updated(instance, &s_transmit_frame);
+    }
+#endif // NS_CONFIG_HEADER_IE_SUPPORT
+
+    s_transmit_message.channel = s_transmit_frame.channel;
+
+    ns_plat_radio_tx_started(instance, &s_transmit_frame);
+    radio_transmit(&s_transmit_message, &s_transmit_frame);
+
+    s_ack_wait = is_ack_requested(s_transmit_frame.psdu);
+
+    if (!s_ack_wait) {
+        s_state = NS_RADIO_STATE_RECEIVE;
+        ns_plat_radio_tx_done(instance, &s_transmit_frame, NULL, NS_ERROR_NONE);
+    }
+}
+
+static void
+radio_send_ack(void)
+{
+    s_ack_frame.length = IEEE802154_ACK_LENGTH;
+    s_ack_message.psdu[0] = IEEE802154_FRAME_TYPE_ACK;
+
+    if (is_data_request_and_has_frame_pending(s_receive_frame.psdu)) {
+        s_ack_message.psdu[0] |= IEEE802154_FRAME_PENDING;
+    }
+
+    s_ack_message.psdu[1] = 0;
+    s_ack_message.psdu[2] = get_dsn(s_receive_frame.psdu);
+
+    s_ack_message.channel = s_receive_frame.channel;
+
+    radio_transmit(&s_ack_message, &s_ack_frame);
+}
+
+static void
+radio_process_frame(ns_instance_t instance)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    ns_panid_t dstpan;
+    ns_short_addr_t short_addr;
+    ns_ext_addr_t ext_addr;
+
+    EXPECT_ACTION(s_promiscuous == false, error = NS_ERROR_NONE);
+
+    switch (s_receive_frame.psdu[1] & IEEE802154_DST_ADDR_MASK) {
+    case IEEE802154_DST_ADDR_NONE:
+        break;
+    case IEEE802154_DST_ADDR_SHORT:
+        dstpan = get_dst_pan(s_receive_frame.psdu);
+        short_addr = get_short_addr(s_receive_frame.psdu);
+        EXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
+                      (short_addr == IEEE802154_BROADCAST || short_addr == s_short_addr),
+                      error = NS_ERROR_ABORT);
+        break;
+    case IEEE802154_DST_ADDR_EXT:
+        dstpan = get_dst_pan(s_receive_frame.psdu);
+        get_ext_addr(s_receive_frame.psdu, &ext_addr);
+        EXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
+                      memcmp(&ext_addr, s_extended_addr, sizeof(ext_addr)) == 0,
+                      error = NS_ERROR_ABORT);
+        break;
+    default:
+        error = NS_ERROR_ABORT;
+        goto exit;
+    }
+
+    s_receive_frame.info.rx_info.rssi = -20;
+    s_receive_frame.info.rx_info.lqi = NS_RADIO_LQI_NONE;
+
+    // generate acknowledgment
+    if (is_ack_requested(s_receive_frame.psdu)) {
+        radio_send_ack();
+    }
+
+exit:
+    if (error != NS_ERROR_ABORT) {
+        ns_plat_radio_receive_done(instance, error == NS_ERROR_NONE ? &s_receive_frame : NULL, error);
+    }
+}
+
+__attribute__((weak)) void
+ns_plat_radio_receive_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_error_t error)
+{
+    (void)instance;
+    (void)frame;
+    (void)error;
+}
+
+__attribute__((weak)) void
+ns_plat_diag_radio_receive_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_error_t error)
+{
+    (void)instance;
+    (void)frame;
+    (void)error;
+}
+
+__attribute__((weak)) void
+ns_plat_radio_tx_started(ns_instance_t instance, ns_radio_frame_t *frame)
+{
+    (void)instance;
+    (void)frame;
+}
+
+__attribute__((weak)) void
+ns_plat_radio_tx_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error)
+{
+    (void)instance;
+    (void)frame;
+    (void)ack_frame;
+    (void)error;
+}
+
+__attribute__((weak)) void
+ns_plat_diag_radio_transmit_done(ns_instance_t instance, ns_radio_frame_t *frame, ns_error_t error)
+{
+    (void)instance;
+    (void)frame;
+    (void)error;
+}
+
+__attribute__((weak)) void
+ns_plat_radio_frame_updated(ns_instance_t instance, ns_radio_frame_t *frame)
+{
+    (void)instance;
+    (void)frame;
+}
+
+__attribute__((weak)) void
+ns_plat_radio_energy_scan_done(ns_instance_t instance, int8_t energy_scan_max_rssi)
+{
+    (void)instance;
+    (void)energy_scan_max_rssi;
 }
