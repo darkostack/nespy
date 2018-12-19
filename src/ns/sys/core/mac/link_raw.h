@@ -37,7 +37,7 @@ struct _mac_link_raw {
     void *instance;
     tasklet_t operation_task;
     bool pending_transmit_data;
-#if NS_LINK_RAW_TIMER_REQUIRED
+#if NS_MAC_LINK_RAW_TIMER_REQUIRED
     timer_milli_t timer;
     mac_link_raw_timer_reason_t timer_reason;
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -45,12 +45,12 @@ struct _mac_link_raw {
 #else
     timer_milli_t energy_scan_timer;
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-#endif // NS_LINK_RAW_TIMER_REQUIRED
+#endif // NS_MAC_LINK_RAW_TIMER_REQUIRED
 #if NS_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
     uint8_t csma_backoffs;
 #endif // NS_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 #if NS_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-    uint8_t retransmit_retries;
+    uint8_t transmit_retries;
 #endif // NS_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 #if NS_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     int8_t energy_scan_rssi;
@@ -68,7 +68,7 @@ struct _mac_link_raw {
 };
 
 void
-mac_link_raw_ctor(mac_link_raw_t *link_raw);
+mac_link_raw_ctor(void *instance, mac_link_raw_t *link_raw);
 
 bool
 mac_link_raw_is_enabled(mac_link_raw_t *link_raw);
@@ -86,7 +86,7 @@ void
 mac_link_raw_invoke_receive_done(mac_link_raw_t *link_raw, ns_radio_frame_t *frame, ns_error_t error);
 
 ns_error_t
-mack_link_raw_transmit(mac_link_raw_t *link_raw, ns_link_raw_transmit_done_func_t callback);
+mac_link_raw_transmit(mac_link_raw_t *link_raw, ns_link_raw_transmit_done_func_t callback);
 
 void
 mac_link_raw_invoke_transmit_done(mac_link_raw_t *link_raw,
@@ -124,11 +124,11 @@ mac_link_raw_get_channel(mac_link_raw_t *link_raw);
 ns_error_t
 mac_link_raw_set_channel(mac_link_raw_t *link_raw, uint8_t channel);
 
-const ns_ext_addr_t *
+ns_ext_addr_t *
 mac_link_raw_get_ext_addr(mac_link_raw_t *link_raw);
 
 ns_error_t
-mac_link_raw_set_ext_addr(mac_link_raw_t *link_raw, const ns_ext_addr_t *ext_addr);
+mac_link_raw_set_ext_addr(mac_link_raw_t *link_raw, ns_ext_addr_t ext_addr);
 
 ns_radio_frame_t *
 mac_link_raw_get_transmit_frame(mac_link_raw_t *link_raw);

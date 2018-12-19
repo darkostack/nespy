@@ -43,6 +43,18 @@ timer_scheduler_ctor(timer_scheduler_t *timer_scheduler)
     timer_scheduler->head = NULL;
 }
 
+bool
+timer_is_running(void *timer)
+{
+    return (((timer_t *)timer)->next != timer);
+}
+
+uint32_t
+timer_get_firetime(void *timer)
+{
+    return ((timer_t *)timer)->firetime;
+}
+
 void
 timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *handler_arg)
 {

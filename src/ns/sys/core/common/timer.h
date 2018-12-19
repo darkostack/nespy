@@ -41,6 +41,13 @@ struct _alarm_api {
 void
 timer_scheduler_ctor(timer_scheduler_t *timer_scheduler);
 
+bool
+timer_is_running(void *timer);
+
+uint32_t
+timer_get_firetime(void *timer);
+
+// --- milliseconds timer
 void
 timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *handler_arg);
 
@@ -53,6 +60,7 @@ timer_milli_start_at(timer_milli_t *milli, uint32_t t0, uint32_t dt);
 void
 timer_milli_stop(timer_milli_t *milli);
 
+// --- microseconds timer
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
 timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *handler_arg);

@@ -18,6 +18,9 @@ instance_ctor(void)
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_ctor(&inst->tasklet_scheduler);
     message_pool_ctor(&inst->message_pool);
+#if NS_RADIO || NS_ENABLE_RAW_LINK_API
+    mac_link_raw_ctor(inst, &inst->link_raw);
+#endif // NS_RADIO || NS_ENABLE_RAW_LINK_API
     heap_ctor(&inst->heap);
 
     inst->is_initialized = true;

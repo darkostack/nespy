@@ -1,7 +1,7 @@
 #ifndef NS_LINK_RAW_H_
 #define NS_LINK_RAW_H_
 
-#include "ns/platform/radio.h"
+#include "ns/include/platform/radio.h"
 
 ns_error_t
 ns_link_raw_set_enable(ns_instance_t instance, bool enabled);

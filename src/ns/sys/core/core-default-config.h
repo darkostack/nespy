@@ -36,6 +36,11 @@
 #define NS_CONFIG_MESSAGE_BUFFER_SIZE 128
 #endif
 
+// IEEE 802.15.4 default channel
+#ifndef NS_CONFIG_DEFAULT_CHANNEL
+#define NS_CONFIG_DEFAULT_CHANNEL 11
+#endif
+
 // define as 1 to enable time synchronization service feature
 #ifndef NS_CONFIG_ENABLE_TIME_SYNC
 #define NS_CONFIG_ENABLE_TIME_SYNC 0
@@ -127,6 +132,11 @@
 
 #ifndef NS_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 #define NS_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
+#endif
+
+// define as 1 to disable CSMA-CA on the last transmit attempt
+#ifndef NS_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#define NS_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT 0
 #endif
 
 // define to 1 if you want to enable microseconds backoff timer implemented in

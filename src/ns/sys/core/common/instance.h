@@ -12,6 +12,9 @@
 #include "ns/sys/core/common/tasklet.h"
 #include "ns/sys/core/common/message.h"
 #include "ns/sys/core/utils/heap.h"
+#if NS_RADIO || NS_ENABLE_RAW_LINK_API
+#include "ns/sys/core/mac/link_raw.h"
+#endif
 
 typedef struct _instance instance_t;
 
@@ -23,6 +26,9 @@ struct _instance {
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_t tasklet_scheduler;
     message_pool_t message_pool;
+#if NS_RADIO || NS_ENABLE_RAW_LINK_API
+    mac_link_raw_t link_raw;
+#endif
     heap_t heap;
 };
 
