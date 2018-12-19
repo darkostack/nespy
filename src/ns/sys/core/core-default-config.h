@@ -150,4 +150,9 @@
 #define NS_CONFIG_MAX_CHILDREN 10
 #endif
 
+// number of mac filter entries
+#ifndef NS_CONFIG_MAC_FILTER_SIZE
+#define NS_CONFIG_MAC_FILTER_SIZE 32
+#endif
+
 #endif // NS_CORE_DEFAULT_CONFIG_H_

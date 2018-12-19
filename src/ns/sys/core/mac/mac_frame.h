@@ -2,6 +2,7 @@
 #define NS_CORE_MAC_MAC_FRAME_H_
 
 #include "ns/sys/core/core-config.h"
+#include "ns/include/link.h"
 #include "ns/include/platform/radio.h"
 #include "ns/sys/core/common/string.h"
 #include <limits.h>

@@ -5,6 +5,8 @@
 #include "ns/sys/core/mac/mac.h"
 #include <string.h>
 
+#if NS_RADIO || NS_ENABLE_RAW_LINK_API
+
 // --- private functions declarations
 static void
 handle_operation_task(void *tasklet);
@@ -562,3 +564,5 @@ ns_plat_radio_frame_updated(ns_instance_t instance, ns_radio_frame_t *frame)
 }
 #endif // NS_CONFIG_HEADER_IE_SUPPORT
 #endif // NS_RADIO
+
+#endif // #if NS_RADIO || NS_ENABLE_RAW_LINK_API

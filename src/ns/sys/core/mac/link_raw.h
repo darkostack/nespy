@@ -7,6 +7,8 @@
 #include "ns/sys/core/common/tasklet.h"
 #include "ns/sys/core/mac/mac_frame.h"
 
+#if NS_RADIO || NS_ENABLE_RAW_LINK_API
+
 #if NS_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || NS_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF || NS_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 #define NS_MAC_LINK_RAW_TIMER_REQUIRED 1
 #else
@@ -132,5 +134,7 @@ mac_link_raw_set_ext_addr(mac_link_raw_t *link_raw, ns_ext_addr_t ext_addr);
 
 ns_radio_frame_t *
 mac_link_raw_get_transmit_frame(mac_link_raw_t *link_raw);
+
+#endif // #if NS_RADIO || NS_ENABLE_RAW_LINK_API
 
 #endif // NS_CORE_MAC_LINK_RAW_H_
