@@ -1,4 +1,5 @@
 #include "ns/include/error.h"
+#include "ns/include/platform/random.h"
 #include "ns/sys/core/common/instance.h"
 #include "ns/test/unit/test_util.h"
 #include <string.h>
@@ -74,8 +75,6 @@ test_heap_allocate_randomly(void *instance, size_t size_limit)
     heap_t *heap = &((instance_t *)instance)->heap;
     node_t *last = &head;
     size_t nnodes = 0;
-
-    extern uint32_t ns_plat_random_get(void);
 
     TEST_VERIFY_OR_EXIT(heap_is_clean(heap),
                         "heap is not clean as expected.\r\n");

@@ -1,4 +1,5 @@
 #include "ns/include/error.h"
+#include "ns/include/platform/random.h"
 #include "ns/sys/core/common/instance.h"
 #include "ns/test/unit/test_util.h"
 #include <string.h>
@@ -14,8 +15,6 @@ test_message_write_read(void *instance)
 
     uint8_t write_buffer[1024];
     uint8_t read_buffer[1024];
-
-    extern uint32_t ns_plat_random_get(void);
 
     for (unsigned i = 0; i < sizeof(write_buffer); i++) {
         write_buffer[i] = (uint8_t)ns_plat_random_get();
@@ -66,8 +65,6 @@ test_message_utility(void *instance)
 
     message_t msgcopy = message_new(0, 0, 0);
     TEST_VERIFY_OR_EXIT(msgcopy != NULL, "message new failed.\r\n");
-
-    extern uint32_t ns_plat_random_get(void);
 
     for (unsigned i = 0; i < sizeof(ref_buffer); i++) {
         ref_buffer[i] = (uint8_t)ns_plat_random_get();

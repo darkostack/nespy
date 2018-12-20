@@ -132,8 +132,8 @@ string_t *
 rss_averager_to_string(rss_averager_t *averager)
 {
     string_t *rss_averager_string = &rss_averager_info_string;
-    VERIFY_OR_EXIT(averager->count != 0);
     string_clear(rss_averager_string);
+    VERIFY_OR_EXIT(averager->count != 0);
     string_set(rss_averager_string,"%d.%s",
                -(averager->average >> RSS_AVERAGER_PRECISION_BIT_SHIFT), 
                s_digits_string[averager->average & RSS_AVERAGER_PRECISION_BIT_MASK]);

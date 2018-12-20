@@ -52,6 +52,12 @@ instance_ctor(void)
     extern ns_error_t test_mac_channel_mask(void);
     test_mac_channel_mask();
 
+    extern ns_error_t test_link_quality_calculations(void);
+    test_link_quality_calculations();
+
+    extern ns_error_t test_rss_averager(void);
+    test_rss_averager();
+
 exit:
     return inst;
 }
