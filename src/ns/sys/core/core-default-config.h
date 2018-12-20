@@ -201,4 +201,19 @@
 #define NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS 0
 #endif
 
+// define as 1 to enable transmission error rate tracking (for both MAC frames and IPv6 messages).
+// when enabled, it will track average error rate of MAC frame transmissions and IPv6 message 
+// error rate for every neighbor.
+#ifndef NS_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+#define NS_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING 1
+#endif
+
+#ifndef NS_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW
+#define NS_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW 128
+#endif
+
+#ifndef NS_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW
+#define NS_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW 128
+#endif
+
 #endif // NS_CORE_DEFAULT_CONFIG_H_

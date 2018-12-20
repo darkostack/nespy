@@ -129,7 +129,7 @@ struct _mac {
     ns_mac_counters_t counters;
     uint32_t key_id_mode2_frame_counter;
 
-    thread_link_quality_success_rate_tracker_t cca_success_rate_tracker;
+    success_rate_tracker_t cca_success_rate_tracker;
     uint16_t cca_sample_count;
     bool enabled;
 };

@@ -30,6 +30,10 @@ SRC_NS_CORE_MAC += $(addprefix ns/sys/core/mac/,\
 	mac_filter.c \
     )
 
+SRC_NS_CORE_THREAD += $(addprefix ns/sys/core/thread/,\
+    link_quality.c \
+    )
+
 SRC_NS_CORE_API += $(addprefix ns/sys/core/api/,\
     instance_api.c \
     tasklet_api.c \
@@ -39,6 +43,7 @@ SRC_NS_CORE_API += $(addprefix ns/sys/core/api/,\
 SRC_NS_CORE += $(SRC_NS_CORE_COMMON)
 SRC_NS_CORE += $(SRC_NS_CORE_UTILS)
 SRC_NS_CORE += $(SRC_NS_CORE_MAC)
+SRC_NS_CORE += $(SRC_NS_CORE_THREAD)
 SRC_NS_CORE += $(SRC_NS_CORE_API)
 
 SRC_NS_CLI += $(addprefix ns/sys/cli/,\
