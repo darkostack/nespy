@@ -7,9 +7,9 @@
 #include "ns/sys/core/common/string.h"
 #include <limits.h>
 
-typedef ns_panid_t panid_t;
-typedef ns_short_addr_t short_addr_t;
-typedef ns_ext_addr_t ext_addr_t;
+typedef ns_panid_t mac_panid_t;
+typedef ns_short_addr_t mac_short_addr_t;
+typedef ns_ext_addr_t mac_ext_addr_t;
 typedef struct _mac_addr mac_addr_t;
 typedef ns_radio_frame_t mac_frame_t;
 
@@ -47,8 +47,8 @@ typedef struct _header_ie {
 
 struct _mac_addr {
     union {
-        short_addr_t short_addr;
-        ext_addr_t ext_addr;
+        mac_short_addr_t short_addr;
+        mac_ext_addr_t ext_addr;
     } shared;
     mac_addr_type_t type;
 };
@@ -184,31 +184,31 @@ typedef struct _mac_time_ie {
 
 // --- MAC extended address functions
 void
-mac_ext_addr_gen_random(ext_addr_t *ext_addr);
+mac_ext_addr_gen_random(mac_ext_addr_t *ext_addr);
 
 bool
-mac_ext_addr_is_group(ext_addr_t *ext_addr);
+mac_ext_addr_is_group(mac_ext_addr_t *ext_addr);
 
 void
-mac_ext_addr_set_group(ext_addr_t *ext_addr, bool group);
+mac_ext_addr_set_group(mac_ext_addr_t *ext_addr, bool group);
 
 void
-mac_ext_addr_toggle_group(ext_addr_t *ext_addr);
+mac_ext_addr_toggle_group(mac_ext_addr_t *ext_addr);
 
 bool
-mac_ext_addr_is_local(ext_addr_t *ext_addr);
+mac_ext_addr_is_local(mac_ext_addr_t *ext_addr);
 
 void
-mac_ext_addr_set_local(ext_addr_t *ext_addr, bool local);
+mac_ext_addr_set_local(mac_ext_addr_t *ext_addr, bool local);
 
 void
-mac_ext_addr_toggle_local(ext_addr_t *ext_addr);
+mac_ext_addr_toggle_local(mac_ext_addr_t *ext_addr);
 
 bool
-mac_ext_addr_is_equal(ext_addr_t *ext_addr1, ext_addr_t *ext_addr2);
+mac_ext_addr_is_equal(mac_ext_addr_t *ext_addr1, mac_ext_addr_t *ext_addr2);
 
 string_t *
-mac_ext_addr_to_string(ext_addr_t *ext_addr);
+mac_ext_addr_to_string(mac_ext_addr_t *ext_addr);
 
 // --- MAC address functions
 void
@@ -226,20 +226,20 @@ mac_addr_type_is_short(mac_addr_t *mac_addr);
 bool
 mac_addr_type_is_extended(mac_addr_t *mac_addr);
 
-short_addr_t
+mac_short_addr_t
 mac_addr_get_short(mac_addr_t *mac_addr);
 
-ext_addr_t *
+mac_ext_addr_t *
 mac_addr_get_extended(mac_addr_t *mac_addr);
 
 void
 mac_addr_set_none(mac_addr_t *mac_addr);
 
 void
-mac_addr_set_short(mac_addr_t *mac_addr, short_addr_t short_addr);
+mac_addr_set_short(mac_addr_t *mac_addr, mac_short_addr_t short_addr);
 
 void
-mac_addr_set_extended(mac_addr_t *mac_addr, ext_addr_t ext_addr);
+mac_addr_set_extended(mac_addr_t *mac_addr, mac_ext_addr_t ext_addr);
 
 void
 mac_addr_set_extended_from_buffer(mac_addr_t *mac_addr, const uint8_t *buffer, bool reverse);
@@ -307,37 +307,37 @@ void
 mac_frame_set_sequence(mac_frame_t *frame, uint8_t sequence);
 
 ns_error_t
-mac_frame_get_dst_panid(mac_frame_t *frame, panid_t *panid);
+mac_frame_get_dst_panid(mac_frame_t *frame, mac_panid_t *panid);
 
 ns_error_t
-mac_frame_set_dst_panid(mac_frame_t *frame, panid_t panid);
+mac_frame_set_dst_panid(mac_frame_t *frame, mac_panid_t panid);
 
 ns_error_t
 mac_frame_get_dst_addr(mac_frame_t *frame, mac_addr_t *mac_addr);
 
 ns_error_t
-mac_frame_set_dst_addr_short(mac_frame_t *frame, short_addr_t short_addr);
+mac_frame_set_dst_addr_short(mac_frame_t *frame, mac_short_addr_t short_addr);
 
 ns_error_t
-mac_frame_set_dst_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr);
+mac_frame_set_dst_addr_ext(mac_frame_t *frame, mac_ext_addr_t *ext_addr);
 
 bool
 mac_frame_is_src_panid_present(mac_frame_t *frame, uint16_t fcf);
 
 ns_error_t
-mac_frame_get_src_panid(mac_frame_t *frame, panid_t *panid);
+mac_frame_get_src_panid(mac_frame_t *frame, mac_panid_t *panid);
 
 ns_error_t
-mac_frame_set_src_panid(mac_frame_t *frame, panid_t panid);
+mac_frame_set_src_panid(mac_frame_t *frame, mac_panid_t panid);
 
 ns_error_t
 mac_frame_get_src_addr(mac_frame_t *frame, mac_addr_t *mac_addr);
 
 ns_error_t
-mac_frame_set_src_addr_short(mac_frame_t *frame, short_addr_t short_addr);
+mac_frame_set_src_addr_short(mac_frame_t *frame, mac_short_addr_t short_addr);
 
 ns_error_t
-mac_frame_set_src_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr);
+mac_frame_set_src_addr_ext(mac_frame_t *frame, mac_ext_addr_t *ext_addr);
 
 ns_error_t
 mac_frame_set_src_addr(mac_frame_t *frame, mac_addr_t *mac_addr);

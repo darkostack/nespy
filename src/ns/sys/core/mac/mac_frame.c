@@ -41,21 +41,21 @@ frame_find_header_ie_index(mac_frame_t *frame);
 
 // --- MAC extended address functions
 void
-mac_ext_addr_gen_random(ext_addr_t *ext_addr)
+mac_ext_addr_gen_random(mac_ext_addr_t *ext_addr)
 {
-    random_fill_buffer(ext_addr->m8, sizeof(ext_addr_t));
+    random_fill_buffer(ext_addr->m8, sizeof(mac_ext_addr_t));
     mac_ext_addr_set_group(ext_addr, false);
     mac_ext_addr_set_local(ext_addr, true);
 }
 
 bool
-mac_ext_addr_is_group(ext_addr_t *ext_addr)
+mac_ext_addr_is_group(mac_ext_addr_t *ext_addr)
 {
     return ((ext_addr->m8[0] & MAC_EXT_ADDR_GROUP_FLAG) != 0);
 }
 
 void
-mac_ext_addr_set_group(ext_addr_t *ext_addr, bool group)
+mac_ext_addr_set_group(mac_ext_addr_t *ext_addr, bool group)
 {
     if (group) {
         ext_addr->m8[0] |= MAC_EXT_ADDR_GROUP_FLAG;
@@ -65,19 +65,19 @@ mac_ext_addr_set_group(ext_addr_t *ext_addr, bool group)
 }
 
 void
-mac_ext_addr_toggle_group(ext_addr_t *ext_addr)
+mac_ext_addr_toggle_group(mac_ext_addr_t *ext_addr)
 {
     ext_addr->m8[0] ^= MAC_EXT_ADDR_GROUP_FLAG;
 }
 
 bool
-mac_ext_addr_is_local(ext_addr_t *ext_addr)
+mac_ext_addr_is_local(mac_ext_addr_t *ext_addr)
 {
     return ((ext_addr->m8[0] & MAC_EXT_ADDR_LOCAL_FLAG) != 0);
 }
 
 void
-mac_ext_addr_set_local(ext_addr_t *ext_addr, bool local)
+mac_ext_addr_set_local(mac_ext_addr_t *ext_addr, bool local)
 {
     if (local) {
         ext_addr->m8[0] |= MAC_EXT_ADDR_LOCAL_FLAG;
@@ -87,19 +87,19 @@ mac_ext_addr_set_local(ext_addr_t *ext_addr, bool local)
 }
 
 void
-mac_ext_addr_toggle_local(ext_addr_t *ext_addr)
+mac_ext_addr_toggle_local(mac_ext_addr_t *ext_addr)
 {
     ext_addr->m8[0] ^= MAC_EXT_ADDR_LOCAL_FLAG;
 }
 
 bool
-mac_ext_addr_is_equal(ext_addr_t *ext_addr1, ext_addr_t *ext_addr2)
+mac_ext_addr_is_equal(mac_ext_addr_t *ext_addr1, mac_ext_addr_t *ext_addr2)
 {
-    return (memcmp(ext_addr1->m8, ext_addr2->m8, sizeof(ext_addr_t)) == 0);
+    return (memcmp(ext_addr1->m8, ext_addr2->m8, sizeof(mac_ext_addr_t)) == 0);
 }
 
 string_t *
-mac_ext_addr_to_string(ext_addr_t *ext_addr)
+mac_ext_addr_to_string(mac_ext_addr_t *ext_addr)
 {
     string_t *ext_addr_string = &mac_ext_addr_info_string;
     string_set(ext_addr_string, "%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -139,13 +139,13 @@ mac_addr_type_is_extended(mac_addr_t *mac_addr)
     return (mac_addr->type == MAC_ADDR_TYPE_EXTENDED);
 }
 
-short_addr_t
+mac_short_addr_t
 mac_addr_get_short(mac_addr_t *mac_addr)
 {
     return mac_addr->shared.short_addr;
 }
 
-ext_addr_t *
+mac_ext_addr_t *
 mac_addr_get_extended(mac_addr_t *mac_addr)
 {
     return &mac_addr->shared.ext_addr;
@@ -158,14 +158,14 @@ mac_addr_set_none(mac_addr_t *mac_addr)
 }
 
 void
-mac_addr_set_short(mac_addr_t *mac_addr, short_addr_t short_addr)
+mac_addr_set_short(mac_addr_t *mac_addr, mac_short_addr_t short_addr)
 {
     mac_addr->shared.short_addr = short_addr;
     mac_addr->type = MAC_ADDR_TYPE_SHORT;
 }
 
 void
-mac_addr_set_extended(mac_addr_t *mac_addr, ext_addr_t ext_addr)
+mac_addr_set_extended(mac_addr_t *mac_addr, mac_ext_addr_t ext_addr)
 {
     mac_addr->shared.ext_addr = ext_addr;
     mac_addr->type = MAC_ADDR_TYPE_EXTENDED;
@@ -176,11 +176,11 @@ mac_addr_set_extended_from_buffer(mac_addr_t *mac_addr, const uint8_t *buffer, b
 {
     mac_addr->type = MAC_ADDR_TYPE_EXTENDED;
     if (reverse) {
-        for (unsigned int i = 0; i < sizeof(ext_addr_t); i++) {
-            mac_addr->shared.ext_addr.m8[i] = buffer[sizeof(ext_addr_t) - 1 - i];
+        for (unsigned int i = 0; i < sizeof(mac_ext_addr_t); i++) {
+            mac_addr->shared.ext_addr.m8[i] = buffer[sizeof(mac_ext_addr_t) - 1 - i];
         }
     } else {
-        memcpy(mac_addr->shared.ext_addr.m8, buffer, sizeof(ext_addr_t));
+        memcpy(mac_addr->shared.ext_addr.m8, buffer, sizeof(mac_ext_addr_t));
     }
 }
 
@@ -272,10 +272,10 @@ mac_frame_init_mac_header(mac_frame_t *frame, uint16_t fcf, uint8_t sec_ctl)
     case MAC_FRAME_FCF_DST_ADDR_NONE:
         break;
     case MAC_FRAME_FCF_DST_ADDR_SHORT:
-        length += sizeof(panid_t) + sizeof(short_addr_t);
+        length += sizeof(mac_panid_t) + sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_DST_ADDR_EXT:
-        length += sizeof(panid_t) + sizeof(ext_addr_t);
+        length += sizeof(mac_panid_t) + sizeof(mac_ext_addr_t);
         break;
     default:
         assert(false);
@@ -283,7 +283,7 @@ mac_frame_init_mac_header(mac_frame_t *frame, uint16_t fcf, uint8_t sec_ctl)
 
     // source PAN
     if (mac_frame_is_src_panid_present(frame, fcf)) {
-        length += sizeof(panid_t);
+        length += sizeof(mac_panid_t);
     }
 
     // source address
@@ -291,10 +291,10 @@ mac_frame_init_mac_header(mac_frame_t *frame, uint16_t fcf, uint8_t sec_ctl)
     case MAC_FRAME_FCF_SRC_ADDR_NONE:
         break;
     case MAC_FRAME_FCF_SRC_ADDR_SHORT:
-        length += sizeof(short_addr_t);
+        length += sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_SRC_ADDR_EXT:
-        length += sizeof(ext_addr_t);
+        length += sizeof(mac_ext_addr_t);
         break;
     default:
         assert(false);
@@ -413,7 +413,7 @@ mac_frame_set_sequence(mac_frame_t *frame, uint8_t sequence)
 }
 
 ns_error_t
-mac_frame_get_dst_panid(mac_frame_t *frame, panid_t *panid)
+mac_frame_get_dst_panid(mac_frame_t *frame, mac_panid_t *panid)
 {
     ns_error_t error = NS_ERROR_NONE;
     uint8_t index = frame_find_dst_panid_index(frame);
@@ -424,7 +424,7 @@ exit:
 }
 
 ns_error_t
-mac_frame_set_dst_panid(mac_frame_t *frame, panid_t panid)
+mac_frame_set_dst_panid(mac_frame_t *frame, mac_panid_t panid)
 {
     uint8_t index = frame_find_dst_panid_index(frame);
     assert(index != MAC_FRAME_INVALID_INDEX);
@@ -454,7 +454,7 @@ exit:
 }
 
 ns_error_t
-mac_frame_set_dst_addr_short(mac_frame_t *frame, short_addr_t short_addr)
+mac_frame_set_dst_addr_short(mac_frame_t *frame, mac_short_addr_t short_addr)
 {
     assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_DST_ADDR_MASK) == MAC_FRAME_FCF_DST_ADDR_SHORT);
     encoding_little_endian_write_uint16(short_addr, mac_frame_get_psdu(frame) + frame_find_dst_addr_index(frame));
@@ -462,14 +462,14 @@ mac_frame_set_dst_addr_short(mac_frame_t *frame, short_addr_t short_addr)
 }
 
 ns_error_t
-mac_frame_set_dst_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr)
+mac_frame_set_dst_addr_ext(mac_frame_t *frame, mac_ext_addr_t *ext_addr)
 {
     uint8_t index = frame_find_dst_addr_index(frame);
     uint8_t *buf = mac_frame_get_psdu(frame) + index;
     assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_DST_ADDR_MASK) == MAC_FRAME_FCF_DST_ADDR_EXT);
     assert(index != MAC_FRAME_INVALID_INDEX);
-    for (unsigned int i = 0; i < sizeof(ext_addr_t); i++) {
-        buf[i] = ext_addr->m8[sizeof(ext_addr_t) - 1 - i];
+    for (unsigned int i = 0; i < sizeof(mac_ext_addr_t); i++) {
+        buf[i] = ext_addr->m8[sizeof(mac_ext_addr_t) - 1 - i];
     }
     return NS_ERROR_NONE;
 }
@@ -503,7 +503,7 @@ mac_frame_is_src_panid_present(mac_frame_t *frame, uint16_t fcf)
 }
 
 ns_error_t
-mac_frame_get_src_panid(mac_frame_t *frame, panid_t *panid)
+mac_frame_get_src_panid(mac_frame_t *frame, mac_panid_t *panid)
 {
     ns_error_t error = NS_ERROR_NONE;
     uint8_t index = frame_find_src_panid_index(frame);
@@ -514,7 +514,7 @@ exit:
 }
 
 ns_error_t
-mac_frame_set_src_panid(mac_frame_t *frame, panid_t panid)
+mac_frame_set_src_panid(mac_frame_t *frame, mac_panid_t panid)
 {
     ns_error_t error = NS_ERROR_NONE;
     uint8_t index = frame_find_src_panid_index(frame);
@@ -547,7 +547,7 @@ exit:
 }
 
 ns_error_t
-mac_frame_set_src_addr_short(mac_frame_t *frame, short_addr_t short_addr)
+mac_frame_set_src_addr_short(mac_frame_t *frame, mac_short_addr_t short_addr)
 {
     uint8_t index = frame_find_src_addr_index(frame);
     assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_SRC_ADDR_MASK) == MAC_FRAME_FCF_SRC_ADDR_SHORT);
@@ -557,14 +557,14 @@ mac_frame_set_src_addr_short(mac_frame_t *frame, short_addr_t short_addr)
 }
 
 ns_error_t
-mac_frame_set_src_addr_ext(mac_frame_t *frame, ext_addr_t *ext_addr)
+mac_frame_set_src_addr_ext(mac_frame_t *frame, mac_ext_addr_t *ext_addr)
 {
     uint8_t index = frame_find_src_addr_index(frame);
     uint8_t *buf = mac_frame_get_psdu(frame) + index;
     assert((frame_get_frame_control_field(frame) & MAC_FRAME_FCF_SRC_ADDR_MASK) == MAC_FRAME_FCF_SRC_ADDR_EXT);
     assert(index != MAC_FRAME_INVALID_INDEX);
-    for (unsigned int i = 0; i < sizeof(ext_addr_t); i++) {
-        buf[i] = ext_addr->m8[sizeof(ext_addr_t) - 1 - i];
+    for (unsigned int i = 0; i < sizeof(mac_ext_addr_t); i++) {
+        buf[i] = ext_addr->m8[sizeof(mac_ext_addr_t) - 1 - i];
     }
     return NS_ERROR_NONE;
 }
@@ -1274,7 +1274,7 @@ exit:
 uint8_t
 frame_find_dst_addr_index(mac_frame_t *frame)
 {
-    return MAC_FRAME_FCF_SIZE + MAC_FRAME_DSN_SIZE + sizeof(panid_t);
+    return MAC_FRAME_FCF_SIZE + MAC_FRAME_DSN_SIZE + sizeof(mac_panid_t);
 }
 
 uint8_t
@@ -1294,10 +1294,10 @@ frame_find_src_panid_index(mac_frame_t *frame)
         // destination PAN + address
         switch (fcf & MAC_FRAME_FCF_DST_ADDR_MASK) {
         case MAC_FRAME_FCF_DST_ADDR_SHORT:
-            index += sizeof(panid_t) + sizeof(short_addr_t);
+            index += sizeof(mac_panid_t) + sizeof(mac_short_addr_t);
             break;
         case MAC_FRAME_FCF_DST_ADDR_EXT:
-            index += sizeof(panid_t) + sizeof(ext_addr_t);
+            index += sizeof(mac_panid_t) + sizeof(mac_ext_addr_t);
             break;
         }
     }
@@ -1317,16 +1317,16 @@ frame_find_src_addr_index(mac_frame_t *frame)
     // destination PAN + address
     switch (fcf & MAC_FRAME_FCF_DST_ADDR_MASK) {
     case MAC_FRAME_FCF_DST_ADDR_SHORT:
-        index += sizeof(panid_t) + sizeof(short_addr_t);
+        index += sizeof(mac_panid_t) + sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_DST_ADDR_EXT:
-        index += sizeof(panid_t) + sizeof(ext_addr_t);
+        index += sizeof(mac_panid_t) + sizeof(mac_ext_addr_t);
         break;
     }
 
     // source PAN
     if (mac_frame_is_src_panid_present(frame, fcf)) {
-        index += sizeof(panid_t);
+        index += sizeof(mac_panid_t);
     }
 
     return index;
@@ -1346,25 +1346,25 @@ frame_find_security_header_index(mac_frame_t *frame)
     // destination PAN + address
     switch (fcf & MAC_FRAME_FCF_DST_ADDR_MASK) {
     case MAC_FRAME_FCF_DST_ADDR_SHORT:
-        index += sizeof(panid_t) + sizeof(short_addr_t);
+        index += sizeof(mac_panid_t) + sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_DST_ADDR_EXT:
-        index += sizeof(panid_t) + sizeof(ext_addr_t);
+        index += sizeof(mac_panid_t) + sizeof(mac_ext_addr_t);
         break;
     }
 
     // source PAN
     if (mac_frame_is_src_panid_present(frame, fcf)) {
-        index += sizeof(panid_t);
+        index += sizeof(mac_panid_t);
     }
 
     // source address
     switch (fcf & MAC_FRAME_FCF_SRC_ADDR_MASK) {
     case MAC_FRAME_FCF_SRC_ADDR_SHORT:
-        index += sizeof(short_addr_t);
+        index += sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_SRC_ADDR_EXT:
-        index += sizeof(ext_addr_t);
+        index += sizeof(mac_ext_addr_t);
         break;
     }
 
@@ -1393,10 +1393,10 @@ frame_skip_security_header_index(mac_frame_t *frame)
     case MAC_FRAME_FCF_DST_ADDR_NONE:
         break;
     case MAC_FRAME_FCF_DST_ADDR_SHORT:
-        index += sizeof(panid_t) + sizeof(short_addr_t);
+        index += sizeof(mac_panid_t) + sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_DST_ADDR_EXT:
-        index += sizeof(panid_t) + sizeof(ext_addr_t);
+        index += sizeof(mac_panid_t) + sizeof(mac_ext_addr_t);
         break;
     default:
         EXIT_NOW(index = MAC_FRAME_INVALID_INDEX);
@@ -1404,7 +1404,7 @@ frame_skip_security_header_index(mac_frame_t *frame)
 
     // source PAN
     if (mac_frame_is_src_panid_present(frame, fcf)) {
-        index += sizeof(panid_t);
+        index += sizeof(mac_panid_t);
     }
 
     // source address
@@ -1412,10 +1412,10 @@ frame_skip_security_header_index(mac_frame_t *frame)
     case MAC_FRAME_FCF_SRC_ADDR_NONE:
         break;
     case MAC_FRAME_FCF_SRC_ADDR_SHORT:
-        index += sizeof(short_addr_t);
+        index += sizeof(mac_short_addr_t);
         break;
     case MAC_FRAME_FCF_SRC_ADDR_EXT:
-        index += sizeof(ext_addr_t);
+        index += sizeof(mac_ext_addr_t);
         break;
     default:
         EXIT_NOW(index = MAC_FRAME_INVALID_INDEX);

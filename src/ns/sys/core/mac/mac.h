@@ -12,6 +12,8 @@
 #include "ns/sys/core/mac/mac_frame.h"
 #include "ns/sys/core/thread/link_quality.h"
 
+typedef struct _mac mac_t;
+
 enum {
     MAC_MIN_BE              = 3,  // macMinBe (IEEE 802.15.4-2006)
     MAC_MAX_BE              = 5,  // macMaxBe (IEEE 802.15.4-2006)
@@ -89,9 +91,9 @@ struct _mac {
 #endif
     timer_milli_t receive_timer;
 
-    ext_addr_t ext_addr;
-    short_addr_t short_addr;
-    panid_t panid;
+    mac_ext_addr_t ext_addr;
+    mac_short_addr_t short_addr;
+    mac_panid_t panid;
     uint8_t pan_channel;
     uint8_t radio_channel;
     uint16_t radio_channel_acquisition_id;
@@ -133,5 +135,162 @@ struct _mac {
     uint16_t cca_sample_count;
     bool enabled;
 };
+
+void
+mac_ctor(void *instance, mac_t *mac);
+
+ns_error_t
+mac_active_scan(mac_t *mac,
+                uint32_t scan_channels,
+                uint16_t scan_duration,
+                active_scan_handler_func_t handler,
+                void *context);
+
+ns_error_t
+mac_convert_beacon_to_active_scan_result(mac_t *mac, mac_frame_t *frame, ns_active_scan_result_t *result);
+
+ns_error_t
+mac_energy_scan(mac_t *mac,
+                uint32_t scan_channels,
+                uint16_t scan_duration,
+                energy_scan_handler_func_t handler,
+                void *context);
+
+void
+mac_energy_scan_done(mac_t *mac, int8_t energy_scan_max_rssi);
+
+bool
+mac_is_beacon_enabled(mac_t *mac);
+
+void
+mac_set_beacon_enabled(mac_t *mac, bool enabled);
+
+bool
+mac_get_rx_on_when_idle(mac_t *mac);
+
+void
+mac_set_rx_on_when_idle(mac_t *mac, bool rx_on_when_idle);
+
+ns_error_t
+mac_send_frame_request(mac_t *mac);
+
+ns_error_t
+mac_send_out_of_band_frame_request(mac_t *mac, ns_radio_frame_t *oob_frame);
+
+const mac_ext_addr_t *
+mac_get_ext_addr(mac_t *mac);
+
+void
+mac_set_ext_addr(mac_t *mac, const mac_ext_addr_t *ext_addr);
+
+mac_short_addr_t
+mac_get_short_addr(mac_t *mac);
+
+ns_error_t
+mac_set_short_addr(mac_t *mac, mac_short_addr_t short_addr);
+
+uint8_t
+mac_get_pan_channel(mac_t *mac);
+
+ns_error_t
+mac_set_pan_channel(mac_t *mac, uint8_t channel);
+
+uint8_t
+mac_get_radio_channel(mac_t *mac);
+
+ns_error_t
+mac_set_radio_channel(mac_t *mac, uint16_t acquisition_id, uint8_t channel);
+
+ns_error_t
+mac_acquired_radio_channel(mac_t *mac, uint16_t *acquisition_id);
+
+ns_error_t
+mac_release_radio_channel(mac_t *mac);
+
+const mac_channel_mask_t *
+mac_get_supported_channel_mask(mac_t *mac);
+
+void
+mac_set_supported_channel_mask(mac_t *mac, const mac_channel_mask_t *mask);
+
+const char *
+mac_get_network_name(mac_t *mac);
+
+ns_error_t
+mac_set_network_name(mac_t *mac, const char *network_name);
+
+ns_error_t
+mac_set_network_name_buf(mac_t *mac, const char *buffer, uint8_t length);
+
+uint16_t
+mac_get_panid(mac_t *mac);
+
+ns_error_t
+mac_set_panid(mac_t *mac, uint16_t panid);
+
+const ns_extended_panid_t *
+mac_get_extended_panid(mac_t *mac);
+
+ns_error_t
+mac_set_extended_panid(mac_t *mac, const ns_extended_panid_t *extended_panid);
+
+#if NS_ENABLE_MAC_FILTER
+mac_filter_t
+mac_get_filter(mac_t *mac);
+#endif
+
+void
+mac_handle_received_frame(mac_t *mac, mac_frame_t *frame, ns_error_t error);
+
+void
+mac_handle_transmit_started(mac_t *mac, ns_radio_frame_t *frame);
+
+void
+mac_handle_transmit_done(mac_t *mac, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error);
+
+bool
+mac_is_active_scan_in_progress(mac_t *mac);
+
+bool
+mac_is_energy_scan_in_progress(mac_t *mac);
+
+bool
+mac_is_in_transmit_state(mac_t *mac);
+
+void
+mac_set_pcap_callback(mac_t *mac, ns_link_pcap_callback_func_t pcap_callback, void *context);
+
+bool
+mac_is_promiscuous(mac_t *mac);
+
+void
+mac_set_promiscuous(mac_t *mac, bool promiscuous);
+
+void
+mac_reset_counters(mac_t *mac);
+
+ns_mac_counters_t *
+mac_get_counters(mac_t *mac);
+
+int8_t
+mac_get_noise_floor(mac_t *mac);
+
+bool
+mac_radio_supports_csma_backoffs(mac_t *mac);
+
+bool
+mac_radio_supports_retries(mac_t *mac);
+
+uint16_t
+mac_get_cca_failure_rate(mac_t *mac);
+
+ns_error_t
+mac_set_enabled(mac_t *mac);
+
+bool
+mac_is_enabled(mac_t *mac);
+
+void
+mac_process_transmit_aes_ccm(mac_t *mac, mac_frame_t *frame, const mac_ext_addr_t *ext_addr);
 
 #endif // NS_CORE_MAC_MAC_H_
