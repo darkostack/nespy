@@ -2,6 +2,7 @@
 #define NS_CORE_COMMON_MESSAGE_H_
 
 #include "ns/include/message.h"
+#include "ns/sys/core/thread/link_quality.h"
 
 typedef ns_message_t message_t;
 typedef struct _buffer buffer_t;
@@ -32,7 +33,7 @@ struct _message_info {
     uint16_t length;                    // number of bytes within the message
     uint16_t offset;                    // a byte offset within the message
     uint16_t datagram_tag;              // the datagram tag used for 6LoWPAN fragmentation
-    // TODO: rss_averager_t rss_averager;        // the averager maintaining the received signal strength (RSS) average
+    rss_averager_t rss_averager;        // the averager maintaining the received signal strength (RSS) average
 
     uint8_t child_mask[8];              // a bit-vector to indicate which sleepy children need to receive this
     uint8_t timeout;                    // seconds remaining before dropping the message
@@ -230,7 +231,6 @@ message_get_interface_id(message_t message);
 void
 message_set_interface_id(message_t message, int8_t interface_id);
 
-/* TODO:
 void
 message_add_rss(message_t message, int8_t rss);
 
@@ -239,7 +239,6 @@ message_get_average_rss(message_t message);
 
 rss_averager_t *
 message_get_rss_averager(message_t message);
-*/
 
 uint16_t
 message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, uint16_t length);

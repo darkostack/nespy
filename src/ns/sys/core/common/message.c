@@ -459,25 +459,23 @@ message_set_interface_id(message_t message, int8_t interface_id)
     ((buffer_t *)message)->buffer.head.info.interface_id = interface_id;
 }
 
-/* TODO:
 void
 message_add_rss(message_t message, int8_t rss)
 {
-
+    rss_averager_add(&((buffer_t *)message)->buffer.head.info.rss_averager, rss);
 }
 
 int8_t
 message_get_average_rss(message_t message)
 {
-
+    return rss_averager_get_average(&((buffer_t *)message)->buffer.head.info.rss_averager);
 }
 
 rss_averager_t *
 message_get_rss_averager(message_t message)
 {
-
+    return &((buffer_t *)message)->buffer.head.info.rss_averager;
 }
-*/
 
 uint16_t
 message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, uint16_t length)
