@@ -25,7 +25,7 @@ trickle_timer_ctor(void *instance,
 {
     assert(transmit_handler != NULL);
 
-    timer_milli_ctor(instance, &trickle_timer->milli, &trickle_timer_handle_timer, trickle_timer);
+    timer_ctor(instance, &trickle_timer->milli, &trickle_timer_handle_timer, trickle_timer);
 
     trickle_timer->interval_min = 0;
     trickle_timer->interval_max = 0;

@@ -44,12 +44,12 @@ mac_link_raw_ctor(void *instance, mac_link_raw_t *link_raw)
     tasklet_ctor(instance, &link_raw->operation_task, &handle_operation_task, (void *)link_raw);
     link_raw->pending_transmit_data = false;
 #if NS_MAC_LINK_RAW_TIMER_REQUIRED
-    timer_milli_ctor(instance, &link_raw->timer, &handle_timer, (void *)link_raw);
+    timer_ctor(instance, &link_raw->timer, &handle_timer, (void *)link_raw);
     link_raw->timer_reason = MAC_LINK_RAW_TIMER_REASON_NONE;
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    timer_micro_ctor(instance, &link_raw->timer_micro, &handle_timer, (void *)link_raw);
+    timer_ctor(instance, &link_raw->timer_micro, &handle_timer, (void *)link_raw);
 #else
-    timer_milli_ctor(instance, &link_raw->energy_scan_timer, &handle_timer, (void *)link_raw);
+    timer_ctor(instance, &link_raw->energy_scan_timer, &handle_timer, (void *)link_raw);
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 #endif // NS_MAC_LINK_RAW_TIMER_REQUIRED
 #if NS_CONFIG_ENABLE_SOFTWARE_RETRANSMIT

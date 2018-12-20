@@ -11,6 +11,7 @@
 #include "ns/sys/core/mac/mac_filter.h"
 #include "ns/sys/core/mac/mac_frame.h"
 #include "ns/sys/core/thread/link_quality.h"
+#include "ns/sys/core/thread/topology.h"
 
 typedef struct _mac mac_t;
 
@@ -75,7 +76,7 @@ struct _mac {
     bool pending_transmit_oob_frame : 1;
     bool pending_waiting_for_data : 1;
     bool rx_on_when_idle : 1;
-    bool beacon_enabled : 1;
+    bool beacons_enabled : 1;
     bool transmit_aborted : 1;
 #if NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool delay_sleep : 1;
