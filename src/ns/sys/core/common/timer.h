@@ -16,7 +16,7 @@ typedef timer_t timer_micro_t;
 typedef void (*timer_handler_func_t)(void *timer);
 typedef struct _timer_handler {
     timer_handler_func_t func;
-    void *arg;
+    void *context;
 } timer_handler_t;
 
 struct _timer {
@@ -49,7 +49,7 @@ timer_get_firetime(void *timer);
 
 // --- milliseconds timer
 void
-timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *handler_arg);
+timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *context);
 
 void
 timer_milli_start(timer_milli_t *milli, uint32_t dt);
@@ -63,7 +63,7 @@ timer_milli_stop(timer_milli_t *milli);
 // --- microseconds timer
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *handler_arg);
+timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *context);
 
 void
 timer_micro_start(timer_micro_t *micro, uint32_t dt);

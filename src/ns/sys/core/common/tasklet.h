@@ -8,7 +8,7 @@ typedef struct _tasklet tasklet_t;
 typedef void (*tasklet_handler_func_t)(void *tasklet);
 typedef struct _tasklet_handler {
     tasklet_handler_func_t func;
-    void *arg;
+    void *context;
 } tasklet_handler_t;
 
 struct _tasklet {
@@ -26,7 +26,7 @@ void
 tasklet_scheduler_ctor(tasklet_scheduler_t *tasklet_scheduler);
 
 void
-tasklet_ctor(void *instance, tasklet_t *tasklet, tasklet_handler_func_t handler, void *handler_arg);
+tasklet_ctor(void *instance, tasklet_t *tasklet, tasklet_handler_func_t handler, void *context);
 
 ns_error_t
 tasklet_post(tasklet_t *tasklet);

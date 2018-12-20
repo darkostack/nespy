@@ -56,13 +56,13 @@ timer_get_firetime(void *timer)
 }
 
 void
-timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *handler_arg)
+timer_milli_ctor(void *instance, timer_milli_t *milli, timer_handler_func_t handler, void *context)
 {
     assert(handler != NULL);
     timer_t *timer = (timer_t *)milli;
     timer->instance = instance;
     timer->handler.func = handler;
-    timer->handler.arg = handler_arg;
+    timer->handler.context = context;
     timer->firetime = 0;
     timer->next = NULL;
 }
@@ -103,13 +103,13 @@ exit:
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
-timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *handler_arg)
+timer_micro_ctor(void *instance, timer_micro_t *micro, timer_handler_func_t handler, void *context)
 {
     assert(handler != NULL);
     timer_t *timer = (timer_t *)micro;
     timer->instance = instance;
     timer->handler.func = handler;
-    timer->handler.arg = handler_arg;
+    timer->handler.context = context;
     timer->firetime = 0;
     timer->next = NULL;
 }

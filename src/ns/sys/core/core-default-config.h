@@ -155,4 +155,35 @@
 #define NS_CONFIG_MAC_FILTER_SIZE 32
 #endif
 
+// the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
+// equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4
+#ifndef NS_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
+#define NS_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT 32
+#endif
+
+// the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
+// equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4
+#ifndef NS_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
+#define NS_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT 4
+#endif
+
+// the maximum number of retries allowed after transmission failure for direct transmission
+// equivalent to macMaxFrameRetries, default value is 3
+#ifndef NS_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+#define NS_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT 3
+#endif
+
+// the maximum number of retries allowed after transmission failure for indirect transmission
+// equivalent to macMaxFrameRetries, default value is 3
+#ifndef NS_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+#define NS_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
+#endif
+
+// The number of times each IEEE 802.15.4 broadcast frame is transmitted.
+// The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy,
+// but may also increase congestion.
+#ifndef NS_CONFIG_TX_NUM_BCAST
+#define NS_CONFIG_TX_NUM_BCAST 1
+#endif
+
 #endif // NS_CORE_DEFAULT_CONFIG_H_

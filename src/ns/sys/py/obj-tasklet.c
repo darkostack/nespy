@@ -24,7 +24,7 @@ struct _py_tasklet_obj {
 static void
 tasklet_handler(void *tasklet)
 {
-    mp_obj_t callback = *((mp_obj_t *)((tasklet_t *)tasklet)->handler.arg);
+    mp_obj_t callback = *((mp_obj_t *)((tasklet_t *)tasklet)->handler.context);
     mp_call_function_0(callback);
 }
 

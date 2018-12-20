@@ -380,7 +380,7 @@ mac_link_raw_transmit_started(mac_link_raw_t *link_raw, ns_radio_frame_t *frame)
 static void
 handle_operation_task(void *tasklet)
 {
-    mac_link_raw_t *link_raw = (mac_link_raw_t *)((tasklet_t *)tasklet)->handler.arg;
+    mac_link_raw_t *link_raw = (mac_link_raw_t *)((tasklet_t *)tasklet)->handler.context;
     link_raw_handle_operation_task(link_raw);
 }
 
@@ -421,7 +421,7 @@ link_raw_start_transmit(mac_link_raw_t *link_raw)
 static void
 handle_timer(void *timer)
 {
-    mac_link_raw_t *link_raw = (mac_link_raw_t *)((timer_t *)timer)->handler.arg;
+    mac_link_raw_t *link_raw = (mac_link_raw_t *)((timer_t *)timer)->handler.context;
 
 #if NS_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     // energy scan uses a different timer for adding delay between RSSI samples

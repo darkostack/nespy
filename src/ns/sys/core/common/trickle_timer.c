@@ -25,7 +25,7 @@ trickle_timer_ctor(void *instance,
 {
     assert(transmit_handler != NULL);
 
-    timer_milli_ctor(instance, &trickle_timer->milli, &trickle_timer_handle_timer, (void *)trickle_timer);
+    timer_milli_ctor(instance, &trickle_timer->milli, &trickle_timer_handle_timer, trickle_timer);
 
     trickle_timer->interval_min = 0;
     trickle_timer->interval_max = 0;
@@ -121,7 +121,7 @@ exit:
 static void
 trickle_timer_handle_timer(void *timer)
 {
-    trickle_timer_t *trickle_timer = (trickle_timer_t *)((timer_t *)timer)->handler.arg;
+    trickle_timer_t *trickle_timer = (trickle_timer_t *)((timer_t *)timer)->handler.context;
     if (trickle_timer->in_transmit_phase) {
         trickle_timer_handle_end_of_time_in_interval(trickle_timer);
     } else {
