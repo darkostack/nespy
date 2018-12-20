@@ -179,11 +179,26 @@
 #define NS_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
 #endif
 
-// The number of times each IEEE 802.15.4 broadcast frame is transmitted.
-// The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy,
+// the number of times each IEEE 802.15.4 broadcast frame is transmitted.
+// the minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy,
 // but may also increase congestion.
 #ifndef NS_CONFIG_TX_NUM_BCAST
 #define NS_CONFIG_TX_NUM_BCAST 1
+#endif
+
+// MAC implementation maintains the average failure rate of CCA (Clear Channel Assessment) operation on
+// frame transmissions. This value specifies the window (in terms of number of transmissions or samples)
+// over which the average rate is maintained.
+// practically, the average value can be considered as the percentage of CCA failures in
+// (approximately) last AVERAGING_WINDOW frame transmissions.
+#ifndef NS_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW
+#define NS_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW 512
+#endif
+
+// define as 1 to stay awake between fragments while transmitting a large packet,
+// and to stay awake after receiving a packet with frame pending set to true.
+#ifndef NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#define NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS 0
 #endif
 
 #endif // NS_CORE_DEFAULT_CONFIG_H_

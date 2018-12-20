@@ -91,4 +91,6 @@ typedef struct _ns_energy_scan_result {
     int8_t max_rssi;
 } ns_energy_scan_result_t;
 
+typedef void (*ns_link_pcap_callback_func_t)(const ns_radio_frame_t *frame, void *context);
+
 #endif // NS_LINK_H_
