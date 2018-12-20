@@ -41,7 +41,7 @@ frame_find_header_ie_index(mac_frame_t *frame);
 
 // --- MAC extended address functions
 void
-mac_ext_addr_gen_random(mac_ext_addr_t *ext_addr)
+mac_ext_addr_generate_random(mac_ext_addr_t *ext_addr)
 {
     random_fill_buffer(ext_addr->m8, sizeof(mac_ext_addr_t));
     mac_ext_addr_set_group(ext_addr, false);

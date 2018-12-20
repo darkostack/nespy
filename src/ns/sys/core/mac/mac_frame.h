@@ -184,7 +184,7 @@ typedef struct _mac_time_ie {
 
 // --- MAC extended address functions
 void
-mac_ext_addr_gen_random(mac_ext_addr_t *ext_addr);
+mac_ext_addr_generate_random(mac_ext_addr_t *ext_addr);
 
 bool
 mac_ext_addr_is_group(mac_ext_addr_t *ext_addr);
