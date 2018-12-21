@@ -96,4 +96,9 @@ instance_set_log_level(ns_log_level_t log_level)
 }
 #endif
 
-
+notifier_t *
+instance_get_notifier(void *instance)
+{
+    instance_t *inst = (instance_t *)instance;
+    return &inst->notifier;
+}

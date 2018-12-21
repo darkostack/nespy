@@ -11,7 +11,7 @@ static void
 handle_state_changed(void *tasklet);
 
 static void
-notifier_handle_stage_changed(notifier_t *notifier);
+notifier_handle_state_changed(notifier_t *notifier);
 
 static void
 notifier_log_changed_flags(ns_changed_flags_t aflags);
@@ -149,11 +149,11 @@ notifier_has_signaled(notifier_t *notifier, ns_changed_flags_t flags)
 static void
 handle_state_changed(void *tasklet)
 {
-    notifier_handle_stage_changed((notifier_t *)((tasklet_t *)tasklet)->handler.context);
+    notifier_handle_state_changed((notifier_t *)((tasklet_t *)tasklet)->handler.context);
 }
 
 static void
-notifier_handle_stage_changed(notifier_t *notifier)
+notifier_handle_state_changed(notifier_t *notifier)
 {
     ns_changed_flags_t flags = notifier->flags_to_signal;
 

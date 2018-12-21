@@ -2,7 +2,7 @@
 #include "ns/include/platform/random.h"
 #include "ns/sys/core/common/instance.h"
 
-#define PRINT_LOGGING 0
+#define PRINT_LOGGING 1
 
 static void
 print_logging(void)
@@ -22,7 +22,38 @@ print_logging(void)
 }
 
 void
+channel_changed_callback(notifier_callback_t *callback, ns_changed_flags_t flags)
+{
+    VERIFY_OR_EXIT(flags & NS_CHANGED_THREAD_CHANNEL);
+
+    printf("notifier: CHANGED THREAD CHANNEL\r\n");
+
+exit:
+    return;
+}
+
+static void
+test_notifier(void)
+{
+    instance_t *instance = instance_get();
+    // signal if first should only print one time
+    notifier_signal_if_first(instance_get_notifier(instance), NS_CHANGED_THREAD_PANID);
+    notifier_signal_if_first(instance_get_notifier(instance), NS_CHANGED_THREAD_PANID);
+    notifier_signal_if_first(instance_get_notifier(instance), NS_CHANGED_THREAD_PANID);
+
+    // signal various flags
+    notifier_signal(instance_get_notifier(instance), NS_CHANGED_THREAD_CHILD_ADDED);
+
+    //notifier_callback_t channel_changed;
+    //notifier_callback_ctor(&channel_changed, &channel_changed_callback);
+    //notifier_register_callback(instance_get_notifier(instance), &channel_changed);
+
+    //notifier_signal(instance_get_notifier(instance), NS_CHANGED_THREAD_CHANNEL);
+}
+
+void
 test_logging(void)
 {
+    test_notifier();
     print_logging();
 }
