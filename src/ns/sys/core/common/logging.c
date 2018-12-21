@@ -9,7 +9,6 @@
 #define ns_log_dump(format, ...) \
     _ns_dynamic_log(log_level, log_region, format NS_CONFIG_LOG_SUFFIX, ##__VA_ARGS__)
 
-
 #if NS_CONFIG_LOG_PKT_DUMP
 static void
 dump_line(ns_log_level_t log_level, ns_log_region_t log_region, const void *abuf, const size_t length)
