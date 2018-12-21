@@ -7,7 +7,7 @@
 #endif
 
 #define ns_log_dump(format, ...) \
-    _ns_dynamic_log(log_level, log_region, format, NS_CONFIG_LOG_SUFFIX, ##__VA_ARGS__)
+    _ns_dynamic_log(log_level, log_region, format NS_CONFIG_LOG_SUFFIX, ##__VA_ARGS__)
 
 
 #if NS_CONFIG_LOG_PKT_DUMP
@@ -69,10 +69,10 @@ ns_dump(ns_log_level_t log_level,
         const void *abuf,
         const size_t length)
 {
-    size_t       idlen = strlen(id);
+    size_t idlen = strlen(id);
     const size_t width = 72;
-    char         buf[80];
-    char *       cur = buf;
+    char buf[80];
+    char *cur = buf;
 
     for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
     {

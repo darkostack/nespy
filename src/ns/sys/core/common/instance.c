@@ -17,6 +17,9 @@ instance_ctor(void)
     timer_scheduler_ctor(&inst->timer_micro_scheduler);
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_ctor(&inst->tasklet_scheduler);
+#if NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    inst->log_level = (ns_log_level_t)NS_CONFIG_LOG_LEVEL;
+#endif // NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     message_pool_ctor(&inst->message_pool);
 #if NS_RADIO || NS_ENABLE_RAW_LINK_API
     mac_link_raw_ctor(inst, &inst->link_raw);
@@ -57,6 +60,9 @@ instance_ctor(void)
 
     extern ns_error_t test_rss_averager(void);
     test_rss_averager();
+
+    extern void test_logging(void);
+    test_logging();
 
 exit:
     return inst;

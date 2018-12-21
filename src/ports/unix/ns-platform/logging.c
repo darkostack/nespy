@@ -42,6 +42,6 @@ ns_plat_log(ns_log_level_t log_level, ns_log_region_t log_region, const char *fo
     EXPECT_ACTION(chars_written >= 0, log_string[offset] = 0);
 
 exit:
-    syslog(LOG_CRIT, "%s", log_string);
+    printf("%s\r\n", log_string);
 }
 #endif

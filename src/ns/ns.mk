@@ -61,6 +61,7 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     test_string.c \
     test_mac_frame.c \
     test_link_quality.c \
+    test_logging.c \
     )
 
 # compiler flags defintions based on BUILD OPTIONS

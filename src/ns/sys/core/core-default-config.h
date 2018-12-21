@@ -131,16 +131,76 @@
 #define NS_CONFIG_ENABLE_DEBUG_UART 0
 #endif
 
-#ifndef NS_CONFIG_LOG_PKT_DUMP
-#define NS_CONFIG_LOG_PKT_DUMP 1
-#endif
-
 #ifndef NS_CONFIG_LOG_PREPEND_LEVEL
 #define NS_CONFIG_LOG_PREPEND_LEVEL 1
 #endif
 
 #ifndef NS_CONFIG_LOG_PREPEND_REGION
 #define NS_CONFIG_LOG_PREPEND_REGION 1
+#endif
+
+#ifndef NS_CONFIG_LOG_API
+#define NS_CONFIG_LOG_API 1
+#endif
+
+#ifndef NS_CONFIG_LOG_MLE
+#define NS_CONFIG_LOG_MLE 1
+#endif
+
+#ifndef NS_CONFIG_LOG_ARP
+#define NS_CONFIG_LOG_ARP 1
+#endif
+
+#ifndef NS_CONFIG_LOG_NETDATA
+#define NS_CONFIG_LOG_NETDATA 1
+#endif
+
+#ifndef NS_CONFIG_LOG_ICMP
+#define NS_CONFIG_LOG_ICMP 1
+#endif
+
+#ifndef NS_CONFIG_LOG_IP6
+#define NS_CONFIG_LOG_IP6 1
+#endif
+
+#ifndef NS_CONFIG_LOG_MAC
+#define NS_CONFIG_LOG_MAC 1
+#endif
+
+#ifndef NS_CONFIG_LOG_MEM
+#define NS_CONFIG_LOG_MEM 1
+#endif
+
+#ifndef NS_CONFIG_LOG_PKT_DUMP
+#define NS_CONFIG_LOG_PKT_DUMP 1
+#endif
+
+#ifndef NS_CONFIG_LOG_NETDIAG
+#define NS_CONFIG_LOG_NETDIAG 1
+#endif
+
+#ifndef NS_CONFIG_LOG_NETDATA
+#define NS_CONFIG_LOG_NETDATA 1
+#endif
+
+#ifndef NS_CONFIG_LOG_PLATFORM
+#define NS_CONFIG_LOG_PLATFORM 0
+#endif
+
+#ifndef NS_CONFIG_LOG_CLI
+#define NS_CONFIG_LOG_CLI 1
+#endif
+
+#ifndef NS_CONFIG_LOG_COAP
+#define NS_CONFIG_LOG_COAP 1
+#endif
+
+#ifndef NS_CONFIG_LOG_CORE
+#define NS_CONFIG_LOG_CORE 1
+#endif
+
+#ifndef NS_CONFIG_LOG_UTIL
+#define NS_CONFIG_LOG_UTIL 1
 #endif
 
 // assert is managed by platform defined logic when this flag is set
