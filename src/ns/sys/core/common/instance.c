@@ -68,3 +68,25 @@ instance_get(void)
     void *inst = &s_instance_raw;
     return (instance_t *)inst;
 }
+
+ns_log_level_t
+instance_get_log_level(void)
+{
+#if NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    instance_t *instance = instance_get();
+    return instance->log_level;
+#else
+    return (ns_log_level_t)NS_CONFIG_LOG_LEVEL;
+#endif
+}
+
+#if NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+void
+instance_set_log_level(ns_log_level_t log_level)
+{
+    instance_t *instance = instance_get();
+    instance->log_level = log_level;
+}
+#endif
+
+

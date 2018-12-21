@@ -39,6 +39,7 @@ typedef enum _ns_error {
     NS_ERROR_GENERIC = 255,
 } ns_error_t;
 
-//TODO: const char *ns_error_to_string(ns_error_t error);
+const char *
+ns_error_to_string(ns_error_t error);
 
 #endif // NS_ERROR_H_

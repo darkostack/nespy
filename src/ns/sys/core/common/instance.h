@@ -9,6 +9,7 @@
 #include "ns/include/instance.h"
 #include "ns/sys/core/core-config.h"
 #include "ns/sys/core/common/code_utils.h"
+#include "ns/sys/core/common/logging.h"
 #include "ns/sys/core/common/timer.h"
 #include "ns/sys/core/common/tasklet.h"
 #include "ns/sys/core/common/message.h"
@@ -26,6 +27,7 @@ struct _instance {
     timer_scheduler_t timer_micro_scheduler;
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     tasklet_scheduler_t tasklet_scheduler;
+    ns_log_level_t log_level;
     message_pool_t message_pool;
 #if NS_RADIO || NS_ENABLE_RAW_LINK_API
     mac_link_raw_t link_raw;
@@ -38,5 +40,13 @@ instance_ctor(void);
 
 instance_t *
 instance_get(void);
+
+ns_log_level_t
+instance_get_log_level(void);
+
+#if NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+void
+instance_set_log_level(ns_log_level_t log_level);
+#endif
 
 #endif // NS_CORE_COMMON_INSTANCE_H_

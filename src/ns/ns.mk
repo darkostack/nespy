@@ -17,6 +17,7 @@ SRC_NS_CORE_COMMON += $(addprefix ns/sys/core/common/,\
     random.c \
     string.c \
     trickle_timer.c \
+    logging.c \
     )
 
 SRC_NS_CORE_UTILS += $(addprefix ns/sys/core/utils/,\
@@ -38,6 +39,7 @@ SRC_NS_CORE_API += $(addprefix ns/sys/core/api/,\
     instance_api.c \
     tasklet_api.c \
     message_api.c \
+    logging_api.c \
     )
 
 SRC_NS_CORE += $(SRC_NS_CORE_COMMON)
