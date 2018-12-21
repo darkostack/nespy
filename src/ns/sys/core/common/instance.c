@@ -20,6 +20,7 @@ instance_ctor(void)
 #if NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     inst->log_level = (ns_log_level_t)NS_CONFIG_LOG_LEVEL;
 #endif // NS_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    notifier_ctor(inst, &inst->notifier);
     message_pool_ctor(&inst->message_pool);
 #if NS_RADIO || NS_ENABLE_RAW_LINK_API
     mac_link_raw_ctor(inst, &inst->link_raw);
