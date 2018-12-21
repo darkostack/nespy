@@ -148,7 +148,9 @@ mac_active_scan(mac_t *mac,
                 void *context);
 
 ns_error_t
-mac_convert_beacon_to_active_scan_result(mac_t *mac, mac_frame_t *frame, ns_active_scan_result_t *result);
+mac_convert_beacon_to_active_scan_result(mac_t *mac,
+                                         mac_frame_t *beacon_frame,
+                                         ns_active_scan_result_t *result);
 
 ns_error_t
 mac_energy_scan(mac_t *mac,
@@ -158,7 +160,7 @@ mac_energy_scan(mac_t *mac,
                 void *context);
 
 void
-mac_energy_scan_done(mac_t *mac, int8_t energy_scan_max_rssi);
+mac_energy_scan_done(mac_t *mac, int8_t rssi);
 
 bool
 mac_is_beacon_enabled(mac_t *mac);
@@ -208,11 +210,11 @@ mac_acquired_radio_channel(mac_t *mac, uint16_t *acquisition_id);
 ns_error_t
 mac_release_radio_channel(mac_t *mac);
 
-const mac_channel_mask_t *
+const mac_channel_mask_t
 mac_get_supported_channel_mask(mac_t *mac);
 
 void
-mac_set_supported_channel_mask(mac_t *mac, const mac_channel_mask_t *mask);
+mac_set_supported_channel_mask(mac_t *mac, const mac_channel_mask_t mask);
 
 const char *
 mac_get_network_name(mac_t *mac);

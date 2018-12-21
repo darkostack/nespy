@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "ns/include/instance.h"
 #include "ns/sys/core/core-config.h"
 #include "ns/sys/core/common/code_utils.h"
 #include "ns/sys/core/common/timer.h"
