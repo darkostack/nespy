@@ -1,13 +1,14 @@
 #include "ns/sys/core/core-config.h"
 #include "ns/include/platform/random.h"
 #include "ns/sys/core/common/instance.h"
+#include "ns/sys/core/utils/heap.h"
 
-#define PRINT_LOGGING 1
+#define RUN_TEST 0
 
 static void
 print_logging(void)
 {
-#if PRINT_LOGGING
+#if RUN_TEST
     ns_log_crit_api("print test 0x%08x", 0xdeadbeef);
 
     uint8_t dump_buffer[128];
@@ -35,7 +36,10 @@ exit:
 static void
 test_notifier(void)
 {
+#if RUN_TEST
     instance_t *instance = instance_get();
+    heap_t *heap = &instance->heap;
+
     // signal if first should only print one time
     notifier_signal_if_first(instance_get_notifier(instance), NS_CHANGED_THREAD_PANID);
     notifier_signal_if_first(instance_get_notifier(instance), NS_CHANGED_THREAD_PANID);
@@ -44,11 +48,13 @@ test_notifier(void)
     // signal various flags
     notifier_signal(instance_get_notifier(instance), NS_CHANGED_THREAD_CHILD_ADDED);
 
-    //notifier_callback_t channel_changed;
-    //notifier_callback_ctor(&channel_changed, &channel_changed_callback);
-    //notifier_register_callback(instance_get_notifier(instance), &channel_changed);
+    notifier_callback_t *channel_changed;
+    channel_changed = (notifier_callback_t *)heap_calloc(heap, 1, sizeof(notifier_callback_t));
+    notifier_callback_ctor(channel_changed, &channel_changed_callback);
+    notifier_register_callback(instance_get_notifier(instance), channel_changed);
 
-    //notifier_signal(instance_get_notifier(instance), NS_CHANGED_THREAD_CHANNEL);
+    notifier_signal(instance_get_notifier(instance), NS_CHANGED_THREAD_CHANNEL);
+#endif
 }
 
 void
