@@ -76,25 +76,20 @@ notifier_register_external_callback(notifier_t *notifier,
 {
     ns_error_t error = NS_ERROR_NONE;
 
-    notifier_external_calllback_t *unused_callback = NULL;
-
     VERIFY_OR_EXIT(callback != NULL);
 
+    notifier_external_calllback_t *unused_callback = NULL;
+
     for (unsigned int i = 0; i < NOTIFIER_MAX_EXTERNAL_HANDLERS; i++) {
-        notifier_external_calllback_t cb = notifier->external_callbacks[i];
-        if (cb.handler == NULL) {
-            if (unused_callback == NULL) {
-                unused_callback = &cb;
-            }
-            continue;
+        if (notifier->external_callbacks[i].handler == NULL) {
+            VERIFY_OR_EXIT(notifier->external_callbacks[i].handler != callback, error = NS_ERROR_ALREADY);
+            unused_callback = &notifier->external_callbacks[i];
+            notifier->external_callbacks[i].handler = callback;
+            notifier->external_callbacks[i].context = context;
         }
-        VERIFY_OR_EXIT((cb.handler != callback) || (cb.context != context), error = NS_ERROR_ALREADY);
     }
 
     VERIFY_OR_EXIT(unused_callback != NULL, error = NS_ERROR_NO_BUFS);
-
-    unused_callback->handler = callback;
-    unused_callback->context = context;
 
 exit:
     return error;
