@@ -3,7 +3,7 @@
 #include "ns/sys/core/common/instance.h"
 #include "ns/sys/core/utils/heap.h"
 
-#define RUN_TEST 1
+#define RUN_TEST 0
 
 static void
 print_logging(void)
@@ -22,6 +22,7 @@ print_logging(void)
 #endif
 }
 
+#if RUN_TEST
 void
 channel_changed_callback(notifier_callback_t *callback, ns_changed_flags_t flags)
 {
@@ -70,6 +71,7 @@ external_netdata_changed_callback(ns_changed_flags_t flags, void *context)
 exit:
     return;
 }
+#endif
 
 static void
 test_notifier(void)
