@@ -74,10 +74,10 @@ mac_link_raw_set_enabled(mac_link_raw_t *link_raw, bool enabled)
 {
     ns_error_t error = NS_ERROR_NONE;
 
-    // TODO:
-#if 0
     ns_log_info_plat("link_raw enabled=%d", enabled ? 1 : 0);
 
+    // TODO:
+#if 0
 #if NS_MTD || NS_FTD
     VERIFY_OR_EXIT(thread_netif_is_up(link_raw->instance), error = NS_ERROR_INVALID_STATE);
 #endif
@@ -206,10 +206,10 @@ mac_link_raw_invoke_receive_done(mac_link_raw_t *link_raw, ns_radio_frame_t *fra
 {
     if (link_raw->receive_done_callback) {
         if (error == NS_ERROR_NONE) {
-            // TODO: ns_log_info_plat("link raw invoke receive done (%d bytes)", frame->length);
+            ns_log_info_plat("link raw invoke receive done (%d bytes)", frame->length);
             link_raw->receive_done_callback(link_raw->instance, frame, error);
         } else {
-            // TODO: ns_log_warn_plat("link raw invoke receive done (err=0x%x)", error);
+            ns_log_warn_plat("link raw invoke receive done (err=0x%x)", error);
         }
     }
 }
@@ -252,9 +252,9 @@ mac_link_raw_invoke_transmit_done(mac_link_raw_t *link_raw,
     assert(frame == link_raw->transmit_frame);
 
     if (error == NS_ERROR_NONE) {
-        //TODO: ns_log_debg_plat("link raw transmit done: %s", ns_error_to_string(error));
+        ns_log_debg_plat("link raw transmit done: %s", ns_error_to_string(error));
     } else {
-        //TODO: ns_log_warn_plat("link raw transmit done: %s", ns_error_to_string(error));
+        ns_log_warn_plat("link raw transmit done: %s", ns_error_to_string(error));
     }
 
 #if NS_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
@@ -367,7 +367,7 @@ mac_link_raw_transmit_started(mac_link_raw_t *link_raw, ns_radio_frame_t *frame)
     // to fire if we don't get a transmit done callback in time.
     if ((link_raw->radio_caps & NS_RADIO_CAPS_ACK_TIMEOUT) == 0 &&
         mac_frame_get_ack_request((mac_frame_t *)frame)) {
-        // TODO: ns_log_debg_plat("link raw starting ack timeout timer");
+        ns_log_debg_plat("link raw starting ack timeout timer");
         link_raw->timer_reason = MAC_LINK_RAW_TIMER_REASON_ACK_TIMEOUT;
         timer_milli_start(&link_raw->timer, MAC_ACK_TIMEOUT);
     }
@@ -490,7 +490,7 @@ link_raw_start_csma_backoff(mac_link_raw_t *link_raw)
     backoff = random_get_uint32_in_range(0, 1U << backoff_exponent);
     backoff *= (uint32_t)MAC_UNIT_BACKOFF_PERIOD * NS_RADIO_SYMBOL_TIME;
 
-    // TODO: ns_log_debg_plat("link raw starting retransmit timeout timer (%d ms)", backoff);
+    ns_log_debg_plat("link raw starting retransmit timeout timer (%d ms)", backoff);
     link_raw->timer_reason = MAC_LINK_RAW_TIMER_REASON_CSMA_BACKOFF_COMPLETE;
 
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
