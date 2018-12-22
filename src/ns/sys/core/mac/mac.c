@@ -280,7 +280,7 @@ mac_convert_beacon_to_active_scan_result(mac_t *mac,
                MAC_BEACON_PAYLOAD_EXT_PANID_SIZE);
     }
 
-    // TODO: log_beacon("received", beacon_payload);
+    mac_log_beacon(mac, "received", beacon_payload);
 
 exit:
     return error;
@@ -425,11 +425,8 @@ mac_set_pan_channel(mac_t *mac, uint8_t channel)
                    error = NS_ERROR_INVALID_ARGS);
     VERIFY_OR_EXIT(mac_channel_mask_contains_channel(&mac->supported_channel_mask, channel),
                    error = NS_ERROR_INVALID_ARGS);
-    // TODO:
-#if 0
     VERIFY_OR_EXIT(mac->pan_channel != channel,
                    notifier_signal_if_first(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_CHANNEL));
-#endif
 
     mac->pan_channel = channel;
     success_rate_tracker_reset(&mac->cca_success_rate_tracker);
@@ -440,7 +437,7 @@ mac_set_pan_channel(mac_t *mac, uint8_t channel)
 
     mac_update_idle_mode(mac);
 
-    // TODO: notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_CHANNEL);
+    notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_CHANNEL);
 
 exit:
     return error;
@@ -520,14 +517,13 @@ mac_set_supported_channel_mask(mac_t *mac, const mac_channel_mask_t mask)
 
     mac_channel_mask_intersect(&new_mask, &supported_channel);
 
-    // TODO:
-#if 0
     VERIFY_OR_EXIT(new_mask.mask != mac->supported_channel_mask.mask,
                    notifier_signal_if_first(instance_get_notifier(mac->instance),
                                             NS_CHANGED_SUPPORTED_CHANNEL_MASK));
-#endif
+
     mac->supported_channel_mask = new_mask;
-    // TODO: notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_SUPPORTED_CHANNEL_MASK);
+
+    notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_SUPPORTED_CHANNEL_MASK);
 
 exit:
     return error;
@@ -552,14 +548,13 @@ mac_set_network_name_buf(mac_t *mac, const char *buffer, uint8_t length)
     uint8_t new_len = (uint8_t)(strnlen(buffer, length));
 
     VERIFY_OR_EXIT(new_len <= NS_NETWORK_NAME_MAX_SIZE, error = NS_ERROR_INVALID_ARGS);
-    // TODO:
-#if 0
-    VERIFY_OR_EXIT(new_len != strlen(mac->network_name.m8) || memcmp(mac->network_name.m8, buffer, new_len) != 0,
-                   notifier_signal_if_first(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_NETWORK_NAME));
-#endif
+    VERIFY_OR_EXIT(new_len != strlen(mac->network_name.m8) ||
+                   memcmp(mac->network_name.m8, buffer, new_len) != 0,
+                   notifier_signal_if_first(instance_get_notifier(mac->instance),
+                                            NS_CHANGED_THREAD_NETWORK_NAME));
     memcpy(mac->network_name.m8, buffer, new_len);
     mac->network_name.m8[new_len] = 0;
-    // TODO: notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_NETWORK_NAME);
+    notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
     return error;
@@ -574,14 +569,14 @@ mac_get_panid(mac_t *mac)
 ns_error_t
 mac_set_panid(mac_t *mac, uint16_t panid)
 {
-    // TODO:
-#if 0
     VERIFY_OR_EXIT(mac->panid != panid,
                    notifier_signal_if_first(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_PANID));
-#endif
+
     mac->panid = panid;
     ns_plat_radio_set_panid(mac->instance, mac->panid);
-    // TODO: notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_PANID);
+
+    notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_PANID);
+
 exit:
     return NS_ERROR_NONE;
 }
@@ -688,7 +683,7 @@ mac_update_idle_mode(mac_t *mac)
 
     if (!mac->rx_on_when_idle && !timer_is_running(&mac->receive_timer) && !ns_plat_radio_get_promiscuous(mac->instance)) {
         if (mac_radio_sleep(mac) != NS_ERROR_INVALID_STATE) {
-            // TODO: ns_log_debg_mac("idle mode: radio sleeping");
+            ns_log_debg_mac("idle mode: radio sleeping");
             EXIT_NOW();
         }
         // If `mac_radio_sleep()` returns `NS_ERROR_INVALID_STATE`
@@ -696,7 +691,7 @@ mac_update_idle_mode(mac_t *mac)
         // the radio in receive mode.
     }
 
-    // TODO: ns_log_debg_mac("idle mode: radio receiving on channel %d", mac->radio_channel);
+    ns_log_debg_mac("idle mode: radio receiving on channel %d", mac->radio_channel);
     mac_radio_receive(mac, mac->radio_channel);
 
 exit:
@@ -707,7 +702,7 @@ static void
 mac_start_operation(mac_t *mac, mac_operation_t operation)
 {
     if (operation != MAC_OPERATION_IDLE) {
-        // TODO: ns_log_debg_mac("request to start operation \"%s\"", mac_operation_to_string(operation));
+        ns_log_debg_mac("request to start operation \"%s\"", mac_operation_to_string(operation));
     }
     switch (operation) {
     case MAC_OPERATION_IDLE:
@@ -739,7 +734,7 @@ mac_start_operation(mac_t *mac, mac_operation_t operation)
 static void
 mac_finish_operation(mac_t *mac)
 {
-    // TODO: ns_log_debg_mac("finishing operation \"%s\"", mac_operation_to_string(mac->operation));
+    ns_log_debg_mac("finishing operation \"%s\"", mac_operation_to_string(mac->operation));
     mac->operation = MAC_OPERATION_IDLE;
 }
 
@@ -790,7 +785,7 @@ mac_perform_next_operation(mac_t *mac)
     }
 
     if (mac->operation != MAC_OPERATION_IDLE) {
-        // TODO: ns_log_debg_mac("starting operation \"%s\"", mac_operation_to_string(mac->operation));
+        ns_log_debg_mac("starting operation \"%s\"", mac_operation_to_string(mac->operation));
     }
 
 exit:
@@ -805,7 +800,7 @@ mac_send_beacon_request(mac_t *mac, mac_frame_t *frame)
     mac_frame_set_dst_panid(frame, MAC_SHORT_ADDR_BROADCAST);
     mac_frame_set_dst_addr_short(frame, MAC_SHORT_ADDR_BROADCAST);
     mac_frame_set_command_id(frame, MAC_FRAME_MAC_CMD_BEACON_REQUEST);
-    // TODO: ns_log_info_mac("sending beacon request");
+    ns_log_info_mac("sending beacon request");
 }
 
 static void
@@ -850,7 +845,7 @@ mac_send_beacon(mac_t *mac, mac_frame_t *frame)
 
     mac_frame_set_payload_length(frame, beacon_length);
 
-    //TODO: log_beacon("sending", beacon_payload);
+    mac_log_beacon(mac, "sending", beacon_payload);
 }
 
 static bool
@@ -1213,7 +1208,7 @@ mac_radio_transmit(mac_t *mac, mac_frame_t *send_frame)
     SUCCESS_OR_EXIT(error = ns_plat_radio_transmit(mac->instance, (ns_radio_frame_t *)send_frame));
 exit:
     if (error != NS_ERROR_NONE) {
-        // TODO: ns_log_warn_mac("ns_plat_radio_transmit() failed with error %s", ns_error_to_string(error));
+        ns_log_warn_mac("ns_plat_radio_transmit() failed with error %s", ns_error_to_string(error));
     }
     return error;
 }
@@ -1231,7 +1226,7 @@ mac_radio_receive(mac_t *mac, uint8_t channel)
     SUCCESS_OR_EXIT(error = ns_plat_radio_receive(mac->instance, channel));
 exit:
     if (error != NS_ERROR_NONE) {
-        // TODO: ns_log_warn_mac("ns_plat_radio_receive() failed with error %s", ns_error_to_string(error));
+        ns_log_warn_mac("ns_plat_radio_receive() failed with error %s", ns_error_to_string(error));
     }
     return error;
 }

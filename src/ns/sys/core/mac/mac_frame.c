@@ -8,6 +8,8 @@
 
 STRING(mac_ext_addr_info, MAC_EXT_ADDR_INFO_STRING_SIZE);
 STRING(mac_addr_info, sizeof(mac_ext_addr_info_string));
+STRING(frame_info, MAC_FRAME_INFO_STRING_SIZE);
+STRING(beacon_payload_info, MAC_BEACON_PAYLOAD_INFO_STRING_SIZE);
 
 // --- MAC frame private functions declarations
 uint16_t
@@ -1073,6 +1075,65 @@ exit:
 }
 #endif // NS_CONFIG_HEADER_IE_SUPPORT
 
+string_t *
+frame_to_info_string(mac_frame_t *frame)
+{
+    string_t *frame_string = &frame_info_string;
+    uint8_t command_id, type;
+    mac_addr_t src, dst;
+
+    string_clear(frame_string);
+
+    string_append(frame_string, "len:%d, seqnum:%d, type:",
+                  mac_frame_get_length(frame),
+                  mac_frame_get_sequence(frame));
+
+    type = mac_frame_get_type(frame);
+
+    switch (type) {
+    case MAC_FRAME_FCF_FRAME_BEACON:
+        string_append(frame_string, "beacon");
+        break;
+    case MAC_FRAME_FCF_FRAME_DATA:
+        string_append(frame_string, "data");
+        break;
+    case MAC_FRAME_FCF_FRAME_ACK:
+        string_append(frame_string, "ack");
+        break;
+    case MAC_FRAME_FCF_FRAME_MAC_CMD:
+        if (mac_frame_get_command_id(frame, &command_id) != NS_ERROR_NONE) {
+            command_id = 0xff;
+        }
+
+        switch (command_id) {
+        case MAC_FRAME_MAC_CMD_DATA_REQUEST:
+            string_append(frame_string, "cmd(data-req)");
+            break;
+        case MAC_FRAME_MAC_CMD_BEACON_REQUEST:
+            string_append(frame_string, "cmd(beacon-req)");
+            break;
+        default:
+            string_append(frame_string, "cmd(%d)", command_id);
+            break;
+        }
+        break;
+    default:
+        string_append(frame_string, "%d", type);
+        break;
+    }
+
+    mac_frame_get_src_addr(frame, &src);
+    mac_frame_get_dst_addr(frame, &dst);
+
+    string_append(frame_string, ", src:%s, dst:%s, sec:%s, ackreq:%s",
+                  string_as_c_string(mac_addr_to_string(&src)),
+                  string_as_c_string(mac_addr_to_string(&dst)),
+                  mac_frame_get_security_enabled(frame) ? "yes" : "no",
+                  mac_frame_get_ack_request(frame) ? "yes" : "no");
+
+    return frame_string;
+}
+
 // --- MAC beacon functions
 void
 mac_beacon_init(mac_beacon_t *beacon)
@@ -1185,6 +1246,24 @@ void
 mac_beacon_payload_set_extended_panid(mac_beacon_payload_t *beacon_payload, const uint8_t *ext_panid)
 {
     memcpy(beacon_payload->extended_panid, ext_panid, sizeof(beacon_payload->extended_panid));
+}
+
+string_t *
+mac_beacon_payload_to_info_string(mac_beacon_payload_t *beacon_payload)
+{
+    string_t *beacon_payload_string = &beacon_payload_info_string;
+    const uint8_t *ext_panid = mac_beacon_payload_get_extended_panid(beacon_payload);
+    string_clear(beacon_payload_string);
+    string_set(beacon_payload_string,
+               "name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
+               mac_beacon_payload_get_network_name(beacon_payload),
+               ext_panid[0], ext_panid[1], ext_panid[2], ext_panid[3],
+               ext_panid[4], ext_panid[5], ext_panid[6], ext_panid[7],
+               mac_beacon_payload_get_protocol_id(beacon_payload),
+               mac_beacon_payload_get_protocol_version(beacon_payload),
+               mac_beacon_payload_is_joining_permitted(beacon_payload) ? "yes" : "no",
+               mac_beacon_payload_is_native(beacon_payload) ? "yes" : "no");
+    return beacon_payload_string;
 }
 
 #if NS_CONFIG_ENABLE_TIME_SYNC

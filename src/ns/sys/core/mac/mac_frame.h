@@ -145,7 +145,7 @@ enum {
     MAC_BEACON_PAYLOAD_PROTOCOL_ID = 3,
     MAC_BEACON_PAYLOAD_NETWORK_NAME_SIZE = 16,
     MAC_BEACON_PAYLOAD_EXT_PANID_SIZE = 8,
-    MAC_BEACON_INFO_STRING_SIZE = 92,
+    MAC_BEACON_PAYLOAD_INFO_STRING_SIZE = 92,
 };
 
 enum {
@@ -499,6 +499,9 @@ uint8_t *
 mac_frame_get_header_ie(mac_frame_t *frame, uint8_t ie_id);
 #endif // NS_CONFIG_HEADER_IE_SUPPORT
 
+string_t *
+frame_to_info_string(mac_frame_t *frame);
+
 // --- MAC beacon functions
 void
 mac_beacon_init(mac_beacon_t *beacon);
@@ -551,6 +554,9 @@ mac_beacon_payload_get_extended_panid(mac_beacon_payload_t *beacon_payload);
 
 void
 mac_beacon_payload_set_extended_panid(mac_beacon_payload_t *beacon_payload, const uint8_t *ext_panid);
+
+string_t *
+mac_beacon_payload_to_info_string(mac_beacon_payload_t *beacon_payload);
 
 #if NS_CONFIG_ENABLE_TIME_SYNC
 // --- MAC vendor ie header functions
