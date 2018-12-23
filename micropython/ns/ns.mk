@@ -41,6 +41,7 @@ SRC_NS_CORE_CRYPTO += $(addprefix ns/src/core/crypto/,\
     aes_ccm.c \
     aes_ecb.c \
     mbedtls.c \
+    sha256.c \
     )
 
 SRC_NS_CORE_API += $(addprefix ns/src/core/api/,\

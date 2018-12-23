@@ -28,6 +28,12 @@ struct _crypto_aes_ccm {
     uint8_t tag_length;
 };
 
+void
+crypto_aes_ccm_ctor(crypto_aes_ccm_t *aes_ccm);
+
+void
+crypto_aes_ccm_dtor(crypto_aes_ccm_t *aes_ccm);
+
 ns_error_t
 crypto_aes_ccm_set_key(crypto_aes_ccm_t *aes_ccm, const uint8_t *key, uint16_t key_length);
 

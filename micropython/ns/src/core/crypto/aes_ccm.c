@@ -2,6 +2,18 @@
 #include "core/common/code_utils.h"
 #include "core/common/debug.h"
 
+void
+crypto_aes_ccm_ctor(crypto_aes_ccm_t *aes_ccm)
+{
+    crypto_aes_ecb_ctor(&aes_ccm->ecb);
+}
+
+void
+crypto_aes_ccm_dtor(crypto_aes_ccm_t *aes_ccm)
+{
+    crypto_aes_ecb_dtor(&aes_ccm->ecb);
+}
+
 ns_error_t
 crypto_aes_ccm_set_key(crypto_aes_ccm_t *aes_ccm, const uint8_t *key, uint16_t key_length)
 {

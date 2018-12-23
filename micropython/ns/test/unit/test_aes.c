@@ -28,7 +28,10 @@ test_mac_beacon_frame(void)
                            0x53, 0x54, 0x22, 0x3B, 0xC1, 0xEC, 0x84, 0x1A, 0xB5, 0x53};
 
     instance_t *instance = instance_get();
+
     crypto_aes_ccm_t aes_ccm;
+    crypto_aes_ccm_ctor(&aes_ccm);
+
     uint32_t header_length = sizeof(test) - 8;
     uint32_t payload_length = 0;
     uint8_t tag_length = 8;
@@ -53,6 +56,8 @@ test_mac_beacon_frame(void)
 
     TEST_VERIFY_OR_EXIT(memcmp(test, decrypted, sizeof(decrypted)) == 0,
                         "test_mac_beacon_frame decrypt failed\r\n");
+
+    crypto_aes_ccm_dtor(&aes_ccm);
 
 exit:
     return error;
@@ -94,6 +99,7 @@ test_mac_command_frame(void)
     };
 
     crypto_aes_ccm_t aes_ccm;
+    crypto_aes_ccm_ctor(&aes_ccm);
 
     crypto_aes_ccm_set_key(&aes_ccm, key, sizeof(key));
     crypto_aes_ccm_init(&aes_ccm, header_length, payload_length, tag_length, nonce, sizeof(nonce));
@@ -111,6 +117,8 @@ test_mac_command_frame(void)
 
     TEST_VERIFY_OR_EXIT(memcmp(test, decrypted, sizeof(decrypted)) == 0,
                         "test_mac_command_frame decrypt failed\r\n");
+
+    crypto_aes_ccm_dtor(&aes_ccm);
 
 exit:
     return error;
