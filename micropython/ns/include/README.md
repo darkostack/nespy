@@ -1,3 +1,3 @@
-# nespy api header files
+# nespy API
 
 ---

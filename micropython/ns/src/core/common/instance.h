@@ -54,4 +54,7 @@ instance_set_log_level(ns_log_level_t log_level);
 notifier_t *
 instance_get_notifier(void *instance);
 
+heap_t *
+instance_get_heap(void *instance);
+
 #endif // NS_CORE_COMMON_INSTANCE_H_

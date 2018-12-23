@@ -37,6 +37,12 @@ SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\
     link_quality.c \
     )
 
+SRC_NS_CORE_CRYPTO += $(addprefix ns/src/core/crypto/,\
+    aes_ccm.c \
+    aes_ecb.c \
+    mbedtls.c \
+    )
+
 SRC_NS_CORE_API += $(addprefix ns/src/core/api/,\
     instance_api.c \
     tasklet_api.c \
@@ -48,6 +54,7 @@ SRC_NS_CORE += $(SRC_NS_CORE_COMMON)
 SRC_NS_CORE += $(SRC_NS_CORE_UTILS)
 SRC_NS_CORE += $(SRC_NS_CORE_MAC)
 SRC_NS_CORE += $(SRC_NS_CORE_THREAD)
+SRC_NS_CORE += $(SRC_NS_CORE_CRYPTO)
 SRC_NS_CORE += $(SRC_NS_CORE_API)
 
 SRC_NS_CLI += $(addprefix ns/src/cli/,\
@@ -64,6 +71,7 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     test_mac_frame.c \
     test_link_quality.c \
     test_logging.c \
+    test_aes.c \
     )
 
 # include path

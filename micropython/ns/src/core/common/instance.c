@@ -1,5 +1,6 @@
 #include "ns/error.h"
 #include "core/common/instance.h"
+#include "core/crypto/mbedtls.h"
 
 static NS_DEFINE_ALIGNED_VAR(s_instance_raw, sizeof(instance_t), uint64_t);
 
@@ -11,7 +12,7 @@ instance_ctor(void)
 
     VERIFY_OR_EXIT(inst->is_initialized == false);
 
-    // objects constructor
+    //instance constructors
     timer_scheduler_ctor(&inst->timer_milli_scheduler);
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     timer_scheduler_ctor(&inst->timer_micro_scheduler);
@@ -26,6 +27,7 @@ instance_ctor(void)
     mac_link_raw_ctor(inst, &inst->link_raw);
 #endif // NS_RADIO || NS_ENABLE_RAW_LINK_API
     heap_ctor(&inst->heap);
+    mbedtls_ctor();
 
     inst->is_initialized = true;
 
@@ -65,6 +67,9 @@ instance_ctor(void)
     extern void test_logging(void);
     test_logging();
 
+    extern ns_error_t test_crypto_aes(void);
+    test_crypto_aes();
+
 exit:
     return inst;
 }
@@ -101,4 +106,11 @@ instance_get_notifier(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
     return &inst->notifier;
+}
+
+heap_t *
+instance_get_heap(void *instance)
+{
+    instance_t *inst = (instance_t *)instance;
+    return &inst->heap;
 }
