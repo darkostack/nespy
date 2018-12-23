@@ -500,7 +500,7 @@ mac_frame_get_header_ie(mac_frame_t *frame, uint8_t ie_id);
 #endif // NS_CONFIG_HEADER_IE_SUPPORT
 
 string_t *
-frame_to_info_string(mac_frame_t *frame);
+mac_frame_to_info_string(mac_frame_t *frame);
 
 // --- MAC beacon functions
 void

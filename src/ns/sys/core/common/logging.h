@@ -225,13 +225,13 @@
     ns_log_warn(NS_LOG_REGION_MAC, _NS_REGION_MAC_PREFIX "error %s: " format, ns_error_to_string(error), \
               ##__VA_ARGS__)
 #define ns_log_mac(log_level, format, ...)                                                     \
-    do                                                                                        \
-    {                                                                                         \
-        if (ns_logging_get_level() >= log_level)                                                 \
-        {                                                                                     \
+    do                                                                                         \
+    {                                                                                          \
+        if (ns_logging_get_level() >= log_level)                                               \
+        {                                                                                      \
             _ns_log_formatter(log_level, NS_LOG_REGION_MAC, "%s" _NS_REGION_MAC_PREFIX format, \
-                            ns_log_LevelToPrefixString(log_level), ##__VA_ARGS__);              \
-        }                                                                                     \
+                            ns_log_level_to_prefix_string(log_level), ##__VA_ARGS__);          \
+        }                                                                                      \
     } while (false)
 
 #else

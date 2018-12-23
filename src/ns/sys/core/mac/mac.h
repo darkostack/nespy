@@ -246,7 +246,7 @@ void
 mac_handle_received_frame(mac_t *mac, mac_frame_t *frame, ns_error_t error);
 
 void
-mac_handle_transmit_started(mac_t *mac, ns_radio_frame_t *frame);
+mac_handle_transmit_started(mac_t *mac, ns_radio_frame_t *aframe);
 
 void
 mac_handle_transmit_done(mac_t *mac, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error);
@@ -288,7 +288,7 @@ uint16_t
 mac_get_cca_failure_rate(mac_t *mac);
 
 ns_error_t
-mac_set_enabled(mac_t *mac);
+mac_set_enabled(mac_t *mac, bool enabled);
 
 bool
 mac_is_enabled(mac_t *mac);

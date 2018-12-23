@@ -28,8 +28,9 @@ SRC_NS_CORE_UTILS += $(addprefix ns/sys/core/utils/,\
 SRC_NS_CORE_MAC += $(addprefix ns/sys/core/mac/,\
     mac_frame.c \
     channel_mask.c \
-	link_raw.c \
-	mac_filter.c \
+    link_raw.c \
+    mac_filter.c \
+    mac.c \
     )
 
 SRC_NS_CORE_THREAD += $(addprefix ns/sys/core/thread/,\

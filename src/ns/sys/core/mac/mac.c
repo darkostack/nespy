@@ -7,12 +7,14 @@
 // TODO: #include "ns/sys/core/crypto/aes_ccm.h"
 // TODO: #include "ns/sys/core/crypto/sha256.h"
 
+#if 0 // TODO:
 static const uint8_t s_mode2_key[] = {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f,
                                       0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66};
 
-static const ns_error_t s_mode2_ext_addr = {
+static const ns_ext_addr_t s_mode2_ext_addr = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
+#endif
 
 static const ns_extended_panid_t s_extended_panid_init = {
     {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
@@ -24,6 +26,7 @@ static const char s_network_name_init[] = "ns-thread";
 static void
 mac_process_transmit_security(mac_t *mac, mac_frame_t *frame, bool process_aes_ccm);
 
+#if 0 // TODO:
 static void
 mac_generate_nonce(mac_t *mac,
                    const mac_ext_addr_t *addr,
@@ -32,10 +35,11 @@ mac_generate_nonce(mac_t *mac,
                    uint8_t *nonce);
 
 static ns_error_t
-mac_process_receive_security_frame(mac_t *mac,
-                                   mac_frame_t *frame,
-                                   const mac_addr_t *src_addr,
-                                   neighbor_t *neighbor);
+mac_process_receive_security(mac_t *mac,
+                             mac_frame_t *frame,
+                             const mac_addr_t *src_addr,
+                             neighbor_t *neighbor);
+#endif
 
 static void
 mac_update_idle_mode(mac_t *mac);
@@ -55,17 +59,18 @@ mac_send_beacon_request(mac_t *mac, mac_frame_t *frame);
 static void
 mac_send_beacon(mac_t *mac, mac_frame_t *frame);
 
+#if 0
 static bool
 mac_should_send_beacon(mac_t *mac);
-
-static void
-mac_start_backoff(mac_t *mac);
+#endif
 
 static void
 mac_begin_transmit(mac_t *mac);
 
+#if 0 // TODO:
 static ns_error_t
 mac_handle_mac_command(mac_t *mac, mac_frame_t *frame);
+#endif
 
 static mac_frame_t *
 mac_get_operation_frame(mac_t *mac);
@@ -128,11 +133,13 @@ mac_radio_receive(mac_t *mac, uint8_t channel);
 static ns_error_t
 mac_radio_sleep(mac_t *mac);
 
+#if 0 // TODO:
 static void
 mac_log_frame_rx_failure(mac_t *mac, const mac_frame_t *frame, ns_error_t error);
 
 static void
 mac_log_frame_tx_failure(mac_t *mac, const mac_frame_t *frame, ns_error_t error);
+#endif
 
 static void
 mac_log_beacon(mac_t *mac, const char *action_text, const mac_beacon_payload_t *beacon_payload);
@@ -206,7 +213,7 @@ mac_ctor(void *instance, mac_t *mac)
     ns_plat_radio_enable(instance);
 
     mac_set_extended_panid(mac, &s_extended_panid_init);
-    mac_set_network_name(mac, &s_network_name_init);
+    mac_set_network_name(mac, s_network_name_init);
     mac_set_panid(mac, mac->panid);
     mac_set_ext_addr(mac, &mac->ext_addr);
     mac_set_short_addr(mac, mac->short_addr);
@@ -308,7 +315,7 @@ exit:
 void
 mac_energy_scan_done(mac_t *mac, int8_t rssi)
 {
-    mac_report_energy_scan_result(mac, max_rssi);
+    mac_report_energy_scan_result(mac, rssi);
     mac_perform_energy_scan(mac);
 }
 
@@ -349,7 +356,7 @@ mac_set_rx_on_when_idle(mac_t *mac, bool rx_on_when_idle)
         }
     }
 
-    mac_update_idle_mode();
+    mac_update_idle_mode(mac);
 
 exit:
     return;
@@ -480,7 +487,7 @@ mac_acquired_radio_channel(mac_t *mac, uint16_t *acquisition_id)
     mac->radio_channel_acquisition_id = random_get_uint16_in_range(1, MAC_MAX_ACQUISITION_ID);
 
     *acquisition_id = mac->radio_channel_acquisition_id;
-    
+
 exit:
     return error;
 }
@@ -526,7 +533,7 @@ mac_set_supported_channel_mask(mac_t *mac, const mac_channel_mask_t mask)
     notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_SUPPORTED_CHANNEL_MASK);
 
 exit:
-    return error;
+    return;
 }
 
 const char *
@@ -582,51 +589,112 @@ exit:
 }
 
 const ns_extended_panid_t *
-mac_get_extended_panid(mac_t *mac);
+mac_get_extended_panid(mac_t *mac)
+{
+    return &mac->extended_panid;
+}
 
 ns_error_t
-mac_set_extended_panid(mac_t *mac, const ns_extended_panid_t *extended_panid);
+mac_set_extended_panid(mac_t *mac, const ns_extended_panid_t *extended_panid)
+{
+    VERIFY_OR_EXIT(memcmp(mac->extended_panid.m8, extended_panid->m8, sizeof(mac->extended_panid)) != 0,
+                   notifier_signal_if_first(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_EXT_PANID));
+
+    mac->extended_panid = *extended_panid;
+    notifier_signal(instance_get_notifier(mac->instance), NS_CHANGED_THREAD_EXT_PANID);
+
+exit:
+    return NS_ERROR_NONE;
+}
 
 #if NS_ENABLE_MAC_FILTER
 mac_filter_t
-mac_get_filter(mac_t *mac);
+mac_get_filter(mac_t *mac)
+{
+    return mac->filter;
+}
 #endif
 
 void
-mac_handle_received_frame(mac_t *mac, mac_frame_t *frame, ns_error_t error);
+mac_handle_received_frame(mac_t *mac, mac_frame_t *frame, ns_error_t error)
+{
+    // TODO:
+}
 
 void
-mac_handle_transmit_started(mac_t *mac, ns_radio_frame_t *frame);
+mac_handle_transmit_started(mac_t *mac, ns_radio_frame_t *aframe)
+{
+    mac_frame_t *frame = (mac_frame_t *)aframe;
+    if (mac_frame_get_ack_request(frame) &&
+        !(ns_plat_radio_get_caps(mac->instance) & NS_RADIO_CAPS_ACK_TIMEOUT)) {
+        timer_milli_start(&mac->mac_timer, MAC_ACK_TIMEOUT);
+        ns_log_debg_mac("ack timer start");
+    }
+}
 
 void
-mac_handle_transmit_done(mac_t *mac, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error);
+mac_handle_transmit_done(mac_t *mac, ns_radio_frame_t *frame, ns_radio_frame_t *ack_frame, ns_error_t error)
+{
+    // TODO:
+}
 
 bool
-mac_is_active_scan_in_progress(mac_t *mac);
+mac_is_active_scan_in_progress(mac_t *mac)
+{
+    return (mac->operation == MAC_OPERATION_ACTIVE_SCAN) || (mac->pending_active_scan);
+}
 
 bool
-mac_is_energy_scan_in_progress(mac_t *mac);
+mac_is_energy_scan_in_progress(mac_t *mac)
+{
+    return (mac->operation == MAC_OPERATION_ENERGY_SCAN) || (mac->pending_energy_scan);
+}
 
 bool
-mac_is_in_transmit_state(mac_t *mac);
+mac_is_in_transmit_state(mac_t *mac)
+{
+    return (mac->operation == MAC_OPERATION_TRANSMIT_DATA) ||
+           (mac->operation == MAC_OPERATION_TRANSMIT_BEACON) ||
+           (mac->operation == MAC_OPERATION_TRANSMIT_OUT_OF_BAND_FRAME);
+}
 
 void
-mac_set_pcap_callback(mac_t *mac, ns_link_pcap_callback_func_t pcap_callback, void *context);
+mac_set_pcap_callback(mac_t *mac, ns_link_pcap_callback_func_t pcap_callback, void *context)
+{
+    mac->pcap_callback = pcap_callback;
+    mac->pcap_callback_context = context;
+}
 
 bool
-mac_is_promiscuous(mac_t *mac);
+mac_is_promiscuous(mac_t *mac)
+{
+    return ns_plat_radio_get_promiscuous(mac->instance);
+}
 
 void
-mac_set_promiscuous(mac_t *mac, bool promiscuous);
+mac_set_promiscuous(mac_t *mac, bool promiscuous)
+{
+    ns_plat_radio_set_promiscuous(mac->instance, promiscuous);
+    mac_update_idle_mode(mac);
+}
 
 void
-mac_reset_counters(mac_t *mac);
+mac_reset_counters(mac_t *mac)
+{
+    memset(&mac->counters, 0, sizeof(mac->counters));
+}
 
 ns_mac_counters_t *
-mac_get_counters(mac_t *mac);
+mac_get_counters(mac_t *mac)
+{
+    return &mac->counters;
+}
 
 int8_t
-mac_get_noise_floor(mac_t *mac);
+mac_get_noise_floor(mac_t *mac)
+{
+    return ns_plat_radio_get_receive_sensitivity(mac->instance);
+}
 
 bool
 mac_radio_supports_csma_backoffs(mac_t *mac)
@@ -635,28 +703,44 @@ mac_radio_supports_csma_backoffs(mac_t *mac)
 }
 
 bool
-mac_radio_supports_retries(mac_t *mac);
+mac_radio_supports_retries(mac_t *mac)
+{
+    return (ns_plat_radio_get_caps(mac->instance) & NS_RADIO_CAPS_TRANSMIT_RETRIES) != 0;
+}
 
 uint16_t
-mac_get_cca_failure_rate(mac_t *mac);
+mac_get_cca_failure_rate(mac_t *mac)
+{
+    return success_rate_tracker_get_failure_rate(&mac->cca_success_rate_tracker);
+}
 
 ns_error_t
-mac_set_enabled(mac_t *mac);
+mac_set_enabled(mac_t *mac, bool enabled)
+{
+    mac->enabled = enabled;
+    return NS_ERROR_NONE;
+}
 
 bool
-mac_is_enabled(mac_t *mac);
+mac_is_enabled(mac_t *mac)
+{
+    return mac->enabled;
+}
 
 void
-mac_process_transmit_aes_ccm(mac_t *mac, mac_frame_t *frame, const mac_ext_addr_t *ext_addr);
-
+mac_process_transmit_aes_ccm(mac_t *mac, mac_frame_t *frame, const mac_ext_addr_t *ext_addr)
+{
+    // TODO:
+}
 
 // --- private functions
 static void
 mac_process_transmit_security(mac_t *mac, mac_frame_t *frame, bool process_aes_ccm)
 {
-
+    // TODO:
 }
 
+#if 0 // TODO:
 static void
 mac_generate_nonce(mac_t *mac,
                    const mac_ext_addr_t *addr,
@@ -664,17 +748,34 @@ mac_generate_nonce(mac_t *mac,
                    uint8_t security_level,
                    uint8_t *nonce)
 {
+    // source address
+    for (int i = 0; i < 8; i++) {
+        nonce[i] = addr->m8[i];
+    }
 
+    nonce += 8;
+
+    // frame_counter
+    nonce[0] = (frame_counter >> 24) & 0xff;
+    nonce[1] = (frame_counter >> 16) & 0xff;
+    nonce[2] = (frame_counter >> 8) & 0xff;
+    nonce[3] = (frame_counter >> 0) & 0xff;
+    nonce += 4;
+
+    // security level
+    nonce[0] = security_level;
 }
 
 static ns_error_t
-mac_process_receive_security_frame(mac_t *mac,
-                                   mac_frame_t *frame,
-                                   const mac_addr_t *src_addr,
-                                   neighbor_t *neighbor)
+mac_process_receive_security(mac_t *mac,
+                             mac_frame_t *frame,
+                             const mac_addr_t *src_addr,
+                             neighbor_t *neighbor)
 {
-
+    // TODO:
+    return NS_ERROR_NONE;
 }
+#endif
 
 static void
 mac_update_idle_mode(mac_t *mac)
@@ -806,7 +907,7 @@ mac_send_beacon_request(mac_t *mac, mac_frame_t *frame)
 static void
 mac_send_beacon(mac_t *mac, mac_frame_t *frame)
 {
-    uint8_t num_unsecure_ports;
+    //TODO: uint8_t num_unsecure_ports;
     uint8_t beacon_length;
     uint16_t fcf;
     mac_beacon_t *beacon = NULL;
@@ -825,8 +926,7 @@ mac_send_beacon(mac_t *mac, mac_frame_t *frame)
 
     beacon_payload = (mac_beacon_payload_t *)mac_beacon_get_payload(beacon);
 
-    // TODO:
-#if 0
+#if 0 // TODO:
     if (key_manager_get_security_policy_flags(thread_netif_get_key_manager(mac->instance)) &
         NS_SECURITY_POLICY_BEACONS) {
         mac_beacon_payload_init(beacon_payload);
@@ -848,17 +948,36 @@ mac_send_beacon(mac_t *mac, mac_frame_t *frame)
     mac_log_beacon(mac, "sending", beacon_payload);
 }
 
+#if 0 // TODO:
 static bool
 mac_should_send_beacon(mac_t *mac)
 {
+    bool should_send = false;
 
+    VERIFY_OR_EXIT(mac->enabled);
+
+    should_send = mac_is_beacon_enabled(mac);
+
+#if NS_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
+    if (!should_send) {
+        // When `ENABLE_BEACON_RSP_WHEN_JOINABLE` feature is enabled,
+        // the device should transmit IEEE 802.15.4 Beacons in response
+        // to IEEE 802.15.4 Beacon Requests even while the device is not
+        // router capable and detached (i.e., `mac_is_beacon_enabled()` is
+        // false) but only if it is in joinable state (unsecure port
+        // list is not empty).
+
+        uint8_t num_unsecure_ports;
+
+        // TODO: ip6_filter_get_unsecure_ports(thread_netif_get_ip6_filter(mac->instance), &num_unsecure_ports);
+        should_send = (num_unsecure_ports != 0);
+    }
+#endif
+
+exit:
+    return should_send;
 }
-
-static void
-mac_start_backoff(mac_t *mac)
-{
-
-}
+#endif
 
 static void
 mac_begin_transmit(mac_t *mac)
@@ -907,8 +1026,7 @@ mac_begin_transmit(mac_t *mac)
         }
 
 #if NS_CONFIG_ENABLE_TIME_SYNC
-// TODO:
-#if 0
+#if 0 // TODO:
         time_ie_offset = mac_get_time_ie_offset(mac, send_frame);
         mac_frame_set_time_ie_offset(send_frame, time_ie_offset);
         if (time_ie_offset != 0) {
@@ -955,11 +1073,37 @@ exit:
     }
 }
 
+#if 0 // TODO:
 static ns_error_t
 mac_handle_mac_command(mac_t *mac, mac_frame_t *frame)
 {
+    ns_error_t error = NS_ERROR_NONE;
+    uint8_t command_id;
 
+    mac_frame_get_command_id(frame, &command_id);
+
+    switch (command_id) {
+    case MAC_FRAME_MAC_CMD_BEACON_REQUEST:
+        mac->counters.rx_beacon_request++;
+        ns_log_info_mac("received beacon request");
+        if (mac_should_send_beacon(mac)) {
+            mac_start_operation(mac, MAC_OPERATION_TRANSMIT_BEACON);
+        }
+        EXIT_NOW(error = NS_ERROR_DROP);
+
+    case MAC_FRAME_MAC_CMD_DATA_REQUEST:
+        mac->counters.rx_data_poll++;
+        break;
+
+    default:
+        mac->counters.rx_other++;
+        break;
+    }
+
+exit:
+    return error;
 }
+#endif
 
 static mac_frame_t *
 mac_get_operation_frame(mac_t *mac)
@@ -980,49 +1124,113 @@ mac_get_operation_frame(mac_t *mac)
 static void
 handle_mac_timer(void *timer)
 {
-
+    mac_t *mac = (mac_t *)((timer_t *)timer)->handler.context;
+    mac_handle_mac_timer(mac);
 }
 
 static void
 mac_handle_mac_timer(mac_t *mac)
 {
-
+    switch (mac->operation) {
+    case MAC_OPERATION_ACTIVE_SCAN:
+        mac_perform_active_scan(mac);
+        break;
+    case MAC_OPERATION_ENERGY_SCAN:
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        timer_micro_stop(&mac->backoff_timer);
+#else
+        timer_milli_stop(&mac->backoff_timer);
+#endif
+        mac_energy_scan_done(mac, mac->energy_scan_current_max_rssi);
+        break;
+    case MAC_OPERATION_TRANSMIT_DATA:
+        ns_log_debg_mac("ack timer fired");
+        mac_radio_receive(mac, mac_frame_get_channel(mac->tx_frame));
+        mac_handle_transmit_done(mac, mac->tx_frame, NULL, NS_ERROR_NO_ACK);
+        break;
+    default:
+        assert(false);
+        break;
+    }
 }
 
 static void
 handle_backoff_timer(void *timer)
 {
-
+    mac_t *mac = (mac_t *)((timer_t *)timer)->handler.context;
+    mac_handle_backoff_timer(mac);
 }
 
 static void
 mac_handle_backoff_timer(mac_t *mac)
 {
+    // The backoff timer serves two purposes:
+    // (a) It is used to add CSMA backoff delay before a frame transmission.
+    // (b) While performing Energy Scan, it is used to add delay between RSSI samples.
 
+    if (mac->operation == MAC_OPERATION_ENERGY_SCAN) {
+        mac_sample_rssi(mac);
+#if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        timer_micro_start_at(&mac->backoff_timer,
+                             timer_get_firetime(&mac->backoff_timer),
+                             MAC_ENERGY_SCAN_RSSI_SAMPLE_INTERVAL);
+#else
+        timer_milli_start_at(&mac->backoff_timer,
+                             timer_get_firetime(&mac->backoff_timer),
+                             MAC_ENERGY_SCAN_RSSI_SAMPLE_INTERVAL);
+#endif
+    } else {
+        mac_begin_transmit(mac);
+    }
 }
 
 static void
 handle_receive_timer(void *timer)
 {
-
+    mac_t *mac = (mac_t *)((timer_t *)timer)->handler.context;
+    mac_handle_receive_timer(mac);
 }
 
 static void
 mac_handle_receive_timer(mac_t *mac)
 {
+    // `mac->receive_timer` is used for two purposes: (1) for data poll timeout
+    // (i.e., waiting to receive a data frame after a data poll ack
+    // indicating a pending frame from parent), and (2) for delaying sleep
+    // when feature `NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS` is
+    // enabled.
 
+    if (mac->operation == MAC_OPERATION_WAITING_FOR_DATA) {
+        ns_log_debg_mac("data poll timeout");
+        mac_finish_operation(mac);
+        // TODO: get_netif().get_mesh_forwarder().get_data_poll_manager().handle_poll_timeout();
+        mac_perform_next_operation(mac);
+    } else {
+        ns_log_debg_mac("sleep delay timeout expired");
+        mac_update_idle_mode(mac);
+    }
 }
 
 static void
 handle_operation_task(void *tasklet)
 {
-
+    mac_t *mac = (mac_t *)((tasklet_t *)tasklet)->handler.context;
+    mac_handle_operation_task(mac);
 }
 
 static void
 mac_handle_operation_task(mac_t *mac)
 {
+    // `mac->operation_task` tasklet is used for two separate purposes:
+    // 1) To invoke `mac_handle_transmit_done()` from a tasklet with `NS_ERROR_ABORT` error.
+    // 2) To perform a scheduled MAC operation.
 
+    if (mac->transmit_aborted) {
+        mac->transmit_aborted = false;
+        mac_handle_transmit_done(mac, mac_get_operation_frame(mac), NULL, NS_ERROR_ABORT);
+    } else {
+        mac_perform_next_operation(mac);
+    }
 }
 
 static void
@@ -1100,7 +1308,7 @@ mac_scan(mac_t *mac,
 {
     mac->scan_context = context;
     mac->scan_duration = scan_duration;
-    mac->scan_channels = MAC_CHANNEL_MASK_CHANNEL_ITERATOR_FIRST;
+    mac->scan_channel = MAC_CHANNEL_MASK_CHANNEL_ITERATOR_FIRST;
 
     if (scan_channels == 0) {
         scan_channels = NS_RADIO_SUPPORTED_CHANNELS;
@@ -1234,26 +1442,89 @@ exit:
 static ns_error_t
 mac_radio_sleep(mac_t *mac)
 {
+    ns_error_t error = NS_ERROR_NONE;
+#if NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+    if (mac->delay_sleep) {
+        ns_log_debg_mac("delaying sleep waiting for frame rx/tx");
+        timer_milli_start(&mac->receive_timer, MAC_SLEEP_DELAY);
+        mac->delay_sleep = false;
+        // If sleep is delayed, `NS_ERROR_INVALID_STATE` is
+        // returned to inform the caller to put/keep the
+        // radio in receive mode.
+        EXIT_NOW(error = NS_ERROR_INVALID_STATE);
+    }
+#endif // NS_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
 
+    error = ns_plat_radio_sleep(mac->instance);
+
+    VERIFY_OR_EXIT(error != NS_ERROR_NONE);
+
+    ns_log_warn_mac("ns_plat_radio_sleep() failed with error %s", ns_error_to_string(error));
+
+exit:
+    return error;
 }
 
+#if (NS_CONFIG_LOG_LEVEL >= NS_LOG_LEVEL_INFO) && (NS_CONFIG_LOG_MAC == 1)
+#if 0 // TODO:
 static void
 mac_log_frame_rx_failure(mac_t *mac, const mac_frame_t *frame, ns_error_t error)
 {
+    ns_log_level_t log_level;
 
+    switch (error) {
+    case NS_ERROR_ABORT:
+    case NS_ERROR_NO_FRAME_RECEIVED:
+    case NS_ERROR_DESTINATION_ADDRESS_FILTERED:
+        log_level = NS_LOG_LEVEL_DEBG;
+        break;
+    default:
+        log_level = NS_LOG_LEVEL_INFO;
+        break;
+    }
+
+    if (frame == NULL) {
+        ns_log_mac(log_level, "frame rx failed, error:%s", ns_error_to_string(error));
+    } else {
+        ns_log_mac(log_level, "frame rx failed, error:%s, %s", ns_error_to_string(error),
+                   string_as_c_string(mac_frame_to_info_string((mac_frame_t *)frame)));
+    }
 }
 
 static void
 mac_log_frame_tx_failure(mac_t *mac, const mac_frame_t *frame, ns_error_t error)
 {
-
+    ns_log_info_mac("frame tx failed, error: %s, retries:%d/%d, %s", ns_error_to_string(error),
+                    mac->transmit_retries, mac_frame_get_max_frame_retries((mac_frame_t *)frame),
+                    string_as_c_string(mac_frame_to_info_string((mac_frame_t *)frame)));
 }
+#endif
 
 static void
 mac_log_beacon(mac_t *mac, const char *action_text, const mac_beacon_payload_t *beacon_payload)
 {
-
+    (void)mac;
+    ns_log_info_mac("%s beacon, %s", action_text,
+                    string_as_c_string(mac_beacon_payload_to_info_string((mac_beacon_payload_t *)beacon_payload)));
 }
+
+#else // #if (NS_CONFIG_LOG_LEVEL >= NS_LOG_LEVEL_INFO) && (NS_CONFIG_LOG_MAC == 1)
+#if 0 // TODO:
+static void
+mac_log_frame_rx_failure(mac_t *, const mac_frame_t *, ns_error_t)
+{
+}
+
+static void
+mac_log_frame_tx_failure(mac_t *, const mac_frame_t *, ns_error_t)
+{
+}
+#endif
+static void
+mac_log_beacon(mac_t *, const char *, const mac_beacon_payload_t *)
+{
+}
+#endif // #if (NS_CONFIG_LOG_LEVEL >= NS_LOG_LEVEL_INFO) && (NS_CONFIG_LOG_MAC == 1)
 
 #if NS_CONFIG_ENABLE_TIME_SYNC
 static void

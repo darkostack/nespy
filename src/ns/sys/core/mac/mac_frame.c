@@ -1076,7 +1076,7 @@ exit:
 #endif // NS_CONFIG_HEADER_IE_SUPPORT
 
 string_t *
-frame_to_info_string(mac_frame_t *frame)
+mac_frame_to_info_string(mac_frame_t *frame)
 {
     string_t *frame_string = &frame_info_string;
     uint8_t command_id, type;
