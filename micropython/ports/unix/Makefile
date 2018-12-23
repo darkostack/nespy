@@ -174,6 +174,7 @@ LIB_SRC_C += $(addprefix ns-platform/,\
     radio.c \
     misc.c \
     logging.c \
+    memory.c \
     )
 
 LIB_SRC_C += $(addprefix ns/src/nsmpy/,\

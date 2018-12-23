@@ -81,3 +81,6 @@ CFLAGS += -DNS_ENABLE_MAC_FILTER=$(NS_ENABLE_MAC_FILTER)
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CORE:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CLI:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_TEST:.c=.o))
+
+# include third party makefile
+include $(TOP)/ns/third_party/mbedtls/mbedtls.mk
