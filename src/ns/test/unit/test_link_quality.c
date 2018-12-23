@@ -1,7 +1,7 @@
-#include "ns/include/platform/random.h"
-#include "ns/sys/core/common/code_utils.h"
-#include "ns/sys/core/thread/link_quality.h"
-#include "ns/test/unit/test_util.h"
+#include "ns/platform/random.h"
+#include "core/common/code_utils.h"
+#include "core/thread/link_quality.h"
+#include "test_util.h"
 #include <string.h>
 
 #define PRINT_DEBUG 0

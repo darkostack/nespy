@@ -1,9 +1,9 @@
-#include "ns/include/error.h"
-#include "ns/sys/core/common/instance.h"
-#include "ns/sys/core/common/string.h"
-#include "ns/sys/core/mac/mac_frame.h"
-#include "ns/sys/core/mac/channel_mask.h"
-#include "ns/test/unit/test_util.h"
+#include "ns/error.h"
+#include "core/common/instance.h"
+#include "core/common/string.h"
+#include "core/mac/mac_frame.h"
+#include "core/mac/channel_mask.h"
+#include "test_util.h"
 #include <string.h>
 #include <stdio.h>
 

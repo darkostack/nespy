@@ -1,4 +1,4 @@
-#include "ns/include/platform/misc.h"
+#include "ns/platform/misc.h"
 #include <stdio.h>
 #include <stdlib.h>
 

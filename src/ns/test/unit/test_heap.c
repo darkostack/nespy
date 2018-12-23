@@ -1,7 +1,7 @@
-#include "ns/include/error.h"
-#include "ns/include/platform/random.h"
-#include "ns/sys/core/common/instance.h"
-#include "ns/test/unit/test_util.h"
+#include "ns/error.h"
+#include "ns/platform/random.h"
+#include "core/common/instance.h"
+#include "test_util.h"
 #include <string.h>
 #include <stdio.h>
 

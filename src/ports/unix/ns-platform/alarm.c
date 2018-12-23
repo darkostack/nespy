@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "ns/include/platform/alarm-milli.h"
-#include "ns/include/platform/alarm-micro.h"
+#include "ns/platform/alarm-milli.h"
+#include "ns/platform/alarm-micro.h"
 #include "platform-unix.h"
 
 #define MS_PER_S 1000

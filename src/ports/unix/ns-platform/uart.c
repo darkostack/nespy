@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include "ns/include/platform/uart.h"
+#include "ns/platform/uart.h"
 #include "platform-unix.h"
 
 static uint8_t        s_receive_buffer[128];

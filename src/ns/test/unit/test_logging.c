@@ -1,7 +1,7 @@
-#include "ns/sys/core/core-config.h"
-#include "ns/include/platform/random.h"
-#include "ns/sys/core/common/instance.h"
-#include "ns/sys/core/utils/heap.h"
+#include "ns/platform/random.h"
+#include "core/core-config.h"
+#include "core/common/instance.h"
+#include "core/utils/heap.h"
 
 #define RUN_TEST 0
 

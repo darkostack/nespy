@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "ns/include/tasklet.h"
-#include "ns/include/platform/alarm-milli.h"
-#include "ns/include/platform/alarm-micro.h"
-#include "ns/include/platform/radio.h"
-#include "ns/include/platform/system.h"
+#include "ns/tasklet.h"
+#include "ns/platform/alarm-milli.h"
+#include "ns/platform/alarm-micro.h"
+#include "ns/platform/radio.h"
+#include "ns/platform/system.h"
 #include "platform-unix.h"
 
 uint32_t g_node_id = 1;

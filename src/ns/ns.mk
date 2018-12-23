@@ -8,7 +8,7 @@ NS_ENABLE_MAC_FILTER=0
 
 ########################################
 
-SRC_NS_CORE_COMMON += $(addprefix ns/sys/core/common/,\
+SRC_NS_CORE_COMMON += $(addprefix ns/src/core/common/,\
     instance.c \
     timer.c \
     tasklet.c \
@@ -21,11 +21,11 @@ SRC_NS_CORE_COMMON += $(addprefix ns/sys/core/common/,\
     notifier.c \
     )
 
-SRC_NS_CORE_UTILS += $(addprefix ns/sys/core/utils/,\
+SRC_NS_CORE_UTILS += $(addprefix ns/src/core/utils/,\
     heap.c \
     )
 
-SRC_NS_CORE_MAC += $(addprefix ns/sys/core/mac/,\
+SRC_NS_CORE_MAC += $(addprefix ns/src/core/mac/,\
     mac_frame.c \
     channel_mask.c \
     link_raw.c \
@@ -33,11 +33,11 @@ SRC_NS_CORE_MAC += $(addprefix ns/sys/core/mac/,\
     mac.c \
     )
 
-SRC_NS_CORE_THREAD += $(addprefix ns/sys/core/thread/,\
+SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\
     link_quality.c \
     )
 
-SRC_NS_CORE_API += $(addprefix ns/sys/core/api/,\
+SRC_NS_CORE_API += $(addprefix ns/src/core/api/,\
     instance_api.c \
     tasklet_api.c \
     message_api.c \
@@ -50,7 +50,7 @@ SRC_NS_CORE += $(SRC_NS_CORE_MAC)
 SRC_NS_CORE += $(SRC_NS_CORE_THREAD)
 SRC_NS_CORE += $(SRC_NS_CORE_API)
 
-SRC_NS_CLI += $(addprefix ns/sys/cli/,\
+SRC_NS_CLI += $(addprefix ns/src/cli/,\
     cli.c \
     cli-uart.c \
     )
@@ -65,6 +65,13 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     test_link_quality.c \
     test_logging.c \
     )
+
+# include path
+CFLAGS += -I$(TOP)/ns/include
+CFLAGS += -I$(TOP)/ns/src
+
+# test code directories
+CFLAGS += -I$(TOP)/ns/test/unit
 
 # compiler flags defintions based on BUILD OPTIONS
 CFLAGS += -DNS_RADIO=$(NS_RADIO)

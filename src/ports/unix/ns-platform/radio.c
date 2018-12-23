@@ -1,10 +1,10 @@
-#include "ns/include/dataset.h"
-#include "ns/include/platform/alarm-milli.h"
-#include "ns/include/platform/alarm-micro.h"
-#include "ns/include/platform/radio.h"
-#include "ns/include/platform/random.h"
-#include "ns/include/platform/time.h"
-#include "ns/sys/core/common/code_utils.h"
+#include "ns/dataset.h"
+#include "ns/platform/alarm-milli.h"
+#include "ns/platform/alarm-micro.h"
+#include "ns/platform/radio.h"
+#include "ns/platform/random.h"
+#include "ns/platform/time.h"
+#include "core/common/code_utils.h"
 #include "platform-unix.h"
 
 enum {

@@ -176,12 +176,12 @@ LIB_SRC_C += $(addprefix ns-platform/,\
     logging.c \
     )
 
-LIB_SRC_C += $(addprefix ns/sys/py/,\
-    mod-nespy.c \
-    obj-instance.c \
-    obj-platform.c \
-    obj-timer.c \
-    obj-tasklet.c \
+LIB_SRC_C += $(addprefix ns/src/nsmpy/,\
+    nespy-modules.c \
+    instance.c \
+    platform.c \
+    timer.c \
+    tasklet.c \
     )
 
 OBJ = $(PY_O)

@@ -1,7 +1,7 @@
 #include "platform-unix.h"
-#include "ns/include/config.h"
-#include "ns/include/platform/logging.h"
-#include "ns/sys/core/common/code_utils.h"
+#include "ns/config.h"
+#include "ns/platform/logging.h"
+#include "core/common/code_utils.h"
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
