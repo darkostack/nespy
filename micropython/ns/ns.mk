@@ -5,6 +5,7 @@
 NS_RADIO=0
 NS_ENABLE_RAW_LINK_API=0
 NS_ENABLE_MAC_FILTER=0
+NS_ENABLE_ECDSA=0
 
 ########################################
 
@@ -44,6 +45,7 @@ SRC_NS_CORE_CRYPTO += $(addprefix ns/src/core/crypto/,\
     sha256.c \
     pbkdf2_cmac.c \
     hmac_sha256.c \
+    ecdsa.c \
     )
 
 SRC_NS_CORE_API += $(addprefix ns/src/core/api/,\
@@ -88,6 +90,7 @@ CFLAGS += -I$(TOP)/ns/test/unit
 CFLAGS += -DNS_RADIO=$(NS_RADIO)
 CFLAGS += -DNS_ENABLE_RAW_LINK_API=$(NS_ENABLE_RAW_LINK_API)
 CFLAGS += -DNS_ENABLE_MAC_FILTER=$(NS_ENABLE_MAC_FILTER)
+CFLAGS += -DNS_ENABLE_ECDSA=$(NS_ENABLE_ECDSA)
 
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CORE:.c=.o))
 OBJ += $(addprefix $(BUILD)/,$(SRC_NS_CLI:.c=.o))
