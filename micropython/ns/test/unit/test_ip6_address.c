@@ -23,6 +23,7 @@ test_ip6_address(void)
     printf("--------------------------- TEST IP6 ADDRESS\r\n");
 
     mac_ext_addr_t ext_addr;
+    mac_ext_addr_t ext_addr2;
     ip6_addr_t ip6_addr;
     ip6_addr_t ip6_addr2;
 
@@ -43,6 +44,14 @@ test_ip6_address(void)
     TEST_VERIFY_OR_EXIT(strcmp(string_as_c_string(ip6_addr_to_string(&ip6_addr)),
                                string_as_c_string(ip6_addr_to_string(&ip6_addr2))) == 0,
                         "ip6 address test failed - ip6 address doesn't match\r\n");
+
+    ip6_addr_to_ext_addr(&ip6_addr, &ext_addr2);
+
+    PRINTF("ext_addr: %s\r\n", string_as_c_string(mac_ext_addr_to_string(&ext_addr2)));
+
+    TEST_VERIFY_OR_EXIT(strcmp(string_as_c_string(mac_ext_addr_to_string(&ext_addr)),
+                               string_as_c_string(mac_ext_addr_to_string(&ext_addr2))) == 0,
+                        "ip6 address test failed - ext address doesn't match\r\n");
 
 exit:
     if (error != NS_ERROR_NONE) {

@@ -103,10 +103,10 @@ void
 ip6_addr_set_iid_from_mac_ext_addr(ip6_addr_t *ip6_addr, mac_ext_addr_t *ext_addr);
 
 void
-ip6_addr_to_ext_addr_from_ext_addr(ip6_addr_t *ip6_addr, mac_ext_addr_t *ext_addr);
+ip6_addr_to_ext_addr(ip6_addr_t *ip6_addr, mac_ext_addr_t *ext_addr);
 
 void
-ip6_addr_to_ext_addr_from_mac_addr(ip6_addr_t *ip6_addr, mac_addr_t *mac_addr);
+ip6_addr_to_mac_addr(ip6_addr_t *ip6_addr, mac_addr_t *mac_addr);
 
 uint8_t
 ip6_addr_get_scope(ip6_addr_t *ip6_addr);

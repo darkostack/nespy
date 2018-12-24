@@ -175,14 +175,14 @@ ip6_addr_set_iid_from_mac_ext_addr(ip6_addr_t *ip6_addr, mac_ext_addr_t *ext_add
 }
 
 void
-ip6_addr_to_ext_addr_from_ext_addr(ip6_addr_t *ip6_addr, mac_ext_addr_t *ext_addr)
+ip6_addr_to_ext_addr(ip6_addr_t *ip6_addr, mac_ext_addr_t *ext_addr)
 {
     memcpy(ext_addr->m8, ip6_addr->fields.m8 + IP6_ADDR_INTERFACE_IDENTIFIER_OFFSET, sizeof(ext_addr->m8));
     mac_ext_addr_toggle_local(ext_addr);
 }
 
 void
-ip6_addr_to_ext_addr_from_mac_addr(ip6_addr_t *ip6_addr, mac_addr_t *mac_addr)
+ip6_addr_to_mac_addr(ip6_addr_t *ip6_addr, mac_addr_t *mac_addr)
 {
     mac_addr_set_extended_from_buffer(mac_addr,
                                       ip6_addr->fields.m8 + IP6_ADDR_INTERFACE_IDENTIFIER_OFFSET,
