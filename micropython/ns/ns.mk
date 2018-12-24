@@ -34,6 +34,10 @@ SRC_NS_CORE_MAC += $(addprefix ns/src/core/mac/,\
     mac.c \
     )
 
+SRC_NS_CORE_NET += $(addprefix ns/src/core/net/,\
+    ip6_address.c \
+    )
+
 SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\
     link_quality.c \
     )
@@ -58,6 +62,7 @@ SRC_NS_CORE_API += $(addprefix ns/src/core/api/,\
 SRC_NS_CORE += $(SRC_NS_CORE_COMMON)
 SRC_NS_CORE += $(SRC_NS_CORE_UTILS)
 SRC_NS_CORE += $(SRC_NS_CORE_MAC)
+SRC_NS_CORE += $(SRC_NS_CORE_NET)
 SRC_NS_CORE += $(SRC_NS_CORE_THREAD)
 SRC_NS_CORE += $(SRC_NS_CORE_CRYPTO)
 SRC_NS_CORE += $(SRC_NS_CORE_API)

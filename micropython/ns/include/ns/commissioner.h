@@ -2,6 +2,7 @@
 #define NS_COMMISSIONER_H_
 
 #include "ns/dataset.h"
+#include "ns/ip6.h"
 #include "ns/platform/radio.h"
 
 typedef enum _ns_commissioner_state
