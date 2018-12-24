@@ -4,8 +4,8 @@
 #include "core/common/encoding.h"
 #include "core/common/instance.h"
 #include "core/common/random.h"
-// TODO: #include "core/crypto/aes_ccm.h"
-// TODO: #include "core/crypto/sha256.h"
+#include "core/crypto/aes_ccm.h"
+#include "core/crypto/sha256.h"
 
 #if 0 // TODO:
 static const uint8_t s_mode2_key[] = {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f,
@@ -26,7 +26,6 @@ static const char s_network_name_init[] = "ns-thread";
 static void
 mac_process_transmit_security(mac_t *mac, mac_frame_t *frame, bool process_aes_ccm);
 
-#if 0 // TODO:
 static void
 mac_generate_nonce(mac_t *mac,
                    const mac_ext_addr_t *addr,
@@ -34,6 +33,7 @@ mac_generate_nonce(mac_t *mac,
                    uint8_t security_level,
                    uint8_t *nonce);
 
+#if 0 // TODO:
 static ns_error_t
 mac_process_receive_security(mac_t *mac,
                              mac_frame_t *frame,
@@ -730,7 +730,41 @@ mac_is_enabled(mac_t *mac)
 void
 mac_process_transmit_aes_ccm(mac_t *mac, mac_frame_t *frame, const mac_ext_addr_t *ext_addr)
 {
-    // TODO:
+    uint32_t frame_counter = 0;
+    uint8_t security_level;
+    uint8_t nonce[MAC_NONCE_SIZE];
+    uint8_t tag_length;
+    crypto_aes_ccm_t aes_ccm;
+    ns_error_t error;
+
+    crypto_aes_ccm_ctor(&aes_ccm);
+
+    mac_frame_get_security_level(frame, &security_level);
+    mac_frame_get_frame_counter(frame, &frame_counter);
+
+    mac_generate_nonce(mac, ext_addr, frame_counter, security_level, nonce);
+
+    crypto_aes_ccm_set_key(&aes_ccm, mac_frame_get_aes_key(frame), 16);
+    tag_length = mac_frame_get_footer_length(frame) - MAC_FRAME_FCS_SIZE;
+
+    error = crypto_aes_ccm_init(&aes_ccm,
+                                mac_frame_get_header_length(frame),
+                                mac_frame_get_payload_length(frame),
+                                tag_length,
+                                nonce,
+                                sizeof(nonce));
+
+    assert(error == NS_ERROR_NONE);
+
+    crypto_aes_ccm_header(&aes_ccm, mac_frame_get_header(frame), mac_frame_get_header_length(frame));
+    crypto_aes_ccm_payload(&aes_ccm,
+                           mac_frame_get_payload(frame),
+                           mac_frame_get_payload(frame),
+                           mac_frame_get_payload_length(frame),
+                           true);
+    crypto_aes_ccm_finalize(&aes_ccm, mac_frame_get_footer(frame), &tag_length);
+
+    crypto_aes_ccm_dtor(&aes_ccm);
 }
 
 // --- private functions
@@ -740,7 +774,6 @@ mac_process_transmit_security(mac_t *mac, mac_frame_t *frame, bool process_aes_c
     // TODO:
 }
 
-#if 0 // TODO:
 static void
 mac_generate_nonce(mac_t *mac,
                    const mac_ext_addr_t *addr,
@@ -766,6 +799,7 @@ mac_generate_nonce(mac_t *mac,
     nonce[0] = security_level;
 }
 
+#if 0 // TODO:
 static ns_error_t
 mac_process_receive_security(mac_t *mac,
                              mac_frame_t *frame,
