@@ -73,6 +73,9 @@ instance_ctor(void)
     extern ns_error_t test_hmac_sha256(void);
     test_hmac_sha256();
 
+    extern ns_error_t test_ip6_address(void);
+    test_ip6_address();
+
 exit:
     return inst;
 }
