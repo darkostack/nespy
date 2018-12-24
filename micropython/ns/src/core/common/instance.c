@@ -70,6 +70,9 @@ instance_ctor(void)
     extern ns_error_t test_crypto_aes(void);
     test_crypto_aes();
 
+    extern ns_error_t test_hmac_sha256(void);
+    test_hmac_sha256();
+
 exit:
     return inst;
 }

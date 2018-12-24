@@ -77,6 +77,7 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     test_link_quality.c \
     test_logging.c \
     test_aes.c \
+    test_hmac_sha256.c \
     )
 
 # include path
