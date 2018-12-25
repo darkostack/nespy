@@ -2,6 +2,7 @@
 #define NS_CORE_COMMON_ENCODING_H_
 
 #include "core/core-config.h"
+#include <stdint.h>
 
 #define BIT_VECTOR_BYTES(x) (((x) + (CHAR_BIT - 1)) / CHAR_BIT)
 
