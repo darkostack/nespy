@@ -181,11 +181,12 @@ ip6_netif_add_external_unicast_addr(ip6_netif_t *ip6_netif, ip6_netif_unicast_ad
     ns_error_t error = NS_ERROR_NONE;
     ip6_netif_unicast_addr_t *entry;
     size_t num = NS_ARRAY_LENGTH(ip6_netif->ext_unicast_addrs);
+    uint8_t i = 0;
 
     VERIFY_OR_EXIT(!ip6_addr_is_link_local(ip6_netif_unicast_addr_get_addr(addr)), error = NS_ERROR_INVALID_ARGS);
 
     for (entry = ip6_netif->unicast_addrs; entry; entry = ip6_netif_unicast_addr_get_next(entry)) {
-        if (ip6_netif_unicast_addr_get_addr(entry) == ip6_netif_unicast_addr_get_addr(addr)) {
+        if (ip6_addr_is_equal(ip6_netif_unicast_addr_get_addr(entry), ip6_netif_unicast_addr_get_addr(addr))) {
             VERIFY_OR_EXIT((entry >= &ip6_netif->ext_unicast_addrs[0]) &&
                            (entry < &ip6_netif->ext_unicast_addrs[num]),
                            error = NS_ERROR_INVALID_ARGS);
@@ -197,7 +198,7 @@ ip6_netif_add_external_unicast_addr(ip6_netif_t *ip6_netif, ip6_netif_unicast_ad
     }
 
     // find an available entry in the `ext_unicast_addrs` array
-    for (entry = &ip6_netif->ext_unicast_addrs[0]; num > 0; num--, entry++) {
+    for (entry = &ip6_netif->ext_unicast_addrs[0]; num > 0; num--, entry++, i++) {
         // in an unused/available entry, `next` points back to the entry itself
         if (entry->next == entry) {
             break;
@@ -207,9 +208,9 @@ ip6_netif_add_external_unicast_addr(ip6_netif_t *ip6_netif, ip6_netif_unicast_ad
     VERIFY_OR_EXIT(num > 0, error = NS_ERROR_NO_BUFS);
 
     // copy the new address into the available entry and insert it in linked-list
-    entry = addr;
-    entry->next = ip6_netif->unicast_addrs;
-    ip6_netif->unicast_addrs = entry;
+    ip6_netif->ext_unicast_addrs[i] = *addr;
+    ip6_netif->ext_unicast_addrs[i].next = ip6_netif->unicast_addrs;
+    ip6_netif->unicast_addrs = &ip6_netif->ext_unicast_addrs[i];
 
     notifier_signal(instance_get_notifier(ip6_netif->instance), NS_CHANGED_IP6_ADDRESS_ADDED);
 
@@ -226,7 +227,7 @@ ip6_netif_remove_external_unicast_addr(ip6_netif_t *ip6_netif, ip6_addr_t *addr)
     size_t num = NS_ARRAY_LENGTH(ip6_netif->ext_unicast_addrs);
 
     for (entry = ip6_netif->unicast_addrs; entry; entry = ip6_netif_unicast_addr_get_next(entry)) {
-        if (ip6_netif_unicast_addr_get_addr(entry) == addr) {
+        if (ip6_addr_is_equal(ip6_netif_unicast_addr_get_addr(entry), addr)) {
             VERIFY_OR_EXIT((entry >= &ip6_netif->ext_unicast_addrs[0]) &&
                            (entry < &ip6_netif->ext_unicast_addrs[num]),
                            error = NS_ERROR_INVALID_ARGS);
@@ -270,7 +271,7 @@ ip6_netif_is_unicast_addr(ip6_netif_t *ip6_netif, const ip6_addr_t *addr)
 
     for (ip6_netif_unicast_addr_t *cur = ip6_netif->unicast_addrs; cur;
          cur = ip6_netif_unicast_addr_get_next(cur)) {
-        if (ip6_netif_unicast_addr_get_addr(cur) == addr) {
+        if (ip6_addr_is_equal(ip6_netif_unicast_addr_get_addr(cur), addr)) {
             EXIT_NOW(rval = true);
         }
     }
@@ -286,7 +287,7 @@ ip6_netif_is_multicast_subscribed(ip6_netif_t *ip6_netif, const ip6_addr_t *addr
 
     for (ip6_netif_multicast_addr_t *cur = ip6_netif->multicast_addrs; cur;
          cur = ip6_netif_multicast_addr_get_next(cur)) {
-        if (ip6_netif_multicast_addr_get_addr(cur) == addr) {
+        if (ip6_addr_is_equal(ip6_netif_multicast_addr_get_addr(cur), addr)) {
             EXIT_NOW(rval = true);
         }
     }
@@ -443,7 +444,7 @@ ip6_netif_get_next_external_multicast(ip6_netif_t *ip6_netif, uint8_t *iterator,
         entry = &ip6_netif->ext_multicast_addrs[i];
         // in an unused/available entry `next` points back to the entry itself.
         if (entry->next != entry) {
-            addr = ip6_netif_multicast_addr_get_addr(entry);
+            *addr = *ip6_netif_multicast_addr_get_addr(entry);
             *iterator = i + 1;
             EXIT_NOW(error = NS_ERROR_NONE);
         }
@@ -459,13 +460,14 @@ ip6_netif_subscribe_external_multicast(ip6_netif_t *ip6_netif, const ip6_addr_t 
     ns_error_t error = NS_ERROR_NONE;
     ip6_netif_multicast_addr_t *entry;
     size_t num = NS_ARRAY_LENGTH(ip6_netif->ext_multicast_addrs);
+    uint8_t i = 0;
 
     if (ip6_netif_is_multicast_subscribed(ip6_netif, addr)) {
         EXIT_NOW(error = NS_ERROR_ALREADY);
     }
 
     // find an available entry in the `ext_multicast_addrs` array
-    for (entry = &ip6_netif->ext_multicast_addrs[0]; num > 0; num--, entry++) {
+    for (entry = &ip6_netif->ext_multicast_addrs[0]; num > 0; num--, entry++, i++) {
         // in an unused/available entry, `next` points back to the entry itself
         if (entry->next == entry) {
             break;
@@ -475,9 +477,9 @@ ip6_netif_subscribe_external_multicast(ip6_netif_t *ip6_netif, const ip6_addr_t 
     VERIFY_OR_EXIT(num > 0, error = NS_ERROR_NO_BUFS);
 
     // copy the address into the available entry and add it to linked list.
-    entry->addr = *addr;
-    entry->next = ip6_netif->multicast_addrs;
-    ip6_netif->multicast_addrs = entry;
+    ip6_netif->ext_multicast_addrs[i].addr = *addr;
+    ip6_netif->ext_multicast_addrs[i].next = ip6_netif->multicast_addrs;
+    ip6_netif->multicast_addrs = &ip6_netif->ext_multicast_addrs[i];
 
     notifier_signal(instance_get_notifier(ip6_netif->instance), NS_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
@@ -494,7 +496,7 @@ ip6_netif_unsubscribe_external_multicast(ip6_netif_t *ip6_netif, const ip6_addr_
     size_t num = NS_ARRAY_LENGTH(ip6_netif->ext_multicast_addrs);
 
     for (entry = ip6_netif->multicast_addrs; entry; entry = ip6_netif_multicast_addr_get_next(entry)) {
-        if (ip6_netif_multicast_addr_get_addr(entry) == addr) {
+        if (ip6_addr_is_equal(ip6_netif_multicast_addr_get_addr(entry), addr)) {
             VERIFY_OR_EXIT((entry >= &ip6_netif->ext_multicast_addrs[0]) &&
                            (entry < &ip6_netif->ext_multicast_addrs[num]));
             if (last) {

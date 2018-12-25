@@ -76,6 +76,9 @@ instance_ctor(void)
     extern ns_error_t test_ip6_address(void);
     test_ip6_address();
 
+    extern ns_error_t test_ip6_netif(void);
+    test_ip6_netif();
+
 exit:
     return inst;
 }
