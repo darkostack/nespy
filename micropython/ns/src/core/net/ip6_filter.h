@@ -4,7 +4,6 @@
 #include "core/core-config.h"
 #include "core/common/message.h"
 
-
 enum {
     IP6_FILTER_MAX_UNSECURE_PORTS = 2,
 };

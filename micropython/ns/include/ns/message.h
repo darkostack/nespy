@@ -2,6 +2,7 @@
 #define NS_MESSAGE_H_
 
 #include "ns/error.h"
+#include <stdbool.h>
 
 typedef void *ns_message_t;
 
