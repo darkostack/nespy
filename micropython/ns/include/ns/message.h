@@ -3,6 +3,7 @@
 
 #include "ns/error.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef void *ns_message_t;
 

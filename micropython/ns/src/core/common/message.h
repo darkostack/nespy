@@ -6,7 +6,6 @@
 
 typedef ns_message_t message_t;
 typedef struct _buffer buffer_t;
-typedef struct _message_info message_info_t;
 typedef struct _message_pool message_pool_t;
 typedef ns_message_queue_t message_queue_t;
 typedef struct _priority_queue priority_queue_t;
@@ -63,7 +62,7 @@ enum {
 struct _buffer {
     union {
         struct {
-            message_info_t info;
+            struct _message_info info;
             uint8_t data[MSG_HEAD_BUFFER_DATA_SIZE];
         } head;
         uint8_t data[MSG_BUFFER_DATA_SIZE];

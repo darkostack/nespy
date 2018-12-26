@@ -23,7 +23,6 @@ struct _ns_ip6_prefix {
     uint8_t length;
 };
 
-
 typedef struct _ns_netif_addr ns_netif_addr_t;
 struct _ns_netif_addr {
     ns_ip6_addr_t addr;  // IPv6 unicast address
