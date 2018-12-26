@@ -119,30 +119,26 @@ ip6_header_set_destination(ip6_header_t *ip6_header, const ip6_addr_t *destinati
 }
 
 uint8_t
-ip6_header_get_payload_length_offset(ip6_header_t *ip6_header)
+ip6_header_get_payload_length_offset(void)
 {
-    (void)ip6_header;
     return offsetof(ip6_header_t, payload_length);
 }
 
 uint8_t
-ip6_header_get_hop_limit_offset(ip6_header_t *ip6_header)
+ip6_header_get_hop_limit_offset(void)
 {
-    (void)ip6_header;
     return offsetof(ip6_header_t, hop_limit);
 }
 
 uint8_t
-ip6_header_get_hop_limit_size(ip6_header_t *ip6_header)
+ip6_header_get_hop_limit_size(void)
 {
-    (void)ip6_header;
     return sizeof(uint8_t);
 }
 
 uint8_t
-ip6_header_get_destination_offset(ip6_header_t *ip6_header)
+ip6_header_get_destination_offset(void)
 {
-    (void)ip6_header;
     return offsetof(ip6_header_t, destination);
 }
 

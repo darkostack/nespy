@@ -3,8 +3,8 @@
 #include "core/common/instance.h"
 #include "core/net/ip6.h"
 #include "core/net/tcp.h"
-//#include "core/net/udp6.h"
-//#include "core/thread/mle.h"
+//TODO: #include "core/net/udp6.h"
+//TODO: #include "core/thread/mle.h"
 
 void
 ip6_filter_ctor(ip6_filter_t *ip6_filter)

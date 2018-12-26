@@ -42,14 +42,14 @@ message_pool_ctor(message_pool_t *message_pool)
 
     message_pool->free_buffers = message_pool->buffers;
 
-    for (uint16_t i = 0; i < MSG_NUM_BUFFERS - 1; i++) {
+    for (uint16_t i = 0; i < MESSAGE_NUM_BUFFERS - 1; i++) {
         message_pool->buffers[i].next = (void *)&message_pool->buffers[i + 1];
     }
 
-    message_pool->buffers[MSG_NUM_BUFFERS - 1].next = NULL;
-    message_pool->num_free_buffers = MSG_NUM_BUFFERS;
+    message_pool->buffers[MESSAGE_NUM_BUFFERS - 1].next = NULL;
+    message_pool->num_free_buffers = MESSAGE_NUM_BUFFERS;
 
-    for (int prio = 0; prio < MSG_NUM_PRIORITIES; prio++) {
+    for (int prio = 0; prio < MESSAGE_NUM_PRIORITIES; prio++) {
         message_pool->all_queue.tails[prio] = NULL;
     }
 }
@@ -63,7 +63,7 @@ message_queue_ctor(message_queue_t *queue)
 void
 message_priority_queue_ctor(priority_queue_t *queue)
 {
-    for (int prio = 0; prio < MSG_NUM_PRIORITIES; prio++) {
+    for (int prio = 0; prio < MESSAGE_NUM_PRIORITIES; prio++) {
         queue->tails[prio] = NULL;
     }
 }
@@ -109,7 +109,7 @@ message_new_set(uint8_t type, uint16_t reserved, const message_settings_t *setti
 
     if (settings == NULL) {
         link_security_enabled = true;
-        priority = MSG_PRIO_NORMAL;
+        priority = MESSAGE_PRIO_NORMAL;
     } else {
         link_security_enabled = settings->link_security_enabled;
         priority = settings->priority;
@@ -155,7 +155,7 @@ message_set_priority(message_t message, uint8_t priority)
     ns_error_t error = NS_ERROR_NONE;
     priority_queue_t *priority_queue = NULL;
 
-    VERIFY_OR_EXIT(priority < MSG_NUM_PRIORITIES, error = NS_ERROR_INVALID_ARGS);
+    VERIFY_OR_EXIT(priority < MESSAGE_NUM_PRIORITIES, error = NS_ERROR_INVALID_ARGS);
     VERIFY_OR_EXIT(msg_is_in_queue(message), ((buffer_t *)message)->buffer.head.info.priority = priority);
     VERIFY_OR_EXIT(message_get_priority(message) != priority);
 
@@ -186,7 +186,7 @@ message_resize(message_t message, uint16_t length)
     // add buffers
     buffer_t *cur_buffer = (buffer_t *)message;
     buffer_t *last_buffer;
-    uint16_t cur_length = MSG_HEAD_BUFFER_DATA_SIZE;
+    uint16_t cur_length = MESSAGE_HEAD_BUFFER_DATA_SIZE;
 
     while (cur_length < length) {
         if (cur_buffer->next == NULL) {
@@ -195,7 +195,7 @@ message_resize(message_t message, uint16_t length)
             VERIFY_OR_EXIT(cur_buffer->next != NULL, error = NS_ERROR_NO_BUFS);
         }
         cur_buffer = (buffer_t *)cur_buffer->next;
-        cur_length += MSG_HEAD_BUFFER_DATA_SIZE;
+        cur_length += MESSAGE_HEAD_BUFFER_DATA_SIZE;
     }
 
     // remove buffers
@@ -222,12 +222,12 @@ message_set_length(message_t message, uint16_t length)
     uint16_t total_len_current = message_get_reserved(message) + message_get_length(message);
     int bufs = 0;
 
-    if (total_len_request > MSG_HEAD_BUFFER_DATA_SIZE) {
-        bufs = (((total_len_request - MSG_HEAD_BUFFER_DATA_SIZE) - 1) / MSG_BUFFER_DATA_SIZE) + 1;
+    if (total_len_request > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bufs = (((total_len_request - MESSAGE_HEAD_BUFFER_DATA_SIZE) - 1) / MESSAGE_BUFFER_DATA_SIZE) + 1;
     }
 
-    if (total_len_current > MSG_HEAD_BUFFER_DATA_SIZE) {
-        bufs -= (((total_len_current - MSG_HEAD_BUFFER_DATA_SIZE) - 1) / MSG_BUFFER_DATA_SIZE) + 1;
+    if (total_len_current > MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bufs -= (((total_len_current - MESSAGE_HEAD_BUFFER_DATA_SIZE) - 1) / MESSAGE_BUFFER_DATA_SIZE) + 1;
     }
 
     error = message_reclaim_buffers(message_pool, bufs, message_get_priority(message));
@@ -489,8 +489,8 @@ message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, u
     offset += message_get_reserved(message);
 
     // special case first buffer
-    if (offset < MSG_HEAD_BUFFER_DATA_SIZE) {
-        bytes_to_cover = MSG_HEAD_BUFFER_DATA_SIZE - offset;
+    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_cover = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
         if (bytes_to_cover > length) {
             bytes_to_cover = length;
         }
@@ -501,22 +501,22 @@ message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, u
         bytes_covered += bytes_to_cover;
         offset = 0;
     } else {
-        offset -= MSG_HEAD_BUFFER_DATA_SIZE;
+        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
     }
 
     // advance to offset
     cur_buffer = (buffer_t *)((buffer_t *)message)->next;
 
-    while (offset >= MSG_BUFFER_DATA_SIZE) {
+    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
         assert(cur_buffer != NULL);
         cur_buffer = (buffer_t *)cur_buffer->next;
-        offset -= MSG_BUFFER_DATA_SIZE;
+        offset -= MESSAGE_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
         assert(cur_buffer != NULL);
-        bytes_to_cover = MSG_BUFFER_DATA_SIZE - offset;
+        bytes_to_cover = MESSAGE_BUFFER_DATA_SIZE - offset;
 
         if (bytes_to_cover > length) {
             bytes_to_cover = length;
@@ -554,7 +554,7 @@ message_prepend(message_t message, const void *buf, uint16_t length)
                    sizeof(((buffer_t *)message)->buffer.head.data) - message_get_reserved(message));
         }
 
-        message_set_reserved(message, message_get_reserved(message) + MSG_BUFFER_DATA_SIZE);
+        message_set_reserved(message, message_get_reserved(message) + MESSAGE_BUFFER_DATA_SIZE);
     }
 
     message_set_reserved(message, message_get_reserved(message) - length);
@@ -621,8 +621,8 @@ message_write(message_t message, uint16_t offset, const void *buf, uint16_t leng
     offset += message_get_reserved(message);
 
     // special case first buffer
-    if (offset < MSG_HEAD_BUFFER_DATA_SIZE) {
-        bytes_to_copy = MSG_HEAD_BUFFER_DATA_SIZE - offset;
+    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_copy = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -632,22 +632,22 @@ message_write(message_t message, uint16_t offset, const void *buf, uint16_t leng
         buf = (uint8_t *)buf + bytes_to_copy;
         offset = 0;
     } else {
-        offset -= MSG_HEAD_BUFFER_DATA_SIZE;
+        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
     }
 
     // advance to offset
     cur_buffer = (buffer_t *)((buffer_t *)message)->next;
 
-    while (offset >= MSG_BUFFER_DATA_SIZE) {
+    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
         assert(cur_buffer != NULL);
         cur_buffer = (buffer_t *)cur_buffer->next;
-        offset -= MSG_BUFFER_DATA_SIZE;
+        offset -= MESSAGE_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
         assert(cur_buffer != NULL);
-        bytes_to_copy = MSG_BUFFER_DATA_SIZE - offset;
+        bytes_to_copy = MESSAGE_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -737,8 +737,8 @@ message_read(message_t message, uint16_t offset, void *buf, uint16_t length)
     offset += message_get_reserved(message);
 
     // special case first buffer
-    if (offset < MSG_HEAD_BUFFER_DATA_SIZE) {
-        bytes_to_copy = MSG_HEAD_BUFFER_DATA_SIZE - offset;
+    if (offset < MESSAGE_HEAD_BUFFER_DATA_SIZE) {
+        bytes_to_copy = MESSAGE_HEAD_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -748,22 +748,22 @@ message_read(message_t message, uint16_t offset, void *buf, uint16_t length)
         buf = (uint8_t *)buf + bytes_to_copy;
         offset = 0;
     } else {
-        offset -= MSG_HEAD_BUFFER_DATA_SIZE;
+        offset -= MESSAGE_HEAD_BUFFER_DATA_SIZE;
     }
 
     // advance to offset
     cur_buffer = (buffer_t *)((buffer_t *)message)->next;
 
-    while (offset >= MSG_BUFFER_DATA_SIZE) {
+    while (offset >= MESSAGE_BUFFER_DATA_SIZE) {
         assert(cur_buffer != NULL);
         cur_buffer = (buffer_t *)cur_buffer->next;
-        offset -= MSG_BUFFER_DATA_SIZE;
+        offset -= MESSAGE_BUFFER_DATA_SIZE;
     }
 
     // begin copy
     while (length > 0) {
         assert(cur_buffer != NULL);
-        bytes_to_copy = MSG_BUFFER_DATA_SIZE - offset;
+        bytes_to_copy = MESSAGE_BUFFER_DATA_SIZE - offset;
         if (bytes_to_copy > length) {
             bytes_to_copy = length;
         }
@@ -803,7 +803,7 @@ message_get_next(message_t message)
         tail = (message_t)msg_queue->tail;
     }
 
-    next = (message == tail) ? NULL : ((buffer_t *)message)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+    next = (message == tail) ? NULL : ((buffer_t *)message)->buffer.head.info.next[MESSAGE_INFO_LIST_INTERFACE];
 
 exit:
     return next;
@@ -825,7 +825,7 @@ void
 message_remove_from_message_queue_list(message_t message, message_queue_t *queue)
 {
     // this list maintained by message queue interface
-    uint8_t list = MSG_INFO_LIST_INTERFACE;
+    uint8_t list = MESSAGE_INFO_LIST_INTERFACE;
 
     assert((((buffer_t *)message)->buffer.head.info.next[list] != NULL) &&
               (((buffer_t *)message)->buffer.head.info.prev[list] != NULL));
@@ -853,7 +853,7 @@ message_remove_from_priority_queue_list(message_t message, priority_queue_t *que
     uint8_t priority;
     buffer_t *tail;
 
-    uint8_t list = MSG_INFO_LIST_INTERFACE;
+    uint8_t list = MESSAGE_INFO_LIST_INTERFACE;
 
     priority = ((buffer_t *)message)->buffer.head.info.priority;
 
@@ -884,7 +884,7 @@ message_remove_from_all_queue_list(message_t message)
     buffer_t *tail;
     message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
 
-    uint8_t list = MSG_INFO_LIST_ALL;
+    uint8_t list = MESSAGE_INFO_LIST_ALL;
 
     priority = message_get_priority(message);
 
@@ -912,7 +912,7 @@ void
 message_add_to_message_queue_list(message_t message, message_queue_t *queue, queue_position_t pos)
 {
     // this list maintained by message queue interface
-    uint8_t list = MSG_INFO_LIST_INTERFACE;
+    uint8_t list = MESSAGE_INFO_LIST_INTERFACE;
 
     assert((((buffer_t *)message)->buffer.head.info.next[list] == NULL) &&
               (((buffer_t *)message)->buffer.head.info.prev[list] == NULL));
@@ -930,7 +930,7 @@ message_add_to_message_queue_list(message_t message, message_queue_t *queue, que
         ((buffer_t *)head)->buffer.head.info.prev[list] = message;
         ((buffer_t *)queue->tail)->buffer.head.info.next[list] = message;
 
-        if (pos == MSG_QUEUE_POS_TAIL) {
+        if (pos == MESSAGE_QUEUE_POS_TAIL) {
             queue->tail = (void *)message;
         }
     }
@@ -943,7 +943,7 @@ message_add_to_priority_queue_list(message_t message, priority_queue_t *queue)
     buffer_t *tail;
     buffer_t *next;
 
-    uint8_t list = MSG_INFO_LIST_INTERFACE;
+    uint8_t list = MESSAGE_INFO_LIST_INTERFACE;
 
     priority = message_get_priority(message);
 
@@ -971,7 +971,7 @@ message_add_to_all_queue_list(message_t message)
     buffer_t *next;
     message_pool_t *message_pool = &((instance_t *)instance_get())->message_pool;
 
-    uint8_t list = MSG_INFO_LIST_ALL;
+    uint8_t list = MESSAGE_INFO_LIST_ALL;
 
     priority = message_get_priority(message);
 
@@ -1048,7 +1048,7 @@ message_t
 message_queue_get_head(message_queue_t *queue)
 {
     return (queue->tail == NULL) ? NULL :
-           ((buffer_t *)queue->tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+           ((buffer_t *)queue->tail)->buffer.head.info.next[MESSAGE_INFO_LIST_INTERFACE];
 }
 
 message_t
@@ -1117,7 +1117,7 @@ message_priority_queue_get_head(priority_queue_t *queue)
 {
     message_t tail;
     tail = msg_find_first_non_null_tail(queue, 0);
-    return (tail == NULL) ? NULL : ((buffer_t *)tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+    return (tail == NULL) ? NULL : ((buffer_t *)tail)->buffer.head.info.next[MESSAGE_INFO_LIST_INTERFACE];
 }
 
 message_t
@@ -1129,7 +1129,7 @@ message_priority_queue_get_head_for_priority(priority_queue_t *queue, uint8_t pr
     if (queue->tails[priority] != NULL) {
         previous_tail = msg_find_first_non_null_tail(queue, msg_prev_priority(priority));
         assert(previous_tail != NULL);
-        head = ((buffer_t *)previous_tail)->buffer.head.info.next[MSG_INFO_LIST_INTERFACE];
+        head = ((buffer_t *)previous_tail)->buffer.head.info.next[MESSAGE_INFO_LIST_INTERFACE];
     } else {
         head = NULL;
     }
@@ -1170,7 +1170,7 @@ message_iterator_get_all_messages_head(message_iterator_t *iterator)
     tail = message_priority_queue_get_tail(&message_pool->all_queue);
 
     if (tail != NULL) {
-        head = ((buffer_t *)tail)->buffer.head.info.next[MSG_INFO_LIST_ALL];
+        head = ((buffer_t *)tail)->buffer.head.info.next[MESSAGE_INFO_LIST_ALL];
     } else {
         head = NULL;
     }
@@ -1287,7 +1287,7 @@ msg_find_first_non_null_tail(priority_queue_t *queue, uint8_t start_prio_level)
 static uint8_t
 msg_prev_priority(uint8_t priority)
 {
-    return (priority == MSG_NUM_PRIORITIES - 1) ? 0 : (priority + 1);
+    return (priority == MESSAGE_NUM_PRIORITIES - 1) ? 0 : (priority + 1);
 }
 
 static uint16_t
@@ -1323,7 +1323,7 @@ msg_iterator_next(message_iterator_t *iterator)
     if (iterator->message == tail) {
         next = NULL;
     } else {
-        next = ((buffer_t *)iterator->message)->buffer.head.info.next[MSG_INFO_LIST_ALL];
+        next = ((buffer_t *)iterator->message)->buffer.head.info.next[MESSAGE_INFO_LIST_ALL];
     }
 
 exit:
@@ -1346,7 +1346,7 @@ msg_iterator_prev(message_iterator_t *iterator)
     if (iterator->message == head) {
         prev = NULL;
     } else {
-        prev = ((buffer_t *)iterator->message)->buffer.head.info.prev[MSG_INFO_LIST_ALL];
+        prev = ((buffer_t *)iterator->message)->buffer.head.info.prev[MESSAGE_INFO_LIST_ALL];
     }
 
 exit:

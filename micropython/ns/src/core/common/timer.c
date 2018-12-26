@@ -92,6 +92,12 @@ timer_milli_stop(timer_milli_t *milli)
     timer_remove(&((instance_t *)timer->instance)->timer_milli_scheduler, timer, &alarm_milli_api);
 }
 
+uint32_t
+timer_milli_get_now(void)
+{
+    return ns_plat_alarm_milli_get_now();
+}
+
 void
 ns_plat_alarm_milli_fired(ns_instance_t instance)
 {
@@ -125,6 +131,12 @@ timer_micro_stop(timer_micro_t *micro)
 {
     timer_t *timer = (timer_t *)micro;
     timer_remove(&((instance_t *)timer->instance)->timer_micro_scheduler, timer, &alarm_micro_api);
+}
+
+uint32_t
+timer_micro_get_now(void)
+{
+    return ns_plat_alarm_micro_get_now();
 }
 
 void

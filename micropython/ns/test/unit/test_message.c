@@ -35,7 +35,7 @@ test_message_write_read(void *instance)
 
     message_free(message);
 
-    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MSG_NUM_BUFFERS,
+    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MESSAGE_NUM_BUFFERS,
                         "num of free buffers did not match as expected.\r\n");
 exit:
     if (error != NS_ERROR_NONE) {
@@ -121,7 +121,7 @@ test_message_utility(void *instance)
     message_free(msgref);
     message_free(msgclone);
 
-    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MSG_NUM_BUFFERS,
+    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MESSAGE_NUM_BUFFERS,
                         "num of free buffers did not match as what is expected.\r\n");
 exit:
     if (error != NS_ERROR_NONE) {

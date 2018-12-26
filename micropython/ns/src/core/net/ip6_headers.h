@@ -158,16 +158,16 @@ void
 ip6_header_set_destination(ip6_header_t *ip6_header, const ip6_addr_t *destination);
 
 uint8_t
-ip6_header_get_payload_length_offset(ip6_header_t *ip6_header);
+ip6_header_get_payload_length_offset(void);
 
 uint8_t
-ip6_header_get_hop_limit_offset(ip6_header_t *ip6_header);
+ip6_header_get_hop_limit_offset(void);
 
 uint8_t
-ip6_header_get_hop_limit_size(ip6_header_t *ip6_header);
+ip6_header_get_hop_limit_size(void);
 
 uint8_t
-ip6_header_get_destination_offset(ip6_header_t *ip6_header);
+ip6_header_get_destination_offset(void);
 
 // --- ip6 extension header functions
 ip6_ip_proto_t

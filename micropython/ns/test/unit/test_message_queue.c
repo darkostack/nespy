@@ -34,7 +34,7 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // enqueue 1 message and remove it
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
@@ -45,7 +45,7 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // enqueue 1 message at head and remove it
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_HEAD) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MESSAGE_QUEUE_POS_HEAD) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
@@ -56,27 +56,27 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // enqueue 5 messages
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[1], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[1], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 2, msg[0], msg[1]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[2], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 3, msg[0], msg[1], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[3], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[3], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 4, msg[0], msg[1], msg[2], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[4], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[4], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 5, msg[0], msg[1], msg[2], msg[3], msg[4]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
@@ -104,12 +104,12 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add after remove
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[2], msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[3], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[3], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 4, msg[1], msg[2], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
@@ -121,7 +121,7 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add to head
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_HEAD) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[2], MESSAGE_QUEUE_POS_HEAD) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 4, msg[2], msg[1], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
@@ -139,13 +139,13 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add to head
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[1], MSG_QUEUE_POS_HEAD) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[1], MESSAGE_QUEUE_POS_HEAD) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 3, msg[1], msg[0], msg[3]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // add to tail
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[2], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[2], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 4, msg[1], msg[0], msg[3], msg[2]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
@@ -172,12 +172,12 @@ test_message_queue(void *instance)
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
 
     // check the failure cases
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL) == NS_ERROR_NONE,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_NONE,
                         "message queue enqueue failed.\r\n");
     error = verify_message_queue_content(&message_queue, 1, msg[0]);
     VERIFY_OR_EXIT(error == NS_ERROR_NONE);
     // enqueue already queued message
-    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MSG_QUEUE_POS_TAIL) == NS_ERROR_ALREADY,
+    TEST_VERIFY_OR_EXIT(message_queue_enqueue(&message_queue, msg[0], MESSAGE_QUEUE_POS_TAIL) == NS_ERROR_ALREADY,
                         "message queue alread enqueue message did not fail as expected.\r\n");
     // dequeue not queued message
     TEST_VERIFY_OR_EXIT(message_queue_dequeue(&message_queue, msg[1]) == NS_ERROR_NOT_FOUND,
@@ -194,7 +194,7 @@ test_message_queue(void *instance)
         message_free(msg[i]);
     }
 
-    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MSG_NUM_BUFFERS,
+    TEST_VERIFY_OR_EXIT(message_pool->num_free_buffers == MESSAGE_NUM_BUFFERS,
                         "num of free buffers did not match the value expected.\r\n");
 
 exit:

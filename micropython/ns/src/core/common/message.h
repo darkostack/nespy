@@ -13,14 +13,14 @@ typedef ns_message_settings_t message_settings_t;
 typedef struct _message_iterator message_iterator_t;
 
 enum {
-    MSG_INFO_LIST_ALL       = 0, // identifies the all messages list (maintained by the message_pool)
-    MSG_INFO_LIST_INTERFACE = 1, // identifies the list for per-interface message queue
-    MSG_INFO_NUM_LISTS      = 2, // number of list
+    MESSAGE_INFO_LIST_ALL       = 0, // identifies the all messages list (maintained by the message_pool)
+    MESSAGE_INFO_LIST_INTERFACE = 1, // identifies the list for per-interface message queue
+    MESSAGE_INFO_NUM_LISTS      = 2, // number of list
 };
 
 struct _message_info {
-    message_t next[MSG_INFO_NUM_LISTS]; // a pointer to the next message in doubly linked list
-    message_t prev[MSG_INFO_NUM_LISTS]; // a pointer to the previous message ind doubly linked list
+    message_t next[MESSAGE_INFO_NUM_LISTS]; // a pointer to the next message in doubly linked list
+    message_t prev[MESSAGE_INFO_NUM_LISTS]; // a pointer to the previous message ind doubly linked list
     message_pool_t *message_pool;       // identifies the message pool for this message
 
     union {
@@ -52,10 +52,10 @@ struct _message_info {
 };
 
 enum {
-    MSG_NUM_BUFFERS           = NS_CONFIG_MESSAGE_NUM_BUFFERS,
-    MSG_BUFFER_SIZE           = NS_CONFIG_MESSAGE_BUFFER_SIZE,
-    MSG_BUFFER_DATA_SIZE      = MSG_BUFFER_SIZE - sizeof(void *), // (void *) is reserved for next pointer
-    MSG_HEAD_BUFFER_DATA_SIZE = MSG_BUFFER_DATA_SIZE - sizeof(struct _message_info),
+    MESSAGE_NUM_BUFFERS           = NS_CONFIG_MESSAGE_NUM_BUFFERS,
+    MESSAGE_BUFFER_SIZE           = NS_CONFIG_MESSAGE_BUFFER_SIZE,
+    MESSAGE_BUFFER_DATA_SIZE      = MESSAGE_BUFFER_SIZE - sizeof(void *), // (void *) is reserved for next pointer
+    MESSAGE_HEAD_BUFFER_DATA_SIZE = MESSAGE_BUFFER_DATA_SIZE - sizeof(struct _message_info),
 };
 
 // Note: the sizeof _buffer structure must equal to MESSAGE_BUFFER_SIZE
@@ -63,33 +63,53 @@ struct _buffer {
     union {
         struct {
             struct _message_info info;
-            uint8_t data[MSG_HEAD_BUFFER_DATA_SIZE];
+            uint8_t data[MESSAGE_HEAD_BUFFER_DATA_SIZE];
         } head;
-        uint8_t data[MSG_BUFFER_DATA_SIZE];
+        uint8_t data[MESSAGE_BUFFER_DATA_SIZE];
     } buffer;
     void *next;
 };
 
 enum {
-    MSG_PRIO_LOW    = NS_MESSAGE_PRIORITY_LOW,
-    MSG_PRIO_NORMAL = NS_MESSAGE_PRIORITY_NORMAL,
-    MSG_PRIO_HIGH   = NS_MESSAGE_PRIORITY_HIGH,
-    MSG_PRIO_NET    = NS_MESSAGE_PRIORITY_HIGH + 1,
-    MSG_NUM_PRIORITIES = 4,
+    MESSAGE_TYPE_IP6           = 0,
+    MESSAGE_TYPE_6LOWPAN       = 1,
+    MESSAGE_TYPE_MAC_DATA_POLL = 2,
+    MESSAGE_TYPE_SUPERVISION   = 3,
+};
+
+enum {
+    MESSAGE_SUB_TYPE_NONE                     = 0,
+    MESSAGE_SUB_TYPE_MLE_ANNOUNCE             = 1,
+    MESSAGE_SUB_TYPE_MLE_DISCOVER_REQUEST     = 2,
+    MESSAGE_SUB_TYPE_MLE_DISCOVER_RESPONSE    = 3,
+    MESSAGE_SUB_TYPE_JOINER_ENTRUST           = 4,
+    MESSAGE_SUB_TYPE_MPL_RETRANSMISSION       = 5,
+    MESSAGE_SUB_TYPE_MLE_GENERAL              = 6,
+    MESSAGE_SUB_TYPE_JOINER_FINALIZE_RESPONSE = 7,
+    MESSAGE_SUB_TYPE_MLE_CHILD_UPDATE_REQUEST = 8,
+    MESSAGE_SUB_TYPE_MLE_DATA_RESPONSE        = 9,
+};
+
+enum {
+    MESSAGE_PRIO_LOW    = NS_MESSAGE_PRIORITY_LOW,
+    MESSAGE_PRIO_NORMAL = NS_MESSAGE_PRIORITY_NORMAL,
+    MESSAGE_PRIO_HIGH   = NS_MESSAGE_PRIORITY_HIGH,
+    MESSAGE_PRIO_NET    = NS_MESSAGE_PRIORITY_HIGH + 1,
+    MESSAGE_NUM_PRIORITIES = 4,
 };
 
 typedef enum _queue_position {
-    MSG_QUEUE_POS_HEAD,
-    MSG_QUEUE_POS_TAIL,
+    MESSAGE_QUEUE_POS_HEAD,
+    MESSAGE_QUEUE_POS_TAIL,
 } queue_position_t;
 
 struct _priority_queue {
-    message_t tails[MSG_NUM_PRIORITIES];
+    message_t tails[MESSAGE_NUM_PRIORITIES];
 };
 
 struct _message_pool {
     uint16_t num_free_buffers;
-    buffer_t buffers[MSG_NUM_BUFFERS];
+    buffer_t buffers[MESSAGE_NUM_BUFFERS];
     buffer_t *free_buffers;
     priority_queue_t all_queue;
 };

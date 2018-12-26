@@ -60,6 +60,9 @@ timer_milli_start_at(timer_milli_t *milli, uint32_t t0, uint32_t dt);
 void
 timer_milli_stop(timer_milli_t *milli);
 
+uint32_t
+timer_milli_get_now(void);
+
 // --- microseconds timer
 #if NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 void
@@ -70,6 +73,9 @@ timer_micro_start_at(timer_micro_t *micro, uint32_t t0, uint32_t dt);
 
 void
 timer_micro_stop(timer_micro_t *micro);
+
+uint32_t
+timer_micro_get_now(void);
 #endif // NS_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 #endif // NS_CORE_COMMON_TIMER_H_

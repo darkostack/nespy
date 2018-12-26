@@ -84,13 +84,13 @@ ns_message_queue_init(ns_message_queue_t *queue)
 ns_error_t
 ns_message_queue_enqueue(ns_message_queue_t *queue, ns_message_t message)
 {
-    return message_queue_enqueue(queue, message, MSG_QUEUE_POS_TAIL);
+    return message_queue_enqueue(queue, message, MESSAGE_QUEUE_POS_TAIL);
 }
 
 ns_error_t
 ns_message_queue_enqueue_at_head(ns_message_queue_t *queue, ns_message_t message)
 {
-    return message_queue_enqueue(queue, message, MSG_QUEUE_POS_HEAD);
+    return message_queue_enqueue(queue, message, MESSAGE_QUEUE_POS_HEAD);
 }
 
 ns_error_t
