@@ -122,14 +122,14 @@ uint8_t
 ip6_header_get_payload_length_offset(ip6_header_t *ip6_header)
 {
     (void)ip6_header;
-    return offsetof(struct _ip6_header, payload_length);
+    return offsetof(ip6_header_t, payload_length);
 }
 
 uint8_t
 ip6_header_get_hop_limit_offset(ip6_header_t *ip6_header)
 {
     (void)ip6_header;
-    return offsetof(struct _ip6_header, hop_limit);
+    return offsetof(ip6_header_t, hop_limit);
 }
 
 uint8_t
@@ -143,7 +143,7 @@ uint8_t
 ip6_header_get_destination_offset(ip6_header_t *ip6_header)
 {
     (void)ip6_header;
-    return offsetof(struct _ip6_header, destination);
+    return offsetof(ip6_header_t, destination);
 }
 
 // --- ip6 extension header functions
