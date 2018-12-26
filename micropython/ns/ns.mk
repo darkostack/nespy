@@ -41,6 +41,7 @@ SRC_NS_CORE_NET += $(addprefix ns/src/core/net/,\
     netif.c \
     ip6_headers.c \
     icmp6.c \
+    ip6_routes.c \
     )
 
 SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\

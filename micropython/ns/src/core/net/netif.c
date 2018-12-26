@@ -545,6 +545,35 @@ ip6_netif_set_multicast_promiscuous(ip6_netif_t *ip6_netif, bool enabled)
     ip6_netif->multicast_promiscuous = enabled;
 }
 
+ns_error_t
+ip6_netif_send_message(ip6_netif_t *ip6_netif, message_t message)
+{
+    (void)ip6_netif;
+    (void)message;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ns_error_t
+ip6_netif_get_link_addr(ip6_netif_t *ip6_netif, ip6_link_addr_t *addr)
+{
+    (void)ip6_netif;
+    (void)addr;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ns_error_t
+ip6_netif_route_lookup(ip6_netif_t *ip6_netif,
+                       const ip6_addr_t *source,
+                       const ip6_addr_t *destination,
+                       uint8_t *prefix_match)
+{
+    (void)ip6_netif;
+    (void)source;
+    (void)destination;
+    (void)prefix_match;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 ip6_netif_subscribe_all_nodes_multicast(ip6_netif_t *ip6_netif)
 {
