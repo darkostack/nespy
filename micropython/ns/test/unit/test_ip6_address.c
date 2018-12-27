@@ -39,7 +39,13 @@ test_ip6_address(void)
     ip6_addr_clear(&ip6_addr2);
     ip6_addr_from_string(&ip6_addr2, string_as_c_string(ip6_addr_to_string(&ip6_addr)));
 
+    ip6_addr_t ip6_addr3 = *(ip6_addr_t *)&ip6_addr2;
+
     PRINTF("ip6_addr: %s\r\n", string_as_c_string(ip6_addr_to_string(&ip6_addr2)));
+    PRINTF("ip6_addr: %s\r\n", string_as_c_string(ip6_addr_to_string(&ip6_addr3)));
+
+    ip6_addr_clear(&ip6_addr3);
+    PRINTF("ip6_addr: %s\r\n", string_as_c_string(ip6_addr_to_string(&ip6_addr3)));
 
     TEST_VERIFY_OR_EXIT(strcmp(string_as_c_string(ip6_addr_to_string(&ip6_addr)),
                                string_as_c_string(ip6_addr_to_string(&ip6_addr2))) == 0,

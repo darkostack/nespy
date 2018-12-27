@@ -739,7 +739,32 @@ ip6_add_tunneled_mpl_option(ip6_t *ip6,
                             ip6_header_t *header,
                             ip6_message_info_t *message_info)
 {
+    ns_error_t error = NS_ERROR_NONE;
+    ip6_header_t tunnel_header;
+    ip6_netif_unicast_addr_t *source;
+    ip6_message_info_t msg_info = *message_info;
 
+    // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
+    memset(ip6_message_info_get_peer_addr(&msg_info), 0, sizeof(ip6_addr_t));
+    ((ip6_addr_t *)ip6_message_info_get_peer_addr(&msg_info))->fields.m16[0] = encoding_swap16(0xff03);
+    ((ip6_addr_t *)ip6_message_info_get_peer_addr(&msg_info))->fields.m16[7] = encoding_swap16(0x00fc);
+
+    ip6_header_init(&tunnel_header);
+    ip6_header_set_hop_limit(&tunnel_header, (uint8_t)IP6_DEFAULT_HOP_LIMIT);
+    ip6_header_set_payload_length(&tunnel_header, ip6_header_get_payload_length(header) + sizeof(tunnel_header));
+    ip6_header_set_destination(&tunnel_header, ip6_message_info_get_peer_addr(&msg_info));
+    ip6_header_set_next_header(&tunnel_header, IP6_IP_PROTO_IP6);
+
+    VERIFY_OR_EXIT((source = ip6_select_source_addr(ip6, &msg_info)) != NULL,
+                   error = NS_ERROR_INVALID_SOURCE_ADDRESS);
+
+    ip6_header_set_source(&tunnel_header, ip6_netif_unicast_addr_get_addr(source));
+
+    SUCCESS_OR_EXIT(error = ip6_add_mpl_option(ip6, message, &tunnel_header));
+    SUCCESS_OR_EXIT(error = message_prepend(message, &tunnel_header, sizeof(tunnel_header)));
+
+exit:
+    return error;
 }
 
 static ns_error_t
