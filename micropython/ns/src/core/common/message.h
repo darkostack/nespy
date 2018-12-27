@@ -260,6 +260,12 @@ rss_averager_t *
 message_get_rss_averager(message_t message);
 
 uint16_t
+message_update_checksum_from_value(uint16_t checksum, uint16_t value);
+
+uint16_t
+message_update_checksum_from_buffer(uint16_t checksum, const void *buf, uint16_t length);
+
+uint16_t
 message_update_checksum(message_t message, uint16_t checksum, uint16_t offset, uint16_t length);
 
 ns_error_t

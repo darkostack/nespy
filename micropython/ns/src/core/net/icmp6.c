@@ -186,22 +186,24 @@ ip6_icmp_handle_message(ip6_icmp_t *ip6_icmp,
 ns_error_t
 ip6_icmp_update_checksum(ip6_icmp_t *ip6_icmp,
                          message_t message,
-                         uint16_t *checksum)
+                         uint16_t checksum)
 {
-    *checksum = message_update_checksum(message,
-                                        *checksum,
-                                        message_get_offset(message),
-                                        message_get_length(message) - message_get_offset(message));
+    checksum = message_update_checksum(message,
+                                       checksum,
+                                       message_get_offset(message),
+                                       message_get_length(message) - message_get_offset(message));
 
-    if (*checksum != 0xffff) {
-        *checksum = ~(*checksum);
+    if (checksum != 0xffff) {
+        checksum = ~checksum;
     }
 
-    *checksum = encoding_big_endian_swap16(*checksum);
+    checksum = encoding_big_endian_swap16(checksum);
+
     message_write(message,
                   message_get_offset(message) + ip6_icmp_header_get_checksum_offset(),
-                  checksum,
-                  sizeof(*checksum));
+                  &checksum,
+                  sizeof(checksum));
+
     return NS_ERROR_NONE;
 }
 

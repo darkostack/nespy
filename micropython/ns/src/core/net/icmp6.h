@@ -104,7 +104,7 @@ ip6_icmp_handle_message(ip6_icmp_t *ip6_icmp,
 ns_error_t
 ip6_icmp_update_checksum(ip6_icmp_t *ip6_icmp,
                          message_t message,
-                         uint16_t *checksum);
+                         uint16_t checksum);
 
 ns_icmp6_echo_mode_t
 ip6_icmp_get_echo_mode(ip6_icmp_t *ip6_icmp);

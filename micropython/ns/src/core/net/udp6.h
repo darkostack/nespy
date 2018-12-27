@@ -104,7 +104,7 @@ void
 ip6_udp_handle_payload(ip6_udp_t *ip6_udp, message_t message, ip6_message_info_t *message_info);
 
 ns_error_t
-ip6_udp_update_checksum(ip6_udp_t *ip6_udp, message_t message, uint16_t *checksum);
+ip6_udp_update_checksum(ip6_udp_t *ip6_udp, message_t message, uint16_t checksum);
 
 #if NS_ENABLE_UDP_PLATFORM
 ns_udp_socket_t *

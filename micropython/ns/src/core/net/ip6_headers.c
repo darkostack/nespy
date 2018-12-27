@@ -18,7 +18,7 @@ ip6_header_init_set_version_class_flow(ip6_header_t *ip6_header, uint32_t versio
 }
 
 ns_error_t
-ip6_header_init_from_message(ip6_header_t *ip6_header, const message_t message)
+ip6_header_init_from_message(ip6_header_t *ip6_header, message_t message)
 {
     ns_error_t error = NS_ERROR_NONE;
     uint16_t length;
@@ -101,7 +101,7 @@ ip6_header_get_source(ip6_header_t *ip6_header)
 }
 
 void
-ip6_header_set_source(ip6_header_t *ip6_header, const ip6_addr_t *source)
+ip6_header_set_source(ip6_header_t *ip6_header, ip6_addr_t *source)
 {
     ip6_header->source = *source;
 }
@@ -113,7 +113,7 @@ ip6_header_get_destination(ip6_header_t *ip6_header)
 }
 
 void
-ip6_header_set_destination(ip6_header_t *ip6_header, const ip6_addr_t *destination)
+ip6_header_set_destination(ip6_header_t *ip6_header, ip6_addr_t *destination)
 {
     ip6_header->destination = *destination;
 }

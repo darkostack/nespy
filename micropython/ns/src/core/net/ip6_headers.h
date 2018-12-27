@@ -116,7 +116,7 @@ void
 ip6_header_init_set_version_class_flow(ip6_header_t *ip6_header, uint32_t version_class_flow);
 
 ns_error_t
-ip6_header_init_from_message(ip6_header_t *ip6_header, const message_t message);
+ip6_header_init_from_message(ip6_header_t *ip6_header, message_t message);
 
 bool
 ip6_header_is_version6(ip6_header_t *ip6_header);
@@ -149,13 +149,13 @@ ip6_addr_t *
 ip6_header_get_source(ip6_header_t *ip6_header);
 
 void
-ip6_header_set_source(ip6_header_t *ip6_header, const ip6_addr_t *source);
+ip6_header_set_source(ip6_header_t *ip6_header, ip6_addr_t *source);
 
 ip6_addr_t *
 ip6_header_get_destination(ip6_header_t *ip6_header);
 
 void
-ip6_header_set_destination(ip6_header_t *ip6_header, const ip6_addr_t *destination);
+ip6_header_set_destination(ip6_header_t *ip6_header, ip6_addr_t *destination);
 
 uint8_t
 ip6_header_get_payload_length_offset(void);

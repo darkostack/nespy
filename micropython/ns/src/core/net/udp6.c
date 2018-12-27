@@ -325,22 +325,23 @@ ip6_udp_handle_payload(ip6_udp_t *ip6_udp, message_t message, ip6_message_info_t
 }
 
 ns_error_t
-ip6_udp_update_checksum(ip6_udp_t *ip6_udp, message_t message, uint16_t *checksum)
+ip6_udp_update_checksum(ip6_udp_t *ip6_udp, message_t message, uint16_t checksum)
 {
-    *checksum = message_update_checksum(message,
-                                        *checksum,
-                                        message_get_offset(message),
-                                        message_get_length(message) - message_get_offset(message));
+    checksum = message_update_checksum(message,
+                                       checksum,
+                                       message_get_offset(message),
+                                       message_get_length(message) - message_get_offset(message));
 
-    if (*checksum != 0xffff) {
-        *checksum = ~(*checksum);
+    if (checksum != 0xffff) {
+        checksum = ~checksum;
     }
 
-    *checksum = encoding_big_endian_swap16(*checksum);
+    checksum = encoding_big_endian_swap16(checksum);
+
     message_write(message,
                   message_get_offset(message) + ip6_udp_header_get_checksum_offset(),
-                  checksum,
-                  sizeof(*checksum));
+                  &checksum,
+                  sizeof(checksum));
 
     return NS_ERROR_NONE;
 }
