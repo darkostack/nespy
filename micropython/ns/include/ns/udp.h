@@ -27,6 +27,7 @@ struct _ns_udp_socket {
     void *context;
     void *handle;
     ns_udp_socket_t *next;
+    void *instance;
 };
 
 ns_message_t

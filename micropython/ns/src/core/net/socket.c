@@ -1,15 +1,16 @@
 #include "core/net/socket.h"
 
+// --- message info functions
 void
 ip6_message_info_ctor(ip6_message_info_t *ip6_message_info)
 {
     memset(ip6_message_info, 0, sizeof(*ip6_message_info));
 }
 
-const ip6_addr_t
+ip6_addr_t *
 ip6_message_info_get_sock_addr(ip6_message_info_t *ip6_message_info)
 {
-    return (ip6_addr_t)ip6_message_info->sock_addr;
+    return (ip6_addr_t *)&ip6_message_info->sock_addr;
 }
 
 void
@@ -30,10 +31,10 @@ ip6_message_info_set_sock_port(ip6_message_info_t *ip6_message_info, uint16_t po
     ip6_message_info->sock_port = port;
 }
 
-ip6_addr_t
+ip6_addr_t *
 ip6_message_info_get_peer_addr(ip6_message_info_t *ip6_message_info)
 {
-    return (ip6_addr_t)ip6_message_info->peer_addr;
+    return (ip6_addr_t *)&ip6_message_info->peer_addr;
 }
 
 void
@@ -88,4 +89,17 @@ void
 ip6_message_info_set_link_info(ip6_message_info_t *ip6_message_info, const void *link_info)
 {
     ip6_message_info->link_info = link_info;
+}
+
+// --- sock addr functions
+void
+ip6_sock_addr_ctor(ip6_sock_addr_t *ip6_sock_addr)
+{
+    memset(&ip6_sock_addr->addr, 0, sizeof(*ip6_sock_addr));
+}
+
+ip6_addr_t *
+ip6_sock_addr_get_addr(ip6_sock_addr_t *ip6_sock_addr)
+{
+    return (ip6_addr_t *)&ip6_sock_addr->addr;
 }

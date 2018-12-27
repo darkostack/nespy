@@ -5,11 +5,13 @@
 #include "core/net/ip6_address.h"
 
 typedef ns_message_info_t ip6_message_info_t;
+typedef ns_sock_addr_t ip6_sock_addr_t;
 
+// --- message info functions
 void
 ip6_message_info_ctor(ip6_message_info_t *ip6_message_info);
 
-const ip6_addr_t
+ip6_addr_t *
 ip6_message_info_get_sock_addr(ip6_message_info_t *ip6_message_info);
 
 void
@@ -21,7 +23,7 @@ ip6_message_info_get_sock_port(ip6_message_info_t *ip6_message_info);
 void
 ip6_message_info_set_sock_port(ip6_message_info_t *ip6_message_info, uint16_t port);
 
-ip6_addr_t
+ip6_addr_t *
 ip6_message_info_get_peer_addr(ip6_message_info_t *ip6_message_info);
 
 void
@@ -50,5 +52,12 @@ ip6_message_info_get_link_info(ip6_message_info_t *ip6_message_info);
 
 void
 ip6_message_info_set_link_info(ip6_message_info_t *ip6_message_info, const void *link_info);
+
+// --- sock addr functions
+void
+ip6_sock_addr_ctor(ip6_sock_addr_t *ip6_sock_addr);
+
+ip6_addr_t *
+ip6_sock_addr_get_addr(ip6_sock_addr_t *ip6_sock_addr);
 
 #endif // NS_CORE_NET_SOCKET_H_
