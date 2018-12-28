@@ -86,20 +86,20 @@ ip6_icmp_register_handler(ip6_icmp_t *ip6_icmp, ip6_icmp_handler_t *handler);
 ns_error_t
 ip6_icmp_send_echo_request(ip6_icmp_t *ip6_icmp,
                            message_t message,
-                           const ip6_message_info_t *ip6_message_info,
+                           const ip6_message_info_t *message_info,
                            uint16_t identifier);
 
 ns_error_t
 ip6_icmp_send_error(ip6_icmp_t *ip6_icmp,
                     ip6_icmp_header_type_t type,
                     ip6_icmp_header_code_t code,
-                    const ip6_message_info_t *ip6_message_info,
-                    const ip6_icmp_header_t *header);
+                    const ip6_message_info_t *message_info,
+                    const ip6_header_t *header);
 
 ns_error_t
 ip6_icmp_handle_message(ip6_icmp_t *ip6_icmp,
                         message_t message,
-                        ip6_message_info_t *ip6_message_info);
+                        ip6_message_info_t *message_info);
 
 ns_error_t
 ip6_icmp_update_checksum(ip6_icmp_t *ip6_icmp,
@@ -114,6 +114,6 @@ ip6_icmp_set_echo_mode(ip6_icmp_t *ip6_icmp, ns_icmp6_echo_mode_t mode);
 
 bool
 ip6_icmp_should_handle_echo_request(ip6_icmp_t *ip6_icmp,
-                                    const ip6_message_info_t *ip6_message_info);
+                                    const ip6_message_info_t *message_info);
 
 #endif // NS_CORE_NET_ICMP6_H_
