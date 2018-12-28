@@ -49,6 +49,10 @@ SRC_NS_CORE_NET += $(addprefix ns/src/core/net/,\
     dns_headers.c \
     )
 
+SRC_NS_CORE_MESHCOP += $(addprefix ns/src/core/meshcop/,\
+    timestamp.c \
+    )
+
 SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\
     link_quality.c \
     )
@@ -74,6 +78,7 @@ SRC_NS_CORE += $(SRC_NS_CORE_COMMON)
 SRC_NS_CORE += $(SRC_NS_CORE_UTILS)
 SRC_NS_CORE += $(SRC_NS_CORE_MAC)
 SRC_NS_CORE += $(SRC_NS_CORE_NET)
+SRC_NS_CORE += $(SRC_NS_CORE_MESHCOP)
 SRC_NS_CORE += $(SRC_NS_CORE_THREAD)
 SRC_NS_CORE += $(SRC_NS_CORE_CRYPTO)
 SRC_NS_CORE += $(SRC_NS_CORE_API)
