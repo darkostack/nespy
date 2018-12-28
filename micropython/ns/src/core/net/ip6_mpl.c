@@ -579,7 +579,7 @@ ip6_mpl_handle_retransmission_timer(ip6_mpl_t *ip6_mpl)
                     if (ip6_mpl_buffered_message_metadata_get_transmission_count(&message_metadata) > 1) {
                         message_set_sub_type(message_copy, MESSAGE_SUB_TYPE_MPL_RETRANSMISSION);
                     }
-                    // TODO: GetIp6().EnqueueDatagram(*messageCopy);
+                    ip6_enqueue_datagram(instance_get_ip6(ip6_mpl->instance), message_copy);
                 }
                 ip6_mpl_buffered_message_metadata_generate_next_transmission_time(&message_metadata,
                         now, IP6_MPL_DATA_MESSAGE_INTERVAL);
@@ -599,7 +599,7 @@ ip6_mpl_handle_retransmission_timer(ip6_mpl_t *ip6_mpl)
 
                     // remove the extra metadata from MPL data message
                     ip6_mpl_buffered_message_metadata_read_from(&message_metadata, message);
-                    // TODO: GetIp6().EnqueueDatagram(*messageCopy);
+                    ip6_enqueue_datagram(instance_get_ip6(ip6_mpl->instance), message);
 
                 } else {
                     // stop retransmitting if the number of timer expirations is already exceeded
