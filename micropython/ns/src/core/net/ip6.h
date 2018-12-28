@@ -5,7 +5,6 @@
 #include "ns/ip6.h"
 #include "ns/udp.h"
 #include "core/common/encoding.h"
-#include "core/common/instance.h"
 #include "core/common/message.h"
 #include "core/net/icmp6.h"
 #include "core/net/ip6_address.h"

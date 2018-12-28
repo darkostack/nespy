@@ -28,6 +28,7 @@ instance_ctor(void)
 #endif // NS_RADIO || NS_ENABLE_RAW_LINK_API
     heap_ctor(&inst->heap);
     mbedtls_ctor();
+    ip6_ctor(&inst->ip6, inst);
 
     inst->is_initialized = true;
 
@@ -122,4 +123,11 @@ instance_get_heap(void *instance)
 {
     instance_t *inst = (instance_t *)instance;
     return &inst->heap;
+}
+
+ip6_t *
+instance_get_ip6(void *instance)
+{
+    instance_t *inst = (instance_t *)instance;
+    return &inst->ip6;
 }

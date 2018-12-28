@@ -1,4 +1,5 @@
 #include "core/net/netif.h"
+#include "core/common/instance.h"
 #include "core/common/code_utils.h"
 #include "core/common/debug.h"
 

@@ -68,7 +68,6 @@ ip6_routes_lookup(ip6_routes_t *ip6_routes, const ip6_addr_t *source, const ip6_
         rval = cur->interface_id;
     }
 
-#if 0 // TODO:
     for (ip6_netif_t *netif = ip6_get_netif_list(instance_get_ip6(ip6_routes->instance)); netif;
          netif = ip6_netif_get_next(netif)) {
         if (ip6_netif_route_lookup(netif, source, destination, &prefix_match) == NS_ERROR_NONE &&
@@ -77,7 +76,6 @@ ip6_routes_lookup(ip6_routes_t *ip6_routes, const ip6_addr_t *source, const ip6_
             rval = ip6_netif_get_interface_id(netif);
         }
     }
-#endif
 
     return rval;
 }

@@ -61,7 +61,7 @@ ip6_udp_socket_close(ip6_udp_socket_t *ip6_udp_socket);
 ns_error_t
 ip6_udp_socket_send_to(ip6_udp_socket_t *ip6_udp_socket,
                        message_t message,
-                       const ip6_message_info_t *message_ifno);
+                       const ip6_message_info_t *message_info);
 
 ip6_sock_addr_t *
 ip6_udp_socket_get_sock_name(ip6_udp_socket_t *ip6_udp_socket);

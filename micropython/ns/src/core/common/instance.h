@@ -18,6 +18,7 @@
 #if NS_RADIO || NS_ENABLE_RAW_LINK_API
 #include "core/mac/link_raw.h"
 #endif
+#include "core/net/ip6.h"
 
 typedef struct _instance instance_t;
 
@@ -35,6 +36,7 @@ struct _instance {
     mac_link_raw_t link_raw;
 #endif
     heap_t heap;
+    ip6_t ip6;
 };
 
 instance_t *
@@ -56,5 +58,8 @@ instance_get_notifier(void *instance);
 
 heap_t *
 instance_get_heap(void *instance);
+
+ip6_t *
+instance_get_ip6(void *instance);
 
 #endif // NS_CORE_COMMON_INSTANCE_H_

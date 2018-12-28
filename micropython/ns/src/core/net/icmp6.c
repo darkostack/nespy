@@ -129,10 +129,7 @@ ip6_icmp_ctor(ip6_icmp_t *ip6_icmp, void *instance)
 message_t
 ip6_icmp_new_message(ip6_icmp_t *ip6_icmp, uint16_t reserved)
 {
-#if 0 // TODO:
     return ip6_new_message(instance_get_ip6(ip6_icmp->instance), sizeof(ip6_icmp_header_t) + reserved, NULL);
-#endif
-    return NULL;
 }
 
 ns_error_t

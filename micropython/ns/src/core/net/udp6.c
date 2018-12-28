@@ -33,6 +33,10 @@ ip6_udp_socket_handle_udp_receive(ip6_udp_socket_t *ip6_udp_socket,
 static ip6_udp_t *
 ip6_udp_socket_get_udp(ip6_udp_socket_t *ip6_udp_socket);
 
+#if NS_ENABLE_PLATFORM_UDP
+static bool is_mle(void *instance, uint16_t port);
+#endif
+
 // --- udp receiver functions
 void
 ip6_udp_receiver_ctor(ip6_udp_receiver_t *ip6_udp_receiver,
@@ -83,15 +87,36 @@ exit:
 ns_error_t
 ip6_udp_socket_bind(ip6_udp_socket_t *ip6_udp_socket, const ip6_sock_addr_t *sock_addr)
 {
+    ns_error_t error = NS_ERROR_NONE;
+
+    ip6_udp_socket->sock_name = *(ip6_sock_addr_t *)sock_addr;
+
+    if (ip6_udp_socket->sock_name.port == 0) {
+        do {
+            ip6_udp_socket->sock_name.port = ip6_udp_get_ephemeral_port(ip6_udp_socket_get_udp(ip6_udp_socket));
+#if NS_ENABLE_PLATFORM_UDP
+            //TODO: error = ns_plat_udp_bind(ip6_udp_socket);
+#endif
+        } while (error != NS_ERROR_NONE);
+    } 
+#if NS_ENABLE_PLATFORM_UDP
     // TODO:
-    return NS_ERROR_NONE;
+#endif
+
+    return error;
 }
 
 ns_error_t
 ip6_udp_socket_connect(ip6_udp_socket_t *ip6_udp_socket, const ip6_sock_addr_t *sock_addr)
 {
-    // TODO:
-    return NS_ERROR_NONE;
+    ns_error_t error = NS_ERROR_NONE;
+    ip6_udp_socket->peer_name = *(ip6_sock_addr_t *)sock_addr;
+#if NS_ENABLE_PLATFORM_UDP
+    if (!is_mle(ip6_udp_socket->instance, ip6_udp_socket->sock_name.port)) {
+        // TODO: error = ns_plat_udp_connect(ip6_udp_socket);
+    }
+#endif
+    return error;
 }
 
 ns_error_t
@@ -113,10 +138,50 @@ exit:
 ns_error_t
 ip6_udp_socket_send_to(ip6_udp_socket_t *ip6_udp_socket,
                        message_t message,
-                       const ip6_message_info_t *message_ifno)
+                       const ip6_message_info_t *message_info)
 {
+    ns_error_t error = NS_ERROR_NONE;
+    ip6_message_info_t message_info_local;
+
+    message_info_local = *(ip6_message_info_t *)message_info;
+
+    if (ip6_addr_is_unspecified(ip6_message_info_get_peer_addr(&message_info_local))) {
+        VERIFY_OR_EXIT(!ip6_addr_is_unspecified(ip6_sock_addr_get_addr(ip6_udp_socket_get_peer_name(ip6_udp_socket))),
+                       error = NS_ERROR_INVALID_ARGS);
+        ip6_message_info_set_peer_addr(&message_info_local, *ip6_sock_addr_get_addr(ip6_udp_socket_get_peer_name(ip6_udp_socket)));
+    }
+
+    if (message_info_local.peer_port == 0) {
+        VERIFY_OR_EXIT(((ip6_sock_addr_t *)ip6_udp_socket_get_peer_name(ip6_udp_socket))->port != 0,
+                       error = NS_ERROR_INVALID_ARGS);
+        message_info_local.peer_port = ((ip6_sock_addr_t *)ip6_udp_socket_get_peer_name(ip6_udp_socket))->port;
+    }
+
+    if (ip6_addr_is_unspecified(ip6_message_info_get_sock_addr(&message_info_local))) {
+        ip6_message_info_set_sock_addr(&message_info_local,
+                                       *ip6_sock_addr_get_addr(ip6_udp_socket_get_sock_name(ip6_udp_socket)));
+    }
+
+    if (((ip6_sock_addr_t *)ip6_udp_socket_get_sock_name(ip6_udp_socket))->port == 0) {
+        SUCCESS_OR_EXIT(error = ip6_udp_socket_bind(ip6_udp_socket,
+                                                    ip6_udp_socket_get_sock_name(ip6_udp_socket)));
+    }
+
+    ip6_message_info_set_sock_port(&message_info_local,
+                                   ((ip6_sock_addr_t *)ip6_udp_socket_get_sock_name(ip6_udp_socket))->port);
+
+#if NS_ENABLE_PLATFORM_UDP
     // TODO:
-    return NS_ERROR_NONE;
+#endif
+    {
+        SUCCESS_OR_EXIT(error = ip6_udp_send_datagram(ip6_udp_socket_get_udp(ip6_udp_socket),
+                                                      message,
+                                                      &message_info_local,
+                                                      IP6_IP_PROTO_UDP));
+    }
+
+exit:
+    return error;
 }
 
 ip6_sock_addr_t *
@@ -229,8 +294,7 @@ ip6_udp_get_ephemeral_port(ip6_udp_t *ip6_udp)
 message_t
 ip6_udp_new_message(ip6_udp_t *ip6_udp, uint16_t reserved, const ns_message_settings_t *settings)
 {
-    // TODO: return ip6_new_message(instance_get_ip6(ip6_udp->instance), sizeof(ip6_udp_header_t) + reserved, settings);
-    return NULL;
+    return ip6_new_message(instance_get_ip6(ip6_udp->instance), sizeof(ip6_udp_header_t) + reserved, settings);
 }
 
 ns_error_t
@@ -263,7 +327,7 @@ ip6_udp_send_datagram(ip6_udp_t *ip6_udp,
         SUCCESS_OR_EXIT(error = message_prepend(message, &udp_header, sizeof(udp_header)));
         message_set_offset(message, 0);
 
-        // TODO: error = ip6_send_datagram(instance_get_ip6(ip6_udp->instance), message, message_info, ip_proto);
+        ip6_send_datagram(instance_get_ip6(ip6_udp->instance), message, message_info, ip_proto);
     }
 
 exit:
@@ -274,8 +338,34 @@ ns_error_t
 ip6_udp_handle_message(ip6_udp_t *ip6_udp, message_t message, ip6_message_info_t *message_info)
 {
     ns_error_t error = NS_ERROR_NONE;
+    ip6_udp_header_t udp_header;
+    uint16_t payload_length;
+    uint16_t checksum;
 
-    // TODO:
+    payload_length = message_get_length(message) - message_get_offset(message);
+
+    // check length
+    VERIFY_OR_EXIT(payload_length >= sizeof(udp_header), error = NS_ERROR_PARSE);
+
+    // verify checksum
+    checksum = ip6_compute_pseudo_header_checksum(ip6_message_info_get_peer_addr(message_info),
+                                                  ip6_message_info_get_sock_addr(message_info),
+                                                  payload_length,
+                                                  IP6_IP_PROTO_UDP);
+
+    checksum = message_update_checksum(message, checksum, message_get_offset(message), payload_length);
+
+    VERIFY_OR_EXIT(message_read(message, message_get_offset(message), &udp_header, sizeof(udp_header)) ==
+                   sizeof(udp_header), error = NS_ERROR_PARSE);
+
+    message_move_offset(message, sizeof(udp_header));
+
+    ip6_message_info_set_peer_port(message_info, ip6_udp_header_get_source_port(&udp_header));
+    ip6_message_info_set_sock_port(message_info, ip6_udp_header_get_destination_port(&udp_header));
+
+#if NS_ENABLE_PLATFORM_UDP
+    VERIFY_OR_EXIT(is_mle(ip6_udp->instance, ip6_message_info_get_sock_port(message_info)));
+#endif
 
     for (ip6_udp_receiver_t *receiver = ip6_udp->receivers; receiver;
          receiver = ip6_udp_receiver_get_next(receiver)) {
@@ -471,6 +561,13 @@ ip6_udp_socket_handle_udp_receive(ip6_udp_socket_t *ip6_udp_socket,
 static ip6_udp_t *
 ip6_udp_socket_get_udp(ip6_udp_socket_t *ip6_udp_socket)
 {
-    // TODO: return ip6_get_udp(instance_get_ip6(ip6_udp_socket->instance))
-    return NULL;
+    return ip6_get_udp(instance_get_ip6(ip6_udp_socket->instance));
 }
+
+#if NS_ENABLE_PLATFORM_UDP
+static bool is_mle(void *instance, uint16_t port)
+{
+    // TODO:
+    return false;
+}
+#endif

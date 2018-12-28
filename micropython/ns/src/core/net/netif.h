@@ -2,7 +2,6 @@
 #define NS_CORE_NET_NETIF_H_
 
 #include "core/core-config.h"
-#include "core/common/instance.h"
 #include "core/common/message.h"
 #include "core/common/tasklet.h"
 #include "core/mac/mac_frame.h"
