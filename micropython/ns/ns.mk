@@ -45,6 +45,7 @@ SRC_NS_CORE_NET += $(addprefix ns/src/core/net/,\
     ip6_filter.c \
     ip6_mpl.c \
     udp6.c \
+    ip6.c \
     )
 
 SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\

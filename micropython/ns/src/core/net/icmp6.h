@@ -114,7 +114,6 @@ ip6_icmp_set_echo_mode(ip6_icmp_t *ip6_icmp, ns_icmp6_echo_mode_t mode);
 
 bool
 ip6_icmp_should_handle_echo_request(ip6_icmp_t *ip6_icmp,
-                                    message_t message,
                                     const ip6_message_info_t *ip6_message_info);
 
 #endif // NS_CORE_NET_ICMP6_H_

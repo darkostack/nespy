@@ -3,27 +3,27 @@
 #include "core/common/debug.h"
 
 // "ff03::fc"
-static ns_netif_multicast_addr_t s_ip6_netif_realm_local_all_mpl_forwarders_multicast_addr = {
+static const ns_netif_multicast_addr_t s_ip6_netif_realm_local_all_mpl_forwarders_multicast_addr = {
     {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc}}},
     NULL};
 
 // "ff03::01"
-static ns_netif_multicast_addr_t s_ip6_netif_realm_local_all_nodes_muticast_addr = {
+static const ns_netif_multicast_addr_t s_ip6_netif_realm_local_all_nodes_muticast_addr = {
     {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}},
     &s_ip6_netif_realm_local_all_mpl_forwarders_multicast_addr};
 
 // "ff02::01"
-static ns_netif_multicast_addr_t s_ip6_netif_link_local_all_nodes_multicast_addr = {
+static const ns_netif_multicast_addr_t s_ip6_netif_link_local_all_nodes_multicast_addr = {
     {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}},
     &s_ip6_netif_realm_local_all_nodes_muticast_addr};
 
 // "ff03:02"
-static ns_netif_multicast_addr_t s_ip6_netif_realm_local_all_routers_multicast_addr = {
+static const ns_netif_multicast_addr_t s_ip6_netif_realm_local_all_routers_multicast_addr = {
     {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
     &s_ip6_netif_link_local_all_nodes_multicast_addr};
 
 // "ff02:02"
-static ns_netif_multicast_addr_t s_ip6_netif_link_local_all_routers_multicast_addr = {
+static const ns_netif_multicast_addr_t s_ip6_netif_link_local_all_routers_multicast_addr = {
     {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
     &s_ip6_netif_realm_local_all_routers_multicast_addr};
 
@@ -317,7 +317,7 @@ ip6_netif_subscribe_all_routers_multicast(ip6_netif_t *ip6_netif)
     }
 
     if (ip6_netif->addr_callback != NULL) {
-        for (ns_netif_multicast_addr_t * entry = &ip6_netif->link_local_all_routers_multicast_addr;
+        for (const ns_netif_multicast_addr_t * entry = &ip6_netif->link_local_all_routers_multicast_addr;
              entry != &ip6_netif->link_local_all_nodes_multicast_addr;
              entry = entry->next) {
             ip6_netif->addr_callback(&entry->addr, IP6_NETIF_MULTICAST_PREFIX_LENGTH, true, ip6_netif->addr_callback_context);
@@ -354,9 +354,9 @@ exit:
 
     if (error != NS_ERROR_NOT_FOUND) {
         if (ip6_netif->addr_callback != NULL) {
-            for (ns_netif_multicast_addr_t *entry = &ip6_netif->link_local_all_routers_multicast_addr;
-                entry != &ip6_netif->link_local_all_nodes_multicast_addr;
-                entry = entry->next) {
+            for (const ns_netif_multicast_addr_t *entry = &ip6_netif->link_local_all_routers_multicast_addr;
+                 entry != &ip6_netif->link_local_all_nodes_multicast_addr;
+                 entry = entry->next) {
                 ip6_netif->addr_callback(&entry->addr, IP6_NETIF_MULTICAST_PREFIX_LENGTH, false, ip6_netif->addr_callback_context);
             }
         }
@@ -366,7 +366,7 @@ exit:
     return error;
 }
 
-ip6_netif_multicast_addr_t *
+const ip6_netif_multicast_addr_t *
 ip6_netif_get_multicast_addrs(ip6_netif_t *ip6_netif)
 {
     return ip6_netif->multicast_addrs;
@@ -398,7 +398,7 @@ exit:
 }
 
 ns_error_t
-ip6_netif_unsubscribe_multicast(ip6_netif_t *ip6_netif, ip6_netif_multicast_addr_t *addr)
+ip6_netif_unsubscribe_multicast(ip6_netif_t *ip6_netif, const ip6_netif_multicast_addr_t *addr)
 {
     ns_error_t error = NS_ERROR_NONE;
 
@@ -582,7 +582,7 @@ ip6_netif_subscribe_all_nodes_multicast(ip6_netif_t *ip6_netif)
     ip6_netif->multicast_addrs = (ip6_netif_multicast_addr_t *)((ns_netif_multicast_addr_t *)(&ip6_netif->link_local_all_nodes_multicast_addr));
 
     if (ip6_netif->addr_callback != NULL) {
-        for (ns_netif_multicast_addr_t *entry = &ip6_netif->link_local_all_nodes_multicast_addr;
+        for (const ns_netif_multicast_addr_t *entry = &ip6_netif->link_local_all_nodes_multicast_addr;
              entry != NULL;
              entry = entry->next) {
             ip6_netif->addr_callback(&entry->addr, IP6_NETIF_MULTICAST_PREFIX_LENGTH, true,
@@ -602,7 +602,7 @@ ip6_netif_unsubscribe_all_nodes_multicast(ip6_netif_t *ip6_netif)
     ip6_netif->multicast_addrs = NULL;
 
     if (ip6_netif->addr_callback != NULL) {
-        for (ns_netif_multicast_addr_t *entry = &ip6_netif->link_local_all_nodes_multicast_addr;
+        for (const ns_netif_multicast_addr_t *entry = &ip6_netif->link_local_all_nodes_multicast_addr;
              entry != NULL;
              entry = entry->next) {
             ip6_netif->addr_callback(&entry->addr, IP6_NETIF_MULTICAST_PREFIX_LENGTH, false,

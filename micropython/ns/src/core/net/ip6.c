@@ -14,8 +14,8 @@ ip6_handle_send_queue(ip6_t *ip6);
 
 static ns_error_t
 ip6_process_receive_callback(ip6_t *ip6,
-                             const message_t message,
-                             const ip6_message_info_t *message_info,
+                             message_t message,
+                             ip6_message_info_t *message_info,
                              uint8_t ip_proto,
                              bool from_ncp_host);
 
@@ -49,13 +49,13 @@ static ns_error_t
 ip6_remove_mpl_option(ip6_t *ip6, message_t message);
 
 static ns_error_t
-ip6_handle_options(ip6_t *ip6, message_t message, ip6_header_t *header, bool *forward);
+ip6_handle_options(ip6_t *ip6, message_t message, ip6_header_t *header, bool forward);
 
 static ns_error_t
 ip6_handle_payload(ip6_t *ip6, message_t message, ip6_message_info_t *message_info, uint8_t ip_proto);
 
 static int8_t
-ip6_find_forward_interface_id(ip6_t *ip6, const ip6_message_info_t *message_info);
+ip6_find_forward_interface_id(ip6_t *ip6, ip6_message_info_t *message_info);
 
 // --- ip6 functions
 void
@@ -164,14 +164,14 @@ ip6_send_datagram(ip6_t *ip6, message_t message, ip6_message_info_t *message_inf
     }
 
     if (ip6_addr_is_realm_local_multicast(ip6_message_info_get_peer_addr(message_info))) {
-        SUCCESS_OR_EXIT(error = ip6_add_mpl_option(ip6, message, &header);
+        SUCCESS_OR_EXIT(error = ip6_add_mpl_option(ip6, message, &header));
     }
 
     SUCCESS_OR_EXIT(error = message_prepend(message, &header, sizeof(header)));
 
     // compute checksum
-    checksum = ip6_compute_pseudo_header_checksum((const ip6_addr_t *)ip6_header_get_source(&header),
-                                                  (const ip6_addr_t *)ip6_header_get_destination(&header),
+    checksum = ip6_compute_pseudo_header_checksum(ip6_header_get_source(&header),
+                                                  ip6_header_get_destination(&header),
                                                   payload_length,
                                                   ip_proto);
 
@@ -210,14 +210,14 @@ ip6_send_raw(ip6_t *ip6, message_t message, int8_t interface_id)
 
     SUCCESS_OR_EXIT(error = ip6_header_init_from_message(&header, message));
 
-    ip6_message_info_set_peer_addr(&message_info, ip6_header_get_source(&header));
-    ip6_message_info_set_sock_addr(&message_info, ip6_header_get_destination(&header));
+    ip6_message_info_set_peer_addr(&message_info, *(ip6_addr_t *)ip6_header_get_source(&header));
+    ip6_message_info_set_sock_addr(&message_info, *(ip6_addr_t *)ip6_header_get_destination(&header));
     ip6_message_info_set_interface_id(&message_info, interface_id);
     ip6_message_info_set_hop_limit(&message_info, ip6_header_get_hop_limit(&header));
     ip6_message_info_set_link_info(&message_info, NULL);
 
     if (ip6_addr_is_multicast(ip6_header_get_destination(&header))) {
-        SUCCESS_OR_EXIT(error = ip6_insert_mpl_option(ip6, message, &header, &message_info);
+        SUCCESS_OR_EXIT(error = ip6_insert_mpl_option(ip6, message, &header, &message_info));
     }
 
     error = ip6_handle_datagram(ip6, message, NULL, interface_id, NULL, true);
@@ -238,8 +238,104 @@ ip6_handle_datagram(ip6_t *ip6,
                     const void *link_message_info,
                     bool from_ncp_host)
 {
-    // TODO:
-    return NS_ERROR_NONE;
+    ns_error_t error = NS_ERROR_NONE;
+    ip6_message_info_t message_info;
+    ip6_header_t header;
+    bool receive = false;
+    bool forward = false;
+    bool tunnel = false;
+    bool multicast_promiscuous = false;
+    uint8_t next_header;
+    uint8_t hop_limit;
+    int8_t forward_interface_id;
+
+    SUCCESS_OR_EXIT(error = ip6_header_init_from_message(&header, message));
+
+    ip6_message_info_set_peer_addr(&message_info, *(ip6_addr_t *)ip6_header_get_source(&header));
+    ip6_message_info_set_sock_addr(&message_info, *(ip6_addr_t *)ip6_header_get_destination(&header));
+    ip6_message_info_set_interface_id(&message_info, interface_id);
+    ip6_message_info_set_hop_limit(&message_info, ip6_header_get_hop_limit(&header));
+    ip6_message_info_set_link_info(&message_info, link_message_info);
+
+    // determine destination of packet
+    if (ip6_addr_is_multicast(ip6_header_get_destination(&header))) {
+        if (netif != NULL) {
+            if (ip6_netif_is_multicast_subscribed(netif, ip6_header_get_destination(&header))) {
+                receive = true;
+            } else if (ip6_netif_is_multicast_promiscuous_enabled(netif)) {
+                multicast_promiscuous = true;
+            }
+
+            // TODO:
+
+        } else {
+            forward = true;
+        }
+    } else {
+        if (ip6_is_unicast_addr(ip6, ip6_header_get_destination(&header))) {
+            receive = true;
+        } else if (!ip6_addr_is_link_local(ip6_header_get_destination(&header))) {
+            forward = true;
+        } else if (netif == NULL) {
+            forward = true;
+        }
+    }
+
+    message_set_interface_id(message, interface_id);
+    message_set_offset(message, sizeof(header));
+
+    // process IPv6 extension headers
+    next_header = (uint8_t)ip6_header_get_next_header(&header);
+    SUCCESS_OR_EXIT(error = ip6_handle_extension_headers(ip6, message, &header, &next_header, forward, receive));
+
+    // process IPv6 payload
+    if (receive) {
+        if (next_header == IP6_IP_PROTO_IP6) {
+            // remove encapsulating header
+            message_remove_header(message, message_get_offset(message));
+            ip6_handle_datagram(ip6, message, netif, interface_id, link_message_info, from_ncp_host);
+            EXIT_NOW(tunnel = true);
+        }
+        ip6_process_receive_callback(ip6, message, &message_info, next_header, from_ncp_host);
+        SUCCESS_OR_EXIT(error = ip6_handle_payload(ip6, message, &message_info, next_header));
+    } else if (multicast_promiscuous) {
+        ip6_process_receive_callback(ip6, message, &message_info, next_header, from_ncp_host);
+    }
+
+    if (forward) {
+        forward_interface_id = ip6_find_forward_interface_id(ip6, &message_info);
+        if (forward_interface_id == 0) {
+            // try passing to host
+            SUCCESS_OR_EXIT(error = ip6_process_receive_callback(ip6, message, &message_info, next_header, from_ncp_host));
+            // the caller transfers custody in the success case, so free the message here
+            message_free(message);
+            EXIT_NOW();
+        }
+        if (netif != NULL) {
+            VERIFY_OR_EXIT(ip6->forwarding_enabled, forward = false);
+            ip6_header_set_hop_limit(&header, ip6_header_get_hop_limit(&header) - 1);
+        }
+        if (ip6_header_get_hop_limit(&header) == 0) {
+            // send time exceeded
+            EXIT_NOW(error = NS_ERROR_DROP);
+        } else {
+            hop_limit = ip6_header_get_hop_limit(&header);
+            message_write(message,
+                          ip6_header_get_hop_limit_offset(),
+                          &hop_limit,
+                          ip6_header_get_hop_limit_size());
+            // submit message to interface
+            VERIFY_OR_EXIT((netif = ip6_get_netif_by_id(ip6, forward_interface_id)) != NULL,
+                           error = NS_ERROR_NO_ROUTE);
+            SUCCESS_OR_EXIT(error = ip6_netif_send_message(netif, message));
+        }
+    }
+
+exit:
+    if (!tunnel && (error != NS_ERROR_NONE || !forward)) {
+        message_free(message);
+    }
+    return error;
 }
 
 void
@@ -316,7 +412,7 @@ ip6_add_netif(ip6_t *ip6, ip6_netif_t *anetif)
         } while (netif->next);
         netif->next = anetif;
     }
-    anetif.next = NULL;
+    anetif->next = NULL;
 exit:
     return error;
 }
@@ -372,7 +468,7 @@ ip6_is_unicast_addr(ip6_t *ip6, const ip6_addr_t *addr)
             EXIT_NOW();
         }
     }
-exti:
+exit:
     return rval;
 }
 
@@ -400,7 +496,7 @@ ip6_select_source_addr(ip6_t *ip6, ip6_message_info_t *message_info)
             uint8_t override_scope;
             uint8_t candidate_prefix_matched;
             candidate_addr = ip6_netif_unicast_addr_get_addr(addr);
-            candidate_prefix_matched = ip6_addr_prefix_match(destination, (const ip6_addr_t *)candidate_addr);
+            candidate_prefix_matched = ip6_addr_prefix_match(destination, candidate_addr);
             override_scope = (candidate_prefix_matched >= addr->prefix_length) ?
                              ip6_netif_unicast_addr_get_scope(addr) : destination_scope;
             if (ip6_addr_is_anycast_routing_locator(candidate_addr)) {
@@ -585,8 +681,8 @@ ip6_handle_send_queue(ip6_t *ip6)
 
 static ns_error_t
 ip6_process_receive_callback(ip6_t *ip6,
-                             const message_t message,
-                             const ip6_message_info_t *message_info,
+                             message_t message,
+                             ip6_message_info_t *message_info,
                              uint8_t ip_proto,
                              bool from_ncp_host)
 {
@@ -715,20 +811,24 @@ ip6_add_mpl_option(ip6_t *ip6, message_t message, ip6_header_t *header)
 
     ip6_hop_by_hop_header_set_next_header(&hbh_header, ip6_header_get_next_header(header));
     ip6_hop_by_hop_header_set_length(&hbh_header, 0);
-    ip6_mpl_init_option(&ip6->mpl, &mpl_option, (const ip6_addr_t *)ip6_header_get_source(header));
+    ip6_mpl_init_option(&ip6->mpl, &mpl_option, ip6_header_get_source(header));
 
     // mpl option may require two bytes padding
     if ((ip6_option_mpl_get_total_length(&mpl_option) + sizeof(hbh_header)) % 8) {
         ip6_option_padn_init(&pad_option, 2);
-        SUCCESS_OR_EXIT(error = message_prepend(message,
-                                                &pad_option,
-                                                ip6_option_padn_get_total_length(&pad_option)));
+        SUCCESS_OR_EXIT(error = message_prepend(message, &pad_option, ip6_option_padn_get_total_length(&pad_option)));
     }
 
     SUCCESS_OR_EXIT(error = message_prepend(message, &mpl_option, ip6_option_mpl_get_total_length(&mpl_option)));
     SUCCESS_OR_EXIT(error = message_prepend(message, &hbh_header, sizeof(hbh_header)));
-    ip6_header_set_payload_length(header, ip6_header_get_payload_length(header) + sizeof(hbh_header) + sizeof(mpl_option));
+
+    ip6_header_set_payload_length(header,
+                                  ip6_header_get_payload_length(header) +
+                                  sizeof(hbh_header) +
+                                  sizeof(mpl_option));
+
     ip6_header_set_next_header(header, IP6_IP_PROTO_HOP_OPTS);
+
 exit:
     return error;
 }
@@ -755,8 +855,7 @@ ip6_add_tunneled_mpl_option(ip6_t *ip6,
     ip6_header_set_destination(&tunnel_header, ip6_message_info_get_peer_addr(&msg_info));
     ip6_header_set_next_header(&tunnel_header, IP6_IP_PROTO_IP6);
 
-    VERIFY_OR_EXIT((source = ip6_select_source_addr(ip6, &msg_info)) != NULL,
-                   error = NS_ERROR_INVALID_SOURCE_ADDRESS);
+    VERIFY_OR_EXIT((source = ip6_select_source_addr(ip6, &msg_info)) != NULL, error = NS_ERROR_INVALID_SOURCE_ADDRESS);
 
     ip6_header_set_source(&tunnel_header, ip6_netif_unicast_addr_get_addr(source));
 
@@ -773,29 +872,259 @@ ip6_insert_mpl_option(ip6_t *ip6,
                       ip6_header_t *header,
                       ip6_message_info_t *message_info)
 {
+    ns_error_t error = NS_ERROR_NONE;
+    VERIFY_OR_EXIT(ip6_addr_is_multicast(ip6_header_get_destination(header)) &&
+                   ip6_addr_get_scope(ip6_header_get_destination(header)) >= IP6_ADDR_REALM_LOCAL_SCOPE);
 
+    if (ip6_addr_is_realm_local_multicast(ip6_header_get_destination(header))) {
+        message_remove_header(message, sizeof(*header));
+        if (ip6_header_get_next_header(header) == IP6_IP_PROTO_HOP_OPTS) {
+            ip6_hop_by_hop_header_t hbh;
+            uint16_t hbh_length = 0;
+            ip6_option_mpl_t mpl_option;
+
+            // read existing hop-by-hop option header
+            message_read(message, 0, &hbh, sizeof(hbh));
+            hbh_length = (ip6_hop_by_hop_header_get_length(&hbh) + 1) * 8;
+
+            VERIFY_OR_EXIT(hbh_length <= ip6_header_get_payload_length(header), error = NS_ERROR_PARSE);
+
+            // increase existing hop-by-hop option header length by 8 bytes
+            ip6_hop_by_hop_header_set_length(&hbh, ip6_hop_by_hop_header_get_length(&hbh) + 1);
+            message_write(message, 0, &hbh, sizeof(hbh));
+
+            // make space for MPL option + padding by shifting hop by hop option header
+            SUCCESS_OR_EXIT(error = message_prepend(message, NULL, 8));
+            message_copy_to(message, 8, 0, hbh_length, message);
+
+            // insert MPL option
+            ip6_mpl_init_option(&ip6->mpl, &mpl_option, ip6_header_get_source(header));
+            message_write(message, hbh_length, &mpl_option, ip6_option_mpl_get_total_length(&mpl_option));
+
+            // insert pad option if needed
+            if (ip6_option_mpl_get_total_length(&mpl_option) % 8) {
+                ip6_option_padn_t pad_option;
+                ip6_option_padn_init(&pad_option, 8 - (ip6_option_mpl_get_total_length(&mpl_option) % 8));
+                message_write(message,
+                              hbh_length + ip6_option_mpl_get_total_length(&mpl_option),
+                              &pad_option,
+                              ip6_option_padn_get_total_length(&pad_option));
+            }
+
+            // increase IPv6 payload length
+            ip6_header_set_payload_length(header, ip6_header_get_payload_length(header) + 8);
+        } else {
+            SUCCESS_OR_EXIT(error = ip6_add_mpl_option(ip6, message, header));
+        }
+        SUCCESS_OR_EXIT(error = message_prepend(message, header, sizeof(*header)));
+    } else {
+
+        // TODO:
+
+        SUCCESS_OR_EXIT(error = ip6_add_tunneled_mpl_option(ip6, message, header, message_info));
+    }
+
+exit:
+    return error;
 }
 
 static ns_error_t
 ip6_remove_mpl_option(ip6_t *ip6, message_t message)
 {
+    ns_error_t error = NS_ERROR_NONE;
+    ip6_header_t ip6_header;
+    ip6_hop_by_hop_header_t hbh;
+    uint16_t offset;
+    uint16_t end_offset;
+    uint16_t mpl_offset = 0;
+    uint8_t mpl_length = 0;
+    bool remove = false;
 
+    offset = 0;
+    message_read(message, offset, &ip6_header, sizeof(ip6_header));
+    offset += sizeof(ip6_header);
+    VERIFY_OR_EXIT(ip6_header_get_next_header(&ip6_header) == IP6_IP_PROTO_HOP_OPTS);
+
+    message_read(message, offset, &hbh, sizeof(hbh));
+    end_offset = offset + (ip6_hop_by_hop_header_get_length(&hbh) + 1) * 8;
+    VERIFY_OR_EXIT(message_get_length(message) >= end_offset, error = NS_ERROR_PARSE);
+
+    offset += sizeof(hbh);
+
+    while (offset < end_offset) {
+        ip6_option_header_t option;
+        ip6_option_header_ctor(&option);
+
+        message_read(message, offset, &option, sizeof(option));
+
+        switch (ip6_option_header_get_type(&option)) {
+        case IP6_OPTION_MPL_TYPE:
+            mpl_offset = offset;
+            mpl_length = ip6_option_header_get_length(&option);
+            if (mpl_offset == sizeof(ip6_header) + sizeof(hbh) &&
+                ip6_hop_by_hop_header_get_length(&hbh) == 0) {
+                // first and only IPv6 option, remove IPv6 HBH option header
+                remove = true;
+            } else if (mpl_offset + 8 == end_offset) {
+                // last IPv6 option, remove last 8 bytes
+                remove = true;
+            }
+            offset += sizeof(option) + ip6_option_header_get_length(&option);
+            break;
+        case IP6_OPTION_PAD1_TYPE:
+            offset += sizeof(ip6_option_padn_t);
+            break;
+        case IP6_OPTION_PADN_TYPE:
+            offset += sizeof(option) + ip6_option_header_get_length(&option);
+            break;
+        default:
+            // encountered another option, now just replace MPL option with PADN
+            remove = false;
+            offset += sizeof(option) + ip6_option_header_get_length(&option);
+            break;
+        }
+    }
+
+    // verify that IPv6 options header is properly formed
+    if (remove) {
+        // last IPv6 option, shrink HBH option header
+        uint8_t buf[8];
+
+        offset = end_offset - sizeof(buf);
+
+        while (offset >= sizeof(buf)) {
+            message_read(message, offset - sizeof(buf), buf, sizeof(buf));
+            message_write(message, offset, buf, sizeof(buf));
+            offset -= sizeof(buf);
+        }
+
+        message_remove_header(message, sizeof(buf));
+
+        if (mpl_offset == sizeof(ip6_header) + sizeof(hbh)) {
+            // remove entire HBH header
+            ip6_header_set_next_header(&ip6_header, ip6_hop_by_hop_header_get_next_header(&hbh));
+        } else {
+            // update HBH header length
+            ip6_hop_by_hop_header_set_length(&hbh, ip6_hop_by_hop_header_get_length(&hbh) - 1);
+            message_write(message, sizeof(ip6_header), &hbh, sizeof(hbh));
+        }
+
+        ip6_header_set_payload_length(&ip6_header, ip6_header_get_payload_length(&ip6_header) - sizeof(buf));
+        message_write(message, 0, &ip6_header, sizeof(ip6_header));
+    } else if (mpl_offset != 0) {
+        // replace MPL option with padn option
+        ip6_option_padn_t pad_option;
+        ip6_option_padn_init(&pad_option, sizeof(ip6_option_header_t) + mpl_length);
+        message_write(message, mpl_offset, &pad_option, ip6_option_padn_get_total_length(&pad_option));
+    }
+
+exit:
+    return error;
 }
 
 static ns_error_t
-ip6_handle_options(ip6_t *ip6, message_t message, ip6_header_t *header, bool *forward)
+ip6_handle_options(ip6_t *ip6, message_t message, ip6_header_t *header, bool forward)
 {
+    ns_error_t error = NS_ERROR_NONE;
+    ip6_hop_by_hop_header_t hbh_header;
+    ip6_option_header_t option_header;
+    ip6_option_header_ctor(&option_header);
+    uint16_t end_offset;
 
+    VERIFY_OR_EXIT(message_read(message,
+                                message_get_offset(message),
+                                &hbh_header,
+                                sizeof(hbh_header)) == sizeof(hbh_header),
+                   error = NS_ERROR_DROP);
+    end_offset = message_get_offset(message) + (ip6_hop_by_hop_header_get_length(&hbh_header) + 1) * 8;
+
+    VERIFY_OR_EXIT(end_offset <= message_get_length(message), error = NS_ERROR_DROP);
+
+    message_move_offset(message, sizeof(option_header));
+
+    while (message_get_offset(message) < end_offset) {
+        VERIFY_OR_EXIT(message_read(message,
+                                    message_get_offset(message),
+                                    &option_header,
+                                    sizeof(option_header)) == sizeof(option_header),
+                       error = NS_ERROR_DROP); 
+
+        if (ip6_option_header_get_type(&option_header) == IP6_OPTION_PAD1_TYPE) {
+            message_move_offset(message, sizeof(ip6_option_pad1_t));
+            continue;
+        }
+
+        VERIFY_OR_EXIT(message_get_offset(message) +
+                       sizeof(option_header) +
+                       ip6_option_header_get_length(&option_header) <= end_offset,
+                       error = NS_ERROR_DROP);
+
+        switch (ip6_option_header_get_type(&option_header)) {
+        case IP6_OPTION_MPL_TYPE:
+            SUCCESS_OR_EXIT(error = ip6_mpl_process_option(&ip6->mpl,
+                                                           message,
+                                                           ip6_header_get_source(header),
+                                                           forward));
+            break;
+        default:
+            switch (ip6_option_header_get_action(&option_header)) {
+            case IP6_OPTION_HEADER_ACTION_SKIP:
+                break;
+            case IP6_OPTION_HEADER_ACTION_DISCARD:
+                EXIT_NOW(error = NS_ERROR_DROP);
+            case IP6_OPTION_HEADER_ACTION_FORCE_ICMP:
+                // TODO: send icmp error
+                EXIT_NOW(error = NS_ERROR_DROP);
+            case IP6_OPTION_HEADER_ACTION_ICMP:
+                // TODO: send icmp error
+                EXIT_NOW(error = NS_ERROR_DROP);
+            }
+            break;
+        }
+
+        message_move_offset(message, sizeof(option_header) + ip6_option_header_get_length(&option_header));
+    }
+
+exit:
+    return error;
 }
 
 static ns_error_t
 ip6_handle_payload(ip6_t *ip6, message_t message, ip6_message_info_t *message_info, uint8_t ip_proto)
 {
-
+    ns_error_t error = NS_ERROR_NONE;
+    switch (ip_proto) {
+    case IP6_IP_PROTO_UDP:
+        EXIT_NOW(error = ip6_udp_handle_message(&ip6->udp, message, message_info));
+    case IP6_IP_PROTO_ICMP6:
+        EXIT_NOW(error = ip6_icmp_handle_message(&ip6->icmp, message, message_info));
+    }
+exit:
+    return error;
 }
 
 static int8_t
-ip6_find_forward_interface_id(ip6_t *ip6, const ip6_message_info_t *message_info)
+ip6_find_forward_interface_id(ip6_t *ip6, ip6_message_info_t *message_info)
 {
+    int8_t interface_id;
 
+    if (ip6_addr_is_multicast(ip6_message_info_get_sock_addr(message_info))) {
+        // multicast
+        interface_id = message_info->interface_id;
+    } else if (ip6_addr_is_link_local(ip6_message_info_get_sock_addr(message_info))) {
+        // on-link link-local address
+        interface_id = message_info->interface_id;
+    } else if ((interface_id = ip6_get_on_link_netif(ip6, ip6_message_info_get_sock_addr(message_info))) > 0) {
+        // on-link global address
+        ;
+    } else if ((interface_id = ip6_routes_lookup(&ip6->routes,
+                                                 ip6_message_info_get_peer_addr(message_info),
+                                                 ip6_message_info_get_sock_addr(message_info))) > 0) {
+        // route
+        ;
+    } else {
+        interface_id = 0;
+    }
+
+    return interface_id;
 }

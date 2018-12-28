@@ -182,6 +182,19 @@ ip6_extension_header_get_length(ip6_extension_header_t *ip6_extension_header);
 void
 ip6_extension_header_set_length(ip6_extension_header_t *ip6_extension_header, uint8_t length);
 
+// --- ip6 hop by hop header functions
+ip6_ip_proto_t
+ip6_hop_by_hop_header_get_next_header(ip6_hop_by_hop_header_t *ip6_hop_by_hop_header);
+
+void
+ip6_hop_by_hop_header_set_next_header(ip6_hop_by_hop_header_t *ip6_hop_by_hop_header, ip6_ip_proto_t next_header);
+
+uint8_t
+ip6_hop_by_hop_header_get_length(ip6_hop_by_hop_header_t *ip6_hop_by_hop_header);
+
+void
+ip6_hop_by_hop_header_set_length(ip6_hop_by_hop_header_t *ip6_hop_by_hop_header, uint8_t length);
+
 // --- ip6 option header functions
 void
 ip6_option_header_ctor(ip6_option_header_t *ip6_option_header);

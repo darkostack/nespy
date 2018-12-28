@@ -108,14 +108,14 @@ ip6_netif_subscribe_all_routers_multicast(ip6_netif_t *ip6_netif);
 ns_error_t
 ip6_netif_unsubscribe_all_routers_multicast(ip6_netif_t *ip6_netif);
 
-ip6_netif_multicast_addr_t *
+const ip6_netif_multicast_addr_t *
 ip6_netif_get_multicast_addrs(ip6_netif_t *ip6_netif);
 
 ns_error_t
 ip6_netif_subscribe_multicast(ip6_netif_t *ip6_netif, ip6_netif_multicast_addr_t *addr);
 
 ns_error_t
-ip6_netif_unsubscribe_multicast(ip6_netif_t *ip6_netif, ip6_netif_multicast_addr_t *addr);
+ip6_netif_unsubscribe_multicast(ip6_netif_t *ip6_netif, const ip6_netif_multicast_addr_t *addr);
 
 ns_error_t
 ip6_netif_get_next_external_multicast(ip6_netif_t *ip6_netif, uint8_t *iterator, ip6_addr_t *addr);

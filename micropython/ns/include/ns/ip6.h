@@ -38,7 +38,7 @@ struct _ns_netif_addr {
 typedef struct _ns_netif_multicast_addr ns_netif_multicast_addr_t;
 struct _ns_netif_multicast_addr {
     ns_ip6_addr_t addr; // IPv6 multicast address
-    ns_netif_multicast_addr_t *next;
+    const ns_netif_multicast_addr_t *next;
 };
 
 typedef enum _ns_netif_interface_id {
@@ -158,7 +158,7 @@ const uint16_t *
 ns_ip6_get_unsecure_ports(ns_instance_t instance, uint8_t *num_entries);
 
 bool
-ns_ip6_is_addr_equal(ns_ip6_addr_t *first, ns_ip6_addr_t *second);
+ns_ip6_is_addr_equal(const ns_ip6_addr_t *first, const ns_ip6_addr_t *second);
 
 ns_error_t
 ns_ip6_addr_from_string(const char *string, ns_ip6_addr_t *addr);
