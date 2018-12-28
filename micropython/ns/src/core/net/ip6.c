@@ -3,7 +3,7 @@
 #include "core/common/debug.h"
 #include "core/common/instance.h"
 #include "core/common/logging.h"
-// TODO: #include "core/thread/mle.h"
+#include "core/thread/mle.h"
 
 // --- private functions declarations
 static void
