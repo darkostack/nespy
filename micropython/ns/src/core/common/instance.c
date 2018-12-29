@@ -80,6 +80,9 @@ instance_ctor(void)
     extern ns_error_t test_ip6_netif(void);
     test_ip6_netif();
 
+    extern ns_error_t test_meshcop_panid_tlv(void);
+    test_meshcop_panid_tlv();
+
 exit:
     return inst;
 }

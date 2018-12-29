@@ -53,6 +53,7 @@ SRC_NS_CORE_NET += $(addprefix ns/src/core/net/,\
 
 SRC_NS_CORE_MESHCOP += $(addprefix ns/src/core/meshcop/,\
     timestamp.c \
+    meshcop_tlvs.c \
     )
 
 SRC_NS_CORE_THREAD += $(addprefix ns/src/core/thread/,\
@@ -103,6 +104,7 @@ SRC_NS_TEST += $(addprefix ns/test/unit/,\
     test_hmac_sha256.c \
     test_ip6_address.c \
     test_ip6_netif.c \
+    test_meshcop_tlvs.c \
     )
 
 # include path
