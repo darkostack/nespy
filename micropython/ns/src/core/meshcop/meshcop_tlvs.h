@@ -13,7 +13,7 @@
 typedef enum _meshcop_tlv_type {
     MESHCOP_TLV_TYPE_CHANNEL                   = NS_MESHCOP_TLV_CHANNEL,
     MESHCOP_TLV_TYPE_PANID                     = NS_MESHCOP_TLV_PANID,
-    MESCHOP_TLV_TYPE_EXTENDED_PANID            = NS_MESHCOP_TLV_EXTPANID,
+    MESHCOP_TLV_TYPE_EXTENDED_PANID            = NS_MESHCOP_TLV_EXTPANID,
     MESHCOP_TLV_TYPE_NETWORK_NAME              = NS_MESHCOP_TLV_NETWORKNAME,
     MESHCOP_TLV_TYPE_PSKC                      = NS_MESHCOP_TLV_PSKC,
     MESHCOP_TLV_TYPE_NETWORK_MASTERKEY         = NS_MESHCOP_TLV_MASTERKEY,
@@ -65,6 +65,41 @@ typedef struct _meshcop_panid_tlv {
     meshcop_tlv_t tlv;
     uint16_t panid;
 } meshcop_panid_tlv_t;
+
+typedef struct _meshcop_extended_panid_tlv {
+    meshcop_tlv_t tlv;
+    ns_extended_panid_t extended_panid;
+} meshcop_extended_panid_tlv_t;
+
+typedef struct _meshcop_network_name_tlv {
+    meshcop_tlv_t tlv;
+    char network_name[NS_NETWORK_NAME_MAX_SIZE];
+} meshcop_network_name_tlv_t;
+
+typedef struct _meshcop_pskc_tlv {
+    meshcop_tlv_t tlv;
+    uint8_t pskc[16];
+} meshcop_pskc_tlv_t;
+
+typedef struct _meshcop_network_master_key_tlv {
+    meshcop_tlv_t tlv;
+    ns_master_key_t network_master_key;
+} meshcop_network_master_key_tlv_t;
+
+typedef struct _meshcop_network_key_sequence_tlv {
+    meshcop_tlv_t tlv;
+    uint32_t network_key_sequence;
+} meshcop_network_key_sequence_tlv_t;
+
+typedef struct _meshcop_mesh_local_prefix_tlv {
+    meshcop_tlv_t tlv;
+    ns_mesh_local_prefix_t mesh_local_prefix;
+} meshcop_mesh_local_prefix_tlv_t;
+
+typedef struct _meshcop_steering_data_tlv {
+    meshcop_tlv_t tlv;
+    uint8_t steering_data[NS_STEERING_DATA_MAX_LENGTH];
+} meshcop_steering_data_tlv_t;
 
 // --- meshcop tlv functions
 meshcop_tlv_type_t
@@ -129,5 +164,120 @@ meshcop_panid_tlv_get_panid(meshcop_panid_tlv_t *meshcop_panid_tlv);
 
 void
 meshcop_panid_tlv_set_panid(meshcop_panid_tlv_t *meshcop_panid_tlv, uint16_t panid);
+
+// --- extended panid tlv functions
+void
+meshcop_extended_panid_tlv_init(meshcop_extended_panid_tlv_t *meshcop_extended_panid_tlv);
+
+bool
+meshcop_extended_panid_tlv_is_valid(meshcop_extended_panid_tlv_t *meshcop_extended_panid_tlv);
+
+const ns_extended_panid_t
+meshcop_extended_panid_tlv_get_extended_panid(meshcop_extended_panid_tlv_t *meshcop_extended_panid_tlv);
+
+void
+meshcop_extended_panid_tlv_set_extended_panid(meshcop_extended_panid_tlv_t *meshcop_extended_panid_tlv,
+                                              const ns_extended_panid_t extended_panid);
+
+// --- network name tlv functions
+void
+meshcop_network_name_tlv_init(meshcop_network_name_tlv_t *meshcop_network_name_tlv);
+
+bool
+meshcop_network_name_tlv_is_valid(meshcop_network_name_tlv_t *meshcop_network_name_tlv);
+
+const char *
+meshcop_network_name_tlv_get_network_name(meshcop_network_name_tlv_t *meshcop_network_name_tlv);
+
+void
+meshcop_network_name_tlv_set_network_name(meshcop_network_name_tlv_t *meshcop_network_name_tlv,
+                                          const char *network_name);
+
+// --- pskc tlv functions
+void
+meshcop_pskc_tlv_init(meshcop_pskc_tlv_t *meshcop_pskc_tlv);
+
+bool
+meshcop_pskc_tlv_is_valid(meshcop_pskc_tlv_t *meshcop_pskc_tlv);
+
+const uint8_t *
+meshcop_pskc_tlv_get_pskc(meshcop_pskc_tlv_t *meshcop_pskc_tlv);
+
+void
+meshcop_pskc_tlv_set_pskc(meshcop_pskc_tlv_t *meshcop_pskc_tlv, const uint8_t *pskc);
+
+// --- network master key tlv functions
+void
+meshcop_network_master_key_tlv_init(meshcop_network_master_key_tlv_t *meshcop_network_master_key_tlv);
+
+bool
+meshcop_network_master_key_tlv_is_valid(meshcop_network_master_key_tlv_t *meshcop_network_master_key_tlv);
+
+const ns_master_key_t
+meshcop_network_master_key_tlv_get_network_master_key(meshcop_network_master_key_tlv_t *meshcop_network_master_key_tlv);
+
+void
+meshcop_network_master_key_tlv_set_network_master_key(meshcop_network_master_key_tlv_t *meshcop_network_master_key_tlv, const ns_master_key_t network_master_key);
+
+// --- network sequence tlv functions
+void
+meshcop_network_key_sequence_tlv_init(meshcop_network_key_sequence_tlv_t *meshcop_network_key_sequence_tlv);
+
+bool
+meshcop_network_key_sequence_tlv_is_valid(meshcop_network_key_sequence_tlv_t *meshcop_network_key_sequence_tlv);
+
+uint32_t
+meshcop_network_key_sequence_tlv_get_network_key_sequence(meshcop_network_key_sequence_tlv_t *meshcop_network_key_sequence_tlv);
+
+void
+meshcop_network_key_sequence_tlv_set_network_key_sequence(meshcop_network_key_sequence_tlv_t *meshcop_network_key_sequence_tlv, uint32_t network_key_sequence);
+
+// --- mesh local prefix tlv functions
+void
+meshcop_mesh_local_prefix_tlv_init(meshcop_mesh_local_prefix_tlv_t *meshcop_mesh_local_prefix_tlv);
+
+bool
+meshcop_mesh_local_prefix_tlv_is_valid(meshcop_mesh_local_prefix_tlv_t *meshcop_mesh_local_prefix_tlv);
+
+const ns_mesh_local_prefix_t
+meshcop_mesh_local_prefix_tlv_get_mesh_local_prefix(meshcop_mesh_local_prefix_tlv_t *meshcop_mesh_local_prefix_tlv);
+
+void
+meshcop_mesh_local_prefix_tlv_set_mesh_local_prefix(meshcop_mesh_local_prefix_tlv_t *meshcop_mesh_local_prefix_tlv, const ns_mesh_local_prefix_t mesh_local_prefix);
+
+// --- steering data tlv
+void
+meshcop_steering_data_tlv_init(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+bool
+meshcop_steering_data_tlv_is_valid(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+void
+meshcop_steering_data_tlv_clear(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+void
+meshcop_steering_data_tlv_set(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+bool
+meshcop_steering_data_tlv_does_allow_any(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+uint8_t
+meshcop_steering_data_tlv_get_num_bits(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+bool
+meshcop_steering_data_tlv_get_bit(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv, uint8_t bit);
+
+void
+meshcop_steering_data_tlv_clear_bit(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv, uint8_t bit);
+
+void
+meshcop_steering_data_tlv_set_bit(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv, uint8_t bit);
+
+bool
+meshcop_steering_data_tlv_is_cleared(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv);
+
+void
+meshcop_steering_data_tlv_compute_bloom_filter(meshcop_steering_data_tlv_t *meshcop_steering_data_tlv,
+                                               const ns_ext_addr_t joiner_id);
 
 #endif // NS_CORE_MESHCOP_MESHCOP_TLVS_H_
