@@ -21,6 +21,7 @@ SRC_NS_CORE_COMMON += $(addprefix ns/src/core/common/,\
     logging.c \
     notifier.c \
     tlvs.c \
+    crc16.c \
     )
 
 SRC_NS_CORE_UTILS += $(addprefix ns/src/core/utils/,\
