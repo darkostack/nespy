@@ -20,6 +20,7 @@ SRC_NS_CORE_COMMON += $(addprefix ns/src/core/common/,\
     trickle_timer.c \
     logging.c \
     notifier.c \
+    tlvs.c \
     )
 
 SRC_NS_CORE_UTILS += $(addprefix ns/src/core/utils/,\
