@@ -1,4 +1,5 @@
 #include "core/meshcop/meshcop_tlvs.h"
+#include "core/common/code_utils.h"
 
 // --- meshcop tlv functions
 meshcop_tlv_type_t
@@ -692,55 +693,132 @@ meshcop_delay_timer_tlv_set_delay_timer(meshcop_delay_timer_tlv_t *meshcop_delay
 
 // --- channel mask entry base tlv functions
 uint8_t
-meshcop_channel_mask_entry_base_tlv_get_channel_page(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv)
+meshcop_channel_mask_entry_base_get_channel_page(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base)
 {
-    return meshcop_channel_mask_entry_base_tlv->channel_page;
+    return meshcop_channel_mask_entry_base->channel_page;
 }
 
 void
-meshcop_channel_mask_entry_base_tlv_set_channel_page(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv,
+meshcop_channel_mask_entry_base_set_channel_page(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base,
                                                      uint8_t channel_page)
 {
-    meshcop_channel_mask_entry_base_tlv->channel_page = channel_page;
+    meshcop_channel_mask_entry_base->channel_page = channel_page;
 }
 
 uint8_t
-meshcop_channel_mask_entry_base_tlv_get_mask_length(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv)
+meshcop_channel_mask_entry_base_get_mask_length(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base)
 {
-    return meshcop_channel_mask_entry_base_tlv->mask_length;
+    return meshcop_channel_mask_entry_base->mask_length;
 }
 
 void
-meshcop_channel_mask_entry_base_tlv_set_mask_length(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t mask_length)
+meshcop_channel_mask_entry_base_set_mask_length(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, uint8_t mask_length)
 {
-    meshcop_channel_mask_entry_base_tlv->mask_length = mask_length;
+    meshcop_channel_mask_entry_base->mask_length = mask_length;
 }
 
 uint16_t
-meshcop_channel_mask_entry_base_tlv_get_size(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv)
+meshcop_channel_mask_entry_base_get_size(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base)
 {
-    return sizeof(meshcop_channel_mask_entry_base_tlv_t) + meshcop_channel_mask_entry_base_tlv->mask_length;
+    return sizeof(meshcop_channel_mask_entry_base_t) + meshcop_channel_mask_entry_base->mask_length;
 }
 
 void
-meshcop_channel_mask_entry_base_tlv_clear_channel(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t channel)
+meshcop_channel_mask_entry_base_clear_channel(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, uint8_t channel)
 {
-    uint8_t *mask = (uint8_t *)meshcop_channel_mask_entry_base_tlv + sizeof(*meshcop_channel_mask_entry_base_tlv);
+    uint8_t *mask = (uint8_t *)meshcop_channel_mask_entry_base + sizeof(*meshcop_channel_mask_entry_base);
     mask[channel / 8] &= ~(0x80 >> (channel % 8));
 }
 
 bool
-meshcop_channel_mask_entry_base_tlv_is_channel_set(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t channel)
+meshcop_channel_mask_entry_base_is_channel_set(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, uint8_t channel)
 {
-    const uint8_t *mask = (const uint8_t *)meshcop_channel_mask_entry_base_tlv + sizeof(*meshcop_channel_mask_entry_base_tlv);
-    return (channel << (meshcop_channel_mask_entry_base_tlv->mask_length * 8)) ? ((mask[channel / 8] & (0x80 >> (channel % 8))) != 0) : false;
+    const uint8_t *mask = (const uint8_t *)meshcop_channel_mask_entry_base + sizeof(*meshcop_channel_mask_entry_base);
+    return (channel << (meshcop_channel_mask_entry_base->mask_length * 8)) ? ((mask[channel / 8] & (0x80 >> (channel % 8))) != 0) : false;
 }
 
-const meshcop_channel_mask_entry_base_tlv_t *
-meshcop_channel_mask_entry_base_tlv_get_next(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, const meshcop_tlv_t *channel_mask_base_tlv)
+const meshcop_channel_mask_entry_base_t *
+meshcop_channel_mask_entry_base_get_next(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, const meshcop_tlv_t *channel_mask_base_tlv)
 {
-    const uint8_t *entry = (const uint8_t *)meshcop_channel_mask_entry_base_tlv + meshcop_channel_mask_entry_base_tlv_get_size(meshcop_channel_mask_entry_base_tlv);
+    const uint8_t *entry = (const uint8_t *)meshcop_channel_mask_entry_base + meshcop_channel_mask_entry_base_get_size(meshcop_channel_mask_entry_base);
     const uint8_t *end = tlv_get_value((tlv_t *)channel_mask_base_tlv) + tlv_get_size((tlv_t *)channel_mask_base_tlv);
 
-    return (entry < end) ? (const meshcop_channel_mask_entry_base_tlv_t *)entry : NULL;
+    return (entry < end) ? (const meshcop_channel_mask_entry_base_t *)entry : NULL;
+}
+
+// --- channel mask entry functions
+void
+meshcop_channel_mask_entry_init(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry)
+{
+    meshcop_channel_mask_entry_base_set_channel_page(&meshcop_channel_mask_entry->channel_mask_entry_base, 0);
+    meshcop_channel_mask_entry_base_set_mask_length(&meshcop_channel_mask_entry->channel_mask_entry_base, sizeof(meshcop_channel_mask_entry->mask));
+}
+
+bool
+meshcop_channel_mask_entry_is_valid(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry)
+{
+    return meshcop_channel_mask_entry_base_get_mask_length(&meshcop_channel_mask_entry->channel_mask_entry_base) == sizeof(meshcop_channel_mask_entry->mask);
+}
+
+uint32_t
+meshcop_channel_mask_entry_get_mask(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry)
+{
+    return encoding_reverse32(encoding_big_endian_swap32(meshcop_channel_mask_entry->mask));
+}
+
+void
+meshcop_channel_mask_entry_set_mask(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry, uint32_t mask)
+{
+    meshcop_channel_mask_entry->mask = encoding_big_endian_swap32(encoding_reverse32(mask));
+}
+
+// --- channel mask base tlv functions
+void
+meshcop_channel_mask_base_tlv_init(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_channel_mask_base_tlv->tlv, MESHCOP_TLV_TYPE_CHANNEL_MASK);
+    tlv_set_length(&meshcop_channel_mask_base_tlv->tlv, sizeof(*meshcop_channel_mask_base_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_channel_mask_base_tlv_is_valid(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv)
+{
+    return true;
+}
+
+const meshcop_channel_mask_entry_base_t *
+meshcop_channel_mask_base_tlv_get_first_entry(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv)
+{
+    const meshcop_channel_mask_entry_base_t *entry = NULL;
+
+    VERIFY_OR_EXIT(tlv_get_length(&meshcop_channel_mask_base_tlv->tlv) >= sizeof(meshcop_channel_mask_entry_base_t));
+
+    entry = (const meshcop_channel_mask_entry_base_t *)tlv_get_value(&meshcop_channel_mask_base_tlv->tlv);
+    VERIFY_OR_EXIT(tlv_get_length(&meshcop_channel_mask_base_tlv->tlv) >= tlv_get_size(&meshcop_channel_mask_base_tlv->tlv), entry = NULL);
+
+exit:
+    return entry;
+}
+
+const meshcop_channel_mask_entry_t *
+meshcop_channel_mask_base_tlv_get_mask_entry(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv,
+                                             uint8_t channel_page)
+{
+    const meshcop_channel_mask_entry_t *page_entry = NULL;
+
+    for (const meshcop_channel_mask_entry_base_t *entry = meshcop_channel_mask_base_tlv_get_first_entry(meshcop_channel_mask_base_tlv);
+         entry != NULL;
+         entry = meshcop_channel_mask_entry_base_get_next((meshcop_channel_mask_entry_base_t *)entry, (const meshcop_tlv_t *)meshcop_channel_mask_base_tlv)) {
+        if (meshcop_channel_mask_entry_base_get_channel_page((meshcop_channel_mask_entry_base_t *)entry) == channel_page) {
+            page_entry = (const meshcop_channel_mask_entry_t *)entry;
+            if (meshcop_channel_mask_entry_is_valid((meshcop_channel_mask_entry_t *)page_entry)) {
+                EXIT_NOW();
+            }
+        }
+    }
+
+    page_entry = NULL;
+
+exit:
+    return page_entry;
 }

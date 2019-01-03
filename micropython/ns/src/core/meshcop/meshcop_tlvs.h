@@ -186,10 +186,19 @@ typedef struct _meshcop_delay_timer_tlv {
     uint32_t delay_timer;
 } meshcop_delay_timer_tlv_t;
 
-typedef struct _meshcop_channel_mask_entry_base_tlv {
+typedef struct _meshcop_channel_mask_entry_base {
     uint8_t channel_page;
     uint8_t mask_length;
-} meshcop_channel_mask_entry_base_tlv_t;
+} meshcop_channel_mask_entry_base_t;
+
+typedef struct _meshcop_channel_mask_entry{
+    meshcop_channel_mask_entry_base_t channel_mask_entry_base;
+    uint32_t mask;
+} meshcop_channel_mask_entry_t;
+
+typedef struct _meshcop_channel_mask_base_tlv {
+    meshcop_tlv_t tlv;
+} meshcop_channel_mask_base_tlv_t;
 
 // --- meshcop tlv functions
 meshcop_tlv_type_t
@@ -521,30 +530,57 @@ meshcop_delay_timer_tlv_get_delay_timer(meshcop_delay_timer_tlv_t *meshcop_delay
 void
 meshcop_delay_timer_tlv_set_delay_timer(meshcop_delay_timer_tlv_t *meshcop_delay_timer_tlv, uint32_t delay_timer);
 
-// --- channel mask entry base tlv functions
+// --- channel mask entry base functions
 uint8_t
-meshcop_channel_mask_entry_base_tlv_get_channel_page(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv);
+meshcop_channel_mask_entry_base_get_channel_page(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base);
 
 void
-meshcop_channel_mask_entry_base_tlv_set_channel_page(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv,
+meshcop_channel_mask_entry_base_set_channel_page(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base,
                                                      uint8_t channel_page);
 
 uint8_t
-meshcop_channel_mask_entry_base_tlv_get_mask_length(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv);
+meshcop_channel_mask_entry_base_get_mask_length(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base);
 
 void
-meshcop_channel_mask_entry_base_tlv_set_mask_length(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t mask_length);
+meshcop_channel_mask_entry_base_set_mask_length(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, uint8_t mask_length);
 
 uint16_t
-meshcop_channel_mask_entry_base_tlv_get_size(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv);
+meshcop_channel_mask_entry_base_get_size(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base);
 
 void
-meshcop_channel_mask_entry_base_tlv_clear_channel(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t channel);
+meshcop_channel_mask_entry_base_clear_channel(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, uint8_t channel);
 
 bool
-meshcop_channel_mask_entry_base_tlv_is_channel_set(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t channel);
+meshcop_channel_mask_entry_base_is_channel_set(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, uint8_t channel);
 
-const meshcop_channel_mask_entry_base_tlv_t *
-meshcop_channel_mask_entry_base_tlv_get_next(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, const meshcop_tlv_t *channel_mask_base_tlv);
+const meshcop_channel_mask_entry_base_t *
+meshcop_channel_mask_entry_base_get_next(meshcop_channel_mask_entry_base_t *meshcop_channel_mask_entry_base, const meshcop_tlv_t *channel_mask_base_tlv);
+
+// --- channel mask entry functions
+void
+meshcop_channel_mask_entry_init(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry);
+
+bool
+meshcop_channel_mask_entry_is_valid(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry);
+
+uint32_t
+meshcop_channel_mask_entry_get_mask(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry);
+
+void
+meshcop_channel_mask_entry_set_mask(meshcop_channel_mask_entry_t *meshcop_channel_mask_entry, uint32_t mask);
+
+// --- channel mask base tlv functions
+void
+meshcop_channel_mask_base_tlv_init(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv);
+
+bool
+meshcop_channel_mask_base_tlv_is_valid(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv);
+
+const meshcop_channel_mask_entry_base_t *
+meshcop_channel_mask_base_tlv_get_first_entry(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv);
+
+const meshcop_channel_mask_entry_t *
+meshcop_channel_mask_base_tlv_get_mask_entry(meshcop_channel_mask_base_tlv_t *meshcop_channel_mask_base_tlv,
+                                             uint8_t channel_page);
 
 #endif // NS_CORE_MESHCOP_MESHCOP_TLVS_H_
