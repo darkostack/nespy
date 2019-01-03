@@ -384,3 +384,363 @@ meshcop_steering_data_tlv_compute_bloom_filter(meshcop_steering_data_tlv_t *mesh
     meshcop_steering_data_tlv_set_bit(meshcop_steering_data_tlv,
             crc16_get(&ansi) % meshcop_steering_data_tlv_get_num_bits(meshcop_steering_data_tlv));
 }
+
+// --- border agent locator tlv
+void
+meshcop_border_agent_locator_tlv_init(meshcop_border_agent_locator_tlv_t *meshcop_border_agent_locator_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_border_agent_locator_tlv->tlv, MESHCOP_TLV_TYPE_BORDER_AGENT_LOCATOR);
+    tlv_set_length(&meshcop_border_agent_locator_tlv->tlv, sizeof(*meshcop_border_agent_locator_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_border_agent_locator_tlv_is_valid(meshcop_border_agent_locator_tlv_t *meshcop_border_agent_locator_tlv)
+{
+    return tlv_get_length(&meshcop_border_agent_locator_tlv->tlv) == sizeof(*meshcop_border_agent_locator_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meshcop_border_agent_locator_tlv_get_border_agent_locator(meshcop_border_agent_locator_tlv_t *meshcop_border_agent_locator_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_border_agent_locator_tlv->locator);
+}
+
+void
+meshcop_border_agent_locator_tlv_set_border_agent_locator(meshcop_border_agent_locator_tlv_t *meshcop_border_agent_locator_tlv, uint16_t locator)
+{
+    meshcop_border_agent_locator_tlv->locator = encoding_big_endian_swap16(locator);
+}
+
+// --- commissioner id tlv
+void
+meshcop_commissioner_id_tlv_init(meshcop_commissioner_id_tlv_t *meshcop_commissioner_id_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_commissioner_id_tlv->tlv, MESHCOP_TLV_TYPE_COMMISSIONER_ID);
+    tlv_set_length(&meshcop_commissioner_id_tlv->tlv, sizeof(*meshcop_commissioner_id_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_commissioner_id_tlv_is_valid(meshcop_commissioner_id_tlv_t *meshcop_commissioner_id_tlv)
+{
+    return tlv_get_length(&meshcop_commissioner_id_tlv->tlv) <= sizeof(*meshcop_commissioner_id_tlv) - sizeof(meshcop_tlv_t);
+}
+
+const char *
+meshcop_commissioner_id_tlv_get_commissioner_id(meshcop_commissioner_id_tlv_t *meshcop_commissioner_id_tlv)
+{
+    return meshcop_commissioner_id_tlv->commissioner_id;
+}
+
+void
+meshcop_commissioner_id_tlv_set_commissioner_id(meshcop_commissioner_id_tlv_t *meshcop_commissioner_id_tlv,
+                                                const char *commissioner_id)
+{
+    size_t length = strnlen(commissioner_id, sizeof(meshcop_commissioner_id_tlv->commissioner_id));
+    memcpy(meshcop_commissioner_id_tlv->commissioner_id, commissioner_id, length);
+    tlv_set_length(&meshcop_commissioner_id_tlv->tlv, (uint8_t)length);
+}
+
+// --- commissioner session id tlv
+void
+meshcop_commissioner_session_id_tlv_init(meshcop_commissioner_session_id_tlv_t *meshcop_commissioner_session_id_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_commissioner_session_id_tlv->tlv, MESHCOP_TLV_TYPE_COMMISSIONER_SESSION_ID);
+    tlv_set_length(&meshcop_commissioner_session_id_tlv->tlv, sizeof(*meshcop_commissioner_session_id_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_commissioner_session_id_tlv_is_valid(meshcop_commissioner_session_id_tlv_t *meshcop_commissioner_session_id_tlv)
+{
+    return tlv_get_length(&meshcop_commissioner_session_id_tlv->tlv) == sizeof(*meshcop_commissioner_session_id_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meshcop_commissioner_session_id_tlv_get_commissioner_session_id(meshcop_commissioner_session_id_tlv_t *meshcop_commissioner_session_id_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_commissioner_session_id_tlv->session_id);
+}
+
+void
+meshcop_commissioner_session_id_tlv_set_commissioner_session_id(meshcop_commissioner_session_id_tlv_t *meshcop_commissioner_session_id_tlv, uint16_t session_id)
+{
+    meshcop_commissioner_session_id_tlv->session_id = encoding_big_endian_swap16(session_id);
+}
+
+// --- security policy tlv
+void
+meshcop_security_policy_tlv_init(meshcop_security_policy_tlv_t *meshcop_security_policy_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_security_policy_tlv->tlv, MESHCOP_TLV_TYPE_SECURITY_POLICY);
+    tlv_set_length(&meshcop_security_policy_tlv->tlv, sizeof(*meshcop_security_policy_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_security_policy_tlv_is_valid(meshcop_security_policy_tlv_t *meshcop_security_policy_tlv)
+{
+    return tlv_get_length(&meshcop_security_policy_tlv->tlv) == sizeof(*meshcop_security_policy_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meshcop_security_policy_tlv_get_rotation_time(meshcop_security_policy_tlv_t *meshcop_security_policy_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_security_policy_tlv->rotation_time);
+}
+
+void
+meshcop_security_policy_tlv_set_rotation_time(meshcop_security_policy_tlv_t *meshcop_security_policy_tlv, uint16_t rotation_time)
+{
+    meshcop_security_policy_tlv->rotation_time = encoding_big_endian_swap16(rotation_time);
+}
+
+uint8_t
+meshcop_security_policy_tlv_get_flags(meshcop_security_policy_tlv_t *meshcop_security_policy_tlv)
+{
+    return meshcop_security_policy_tlv->flags;
+}
+
+void
+meshcop_security_policy_tlv_set_flags(meshcop_security_policy_tlv_t *meshcop_security_policy_tlv, uint8_t flags)
+{
+    meshcop_security_policy_tlv->flags = flags;
+}
+
+// --- active timestamp tlv
+void
+meshcop_active_timestamp_tlv_init(meshcop_active_timestamp_tlv_t *meshcop_active_timestamp_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_active_timestamp_tlv->tlv, MESHCOP_TLV_TYPE_ACTIVE_TIMESTAMP);
+    tlv_set_length(&meshcop_active_timestamp_tlv->tlv, sizeof(*meshcop_active_timestamp_tlv) - sizeof(meshcop_tlv_t));
+    meshcop_timestamp_init(&meshcop_active_timestamp_tlv->timestamp);
+}
+
+bool
+meshcop_active_timestamp_tlv_is_valid(meshcop_active_timestamp_tlv_t *meshcop_active_timestamp_tlv)
+{
+    return tlv_get_length(&meshcop_active_timestamp_tlv->tlv) == sizeof(*meshcop_active_timestamp_tlv) - sizeof(meshcop_tlv_t);
+}
+
+// --- state tlv
+void
+meshcop_state_tlv_init(meshcop_state_tlv_t *meshcop_state_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_state_tlv->tlv, MESHCOP_TLV_TYPE_STATE);
+    tlv_set_length(&meshcop_state_tlv->tlv, sizeof(*meshcop_state_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_state_tlv_is_valid(meshcop_state_tlv_t *meshcop_state_tlv)
+{
+    return tlv_get_length(&meshcop_state_tlv->tlv) == sizeof(*meshcop_state_tlv) - sizeof(meshcop_tlv_t);
+}
+
+meshcop_state_tlv_state_t
+meshcop_state_tlv_get_state(meshcop_state_tlv_t *meshcop_state_tlv)
+{
+    return (meshcop_state_tlv_state_t)meshcop_state_tlv->state;
+}
+
+void
+meshcop_state_tlv_set_state(meshcop_state_tlv_t *meshcop_state_tlv, meshcop_state_tlv_state_t state)
+{
+    meshcop_state_tlv->state = (uint8_t)state;
+}
+
+// --- joiner udp port tlv functions
+void
+meshcop_joiner_udp_port_tlv_init(meshcop_joiner_udp_port_tlv_t *meshcop_joiner_udp_port_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_joiner_udp_port_tlv->tlv, MESHCOP_TLV_TYPE_JOINER_UDP_PORT);
+    tlv_set_length(&meshcop_joiner_udp_port_tlv->tlv, sizeof(*meshcop_joiner_udp_port_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_joiner_udp_port_tlv_is_valid(meshcop_joiner_udp_port_tlv_t *meshcop_joiner_udp_port_tlv)
+{
+    return tlv_get_length(&meshcop_joiner_udp_port_tlv->tlv) == sizeof(*meshcop_joiner_udp_port_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meshcop_joiner_udp_port_tlv_get_udp_port(meshcop_joiner_udp_port_tlv_t *meshcop_joiner_udp_port_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_joiner_udp_port_tlv->udp_port);
+}
+
+void
+meshcop_joiner_udp_port_tlv_set_udp_port(meshcop_joiner_udp_port_tlv_t *meshcop_joiner_udp_port_tlv, uint16_t udp_port)
+{
+    meshcop_joiner_udp_port_tlv->udp_port = encoding_big_endian_swap16(udp_port);
+}
+
+// --- joiner iid tlv functions
+void
+meshcop_joiner_iid_tlv_init(meshcop_joiner_iid_tlv_t *meshcop_joiner_iid_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_joiner_iid_tlv->tlv, MESHCOP_TLV_TYPE_JOINER_IID);
+    tlv_set_length(&meshcop_joiner_iid_tlv->tlv, sizeof(*meshcop_joiner_iid_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_joiner_iid_tlv_is_valid(meshcop_joiner_iid_tlv_t *meshcop_joiner_iid_tlv)
+{
+    return tlv_get_length(&meshcop_joiner_iid_tlv->tlv) == sizeof(*meshcop_joiner_iid_tlv) - sizeof(meshcop_tlv_t);
+}
+
+const uint8_t *
+meshcop_joiner_iid_tlv_get_iid(meshcop_joiner_iid_tlv_t *meshcop_joiner_iid_tlv)
+{
+    return meshcop_joiner_iid_tlv->iid;
+}
+
+void
+meshcop_joiner_iid_tlv_set_iid(meshcop_joiner_iid_tlv_t *meshcop_joiner_iid_tlv, const uint8_t *iid)
+{
+    memcpy(meshcop_joiner_iid_tlv->iid, iid, sizeof(meshcop_joiner_iid_tlv->iid));
+}
+
+// --- joiner router locator tlv functions
+void
+meshcop_joiner_router_locator_tlv_init(meshcop_joiner_router_locator_tlv_t *meshcop_joiner_router_locator_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_joiner_router_locator_tlv->tlv, MESHCOP_TLV_TYPE_JOINER_ROUTER_LOCATOR);
+    tlv_set_length(&meshcop_joiner_router_locator_tlv->tlv, sizeof(*meshcop_joiner_router_locator_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_joiner_router_locator_tlv_is_valid(meshcop_joiner_router_locator_tlv_t *meshcop_joiner_router_locator_tlv)
+{
+    return tlv_get_length(&meshcop_joiner_router_locator_tlv->tlv) == sizeof(*meshcop_joiner_router_locator_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meshcop_joiner_router_locator_tlv_get_joiner_router_locator(meshcop_joiner_router_locator_tlv_t *meshcop_joiner_router_locator_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_joiner_router_locator_tlv->locator);
+}
+
+void
+meshcop_joiner_router_locator_tlv_set_joiner_router_locator(meshcop_joiner_router_locator_tlv_t *meshcop_joiner_router_locator_tlv, uint16_t locator)
+{
+    meshcop_joiner_router_locator_tlv->locator = encoding_big_endian_swap16(locator);
+}
+
+// --- joiner router kek tlv functions
+void
+meshcop_joiner_router_kek_tlv_init(meshcop_joiner_router_kek_tlv_t *meshcop_joiner_router_kek_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_joiner_router_kek_tlv->tlv, MESHCOP_TLV_TYPE_JOINER_ROUTER_KEK);
+    tlv_set_length(&meshcop_joiner_router_kek_tlv->tlv, sizeof(*meshcop_joiner_router_kek_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_joiner_router_kek_tlv_is_valid(meshcop_joiner_router_kek_tlv_t *meshcop_joiner_router_kek_tlv)
+{
+    return tlv_get_length(&meshcop_joiner_router_kek_tlv->tlv) == sizeof(*meshcop_joiner_router_kek_tlv) - sizeof(meshcop_tlv_t);
+}
+
+const uint8_t *
+meshcop_joiner_router_kek_tlv_get_kek(meshcop_joiner_router_kek_tlv_t *meshcop_joiner_router_kek_tlv)
+{
+    return meshcop_joiner_router_kek_tlv->kek;
+}
+
+void
+meshcop_joiner_router_kek_tlv_set_kek(meshcop_joiner_router_kek_tlv_t *meshcop_joiner_router_kek_tlv, const uint8_t *kek)
+{
+    memcpy(&meshcop_joiner_router_kek_tlv->kek, kek, sizeof(meshcop_joiner_router_kek_tlv->kek));
+}
+
+// --- pending timestamp tlv functions
+void
+meshcop_pending_timestamp_tlv_init(meshcop_pending_timestamp_tlv_t *meshcop_pending_timestamp_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_pending_timestamp_tlv->tlv, MESHCOP_TLV_TYPE_PENDING_TIMESTAMP);
+    tlv_set_length(&meshcop_pending_timestamp_tlv->tlv, sizeof(*meshcop_pending_timestamp_tlv) - sizeof(meshcop_tlv_t));
+    meshcop_timestamp_init(&meshcop_pending_timestamp_tlv->timestamp);
+}
+
+bool
+meshcop_pending_timestamp_tlv_is_valid(meshcop_pending_timestamp_tlv_t *meshcop_pending_timestamp_tlv)
+{
+    return tlv_get_length(&meshcop_pending_timestamp_tlv->tlv) == sizeof(*meshcop_pending_timestamp_tlv) - sizeof(meshcop_tlv_t);
+}
+
+// --- delay timer tlv functions
+void
+meshcop_delay_timer_tlv_init(meshcop_delay_timer_tlv_t *meshcop_delay_timer_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_delay_timer_tlv->tlv, MESHCOP_TLV_TYPE_DELAY_TIMER);
+    tlv_set_length(&meshcop_delay_timer_tlv->tlv, sizeof(*meshcop_delay_timer_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_delay_timer_tlv_is_valid(meshcop_delay_timer_tlv_t *meshcop_delay_timer_tlv)
+{
+    return tlv_get_length(&meshcop_delay_timer_tlv->tlv) == sizeof(*meshcop_delay_timer_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint32_t
+meshcop_delay_timer_tlv_get_delay_timer(meshcop_delay_timer_tlv_t *meshcop_delay_timer_tlv)
+{
+    return encoding_big_endian_swap32(meshcop_delay_timer_tlv->delay_timer);
+}
+
+void
+meshcop_delay_timer_tlv_set_delay_timer(meshcop_delay_timer_tlv_t *meshcop_delay_timer_tlv, uint32_t delay_timer)
+{
+    meshcop_delay_timer_tlv->delay_timer = encoding_big_endian_swap32(delay_timer);
+}
+
+// --- channel mask entry base tlv functions
+uint8_t
+meshcop_channel_mask_entry_base_tlv_get_channel_page(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv)
+{
+    return meshcop_channel_mask_entry_base_tlv->channel_page;
+}
+
+void
+meshcop_channel_mask_entry_base_tlv_set_channel_page(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv,
+                                                     uint8_t channel_page)
+{
+    meshcop_channel_mask_entry_base_tlv->channel_page = channel_page;
+}
+
+uint8_t
+meshcop_channel_mask_entry_base_tlv_get_mask_length(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv)
+{
+    return meshcop_channel_mask_entry_base_tlv->mask_length;
+}
+
+void
+meshcop_channel_mask_entry_base_tlv_set_mask_length(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t mask_length)
+{
+    meshcop_channel_mask_entry_base_tlv->mask_length = mask_length;
+}
+
+uint16_t
+meshcop_channel_mask_entry_base_tlv_get_size(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv)
+{
+    return sizeof(meshcop_channel_mask_entry_base_tlv_t) + meshcop_channel_mask_entry_base_tlv->mask_length;
+}
+
+void
+meshcop_channel_mask_entry_base_tlv_clear_channel(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t channel)
+{
+    uint8_t *mask = (uint8_t *)meshcop_channel_mask_entry_base_tlv + sizeof(*meshcop_channel_mask_entry_base_tlv);
+    mask[channel / 8] &= ~(0x80 >> (channel % 8));
+}
+
+bool
+meshcop_channel_mask_entry_base_tlv_is_channel_set(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, uint8_t channel)
+{
+    const uint8_t *mask = (const uint8_t *)meshcop_channel_mask_entry_base_tlv + sizeof(*meshcop_channel_mask_entry_base_tlv);
+    return (channel << (meshcop_channel_mask_entry_base_tlv->mask_length * 8)) ? ((mask[channel / 8] & (0x80 >> (channel % 8))) != 0) : false;
+}
+
+const meshcop_channel_mask_entry_base_tlv_t *
+meshcop_channel_mask_entry_base_tlv_get_next(meshcop_channel_mask_entry_base_tlv_t *meshcop_channel_mask_entry_base_tlv, const meshcop_tlv_t *channel_mask_base_tlv)
+{
+    const uint8_t *entry = (const uint8_t *)meshcop_channel_mask_entry_base_tlv + meshcop_channel_mask_entry_base_tlv_get_size(meshcop_channel_mask_entry_base_tlv);
+    const uint8_t *end = tlv_get_value((tlv_t *)channel_mask_base_tlv) + tlv_get_size((tlv_t *)channel_mask_base_tlv);
+
+    return (entry < end) ? (const meshcop_channel_mask_entry_base_tlv_t *)entry : NULL;
+}
