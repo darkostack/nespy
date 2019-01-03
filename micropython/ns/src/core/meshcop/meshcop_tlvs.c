@@ -822,3 +822,134 @@ meshcop_channel_mask_base_tlv_get_mask_entry(meshcop_channel_mask_base_tlv_t *me
 exit:
     return page_entry;
 }
+
+// --- channel mask tlv
+void
+meshcop_channel_mask_tlv_init(meshcop_channel_mask_tlv_t *meshcop_channel_mask_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_channel_mask_tlv->channel_mask_base_tlv.tlv, MESHCOP_TLV_TYPE_CHANNEL_MASK);
+    tlv_set_length(&meshcop_channel_mask_tlv->channel_mask_base_tlv.tlv, sizeof(*meshcop_channel_mask_tlv) - sizeof(meshcop_tlv_t));
+    meshcop_channel_mask_entry_init(&meshcop_channel_mask_tlv->channel_mask_entry);
+}
+
+bool
+meshcop_channel_mask_tlv_is_valid(meshcop_channel_mask_tlv_t *meshcop_channel_mask_tlv)
+{
+    return tlv_get_length(&meshcop_channel_mask_tlv->channel_mask_base_tlv.tlv) == sizeof(*meshcop_channel_mask_tlv) - sizeof(meshcop_tlv_t) && meshcop_channel_mask_entry_is_valid(&meshcop_channel_mask_tlv->channel_mask_entry);
+}
+
+// --- count tlv
+void
+meshcop_count_tlv_init(meshcop_count_tlv_t *meshcop_count_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_count_tlv->tlv, MESHCOP_TLV_TYPE_COUNT);
+    tlv_set_length(&meshcop_count_tlv->tlv, sizeof(*meshcop_count_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_count_tlv_is_valid(meshcop_count_tlv_t *meshcop_count_tlv)
+{
+    return tlv_get_length(&meshcop_count_tlv->tlv) == sizeof(*meshcop_count_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint8_t
+meshcop_count_tlv_get_count(meshcop_count_tlv_t *meshcop_count_tlv)
+{
+    return meshcop_count_tlv->count;
+}
+
+void
+meshcop_count_tlv_set_count(meshcop_count_tlv_t *meshcop_count_tlv, uint8_t count)
+{
+    meshcop_count_tlv->count = count;
+}
+
+// --- period tlv
+void
+meshcop_period_tlv_init(meshcop_period_tlv_t *meshcop_period_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_period_tlv->tlv, MESHCOP_TLV_TYPE_PERIOD);
+    tlv_set_length(&meshcop_period_tlv->tlv, sizeof(*meshcop_period_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meshcop_period_tlv_is_valid(meshcop_period_tlv_t *meshcop_period_tlv)
+{
+    return tlv_get_length(&meshcop_period_tlv->tlv) == sizeof(*meshcop_period_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meshcop_period_tlv_get_period(meshcop_period_tlv_t *meshcop_period_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_period_tlv->period);
+}
+
+void
+meshcop_period_tlv_set_period(meshcop_period_tlv_t *meshcop_period_tlv, uint16_t period)
+{
+    meshcop_period_tlv->period = encoding_big_endian_swap16(period);
+}
+
+// --- scan duration tlv
+void
+meshcop_scan_duration_tlv_init(meshcop_scan_duration_tlv_t *meshcop_scan_duration_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_scan_duration_tlv->tlv, MESHCOP_TLV_TYPE_SCAN_DURATION);
+    tlv_set_length(&meshcop_scan_duration_tlv->tlv, sizeof(*meshcop_scan_duration_tlv) - sizeof(meshcop_tlv_t));
+}
+
+bool
+meschop_scan_duration_tlv_is_valid(meshcop_scan_duration_tlv_t *meshcop_scan_duration_tlv)
+{
+    return tlv_get_length(&meshcop_scan_duration_tlv->tlv) == sizeof(*meshcop_scan_duration_tlv) - sizeof(meshcop_tlv_t);
+}
+
+uint16_t
+meschop_scan_duration_tlv_get_scan_duration(meshcop_scan_duration_tlv_t *meshcop_scan_duration_tlv)
+{
+    return encoding_big_endian_swap16(meshcop_scan_duration_tlv->scan_duration);
+}
+
+void
+meshcop_scan_duration_tlv_set_scan_duration(meshcop_scan_duration_tlv_t *meshcop_scan_duration_tlv, uint16_t scan_duration)
+{
+    meshcop_scan_duration_tlv->scan_duration = encoding_big_endian_swap16(scan_duration);
+}
+
+// --- provisioning url tlv funstions
+void
+meshcop_provisioning_url_tlv_init(meshcop_provisioning_url_tlv_t *meshcop_provisioning_url_tlv)
+{
+    meshcop_tlv_set_type(&meshcop_provisioning_url_tlv->tlv, MESHCOP_TLV_TYPE_PROVISIONING_URL);
+    tlv_set_length(&meshcop_provisioning_url_tlv->tlv, 0);
+}
+
+bool
+meshcop_provisioning_url_tlv_is_valid(meshcop_provisioning_url_tlv_t *meshcop_provisioning_url_tlv)
+{
+    return tlv_get_length(&meshcop_provisioning_url_tlv->tlv) == sizeof(*meshcop_provisioning_url_tlv) - sizeof(meshcop_tlv_t);
+}
+
+const char *
+meshcop_provisioning_url_tlv_get_provisioning_url(meshcop_provisioning_url_tlv_t *meshcop_provisioning_url_tlv)
+{
+    return meshcop_provisioning_url_tlv->provisioning_url;
+}
+
+ns_error_t
+meshcop_provisioning_url_tlv_set_provisioning_url(meshcop_provisioning_url_tlv_t *meshcop_provisioning_url_tlv,
+                                                  const char *provisioning_url)
+{
+    ns_error_t error = NS_ERROR_NONE;
+    size_t len = provisioning_url ? strnlen(provisioning_url, MESHCOP_PROVISIONING_URL_MAX_LENGTH + 1) : 0;
+
+    VERIFY_OR_EXIT(len <= MESHCOP_PROVISIONING_URL_MAX_LENGTH, error = NS_ERROR_INVALID_ARGS);
+    tlv_set_length(&meshcop_provisioning_url_tlv->tlv, (uint8_t)len);
+
+    if (len > 0) {
+        memcpy(meshcop_provisioning_url_tlv->provisioning_url, provisioning_url, len);
+    }
+
+exit:
+    return error;
+}
