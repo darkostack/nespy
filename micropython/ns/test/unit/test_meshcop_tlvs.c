@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define PRINT_DEBUG 1
+#define PRINT_DEBUG 0
 
 #if PRINT_DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -31,7 +31,8 @@ test_meshcop_panid_tlv(void)
 
     meshcop_panid_tlv_set_panid(&panid_tlv, 0x1234);
 
-    PRINTF("panid: 0x%04x\r\n", meshcop_panid_tlv_get_panid(&panid_tlv));
+    TEST_VERIFY_OR_EXIT(meshcop_panid_tlv_get_panid(&panid_tlv) == 0x1234,
+                        "meshcop panid tlv - get panid failed.\r\n");
 
     meshcop_network_name_tlv_t network_name;
 
@@ -43,7 +44,8 @@ test_meshcop_panid_tlv(void)
 
     VERIFY_OR_EXIT(meshcop_network_name_tlv_is_valid(&network_name));
 
-    PRINTF("network name: %s\r\n", meshcop_network_name_tlv_get_network_name(&network_name));
+    TEST_VERIFY_OR_EXIT(strcmp(meshcop_network_name_tlv_get_network_name(&network_name), "nespy-thread") == 0,
+                        "mehscop network name tlv - get network name failed.\r\n");
 
 exit:
     if (error != NS_ERROR_NONE) {

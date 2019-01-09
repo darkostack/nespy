@@ -225,13 +225,107 @@ typedef struct _meshcop_energy_list_tlv {
 } meshcop_energy_list_tlv_t;
 
 enum {
-    MESHCOP_PROVISIONING_URL_MAX_LENGTH = 64,
+    MESHCOP_PROVISIONING_URL_TLV_MAX_LENGTH = 64,
 };
 
 typedef struct _meshcop_provisioning_url_tlv {
     meshcop_tlv_t tlv;
-    char provisioning_url[MESHCOP_PROVISIONING_URL_MAX_LENGTH];
+    char provisioning_url[MESHCOP_PROVISIONING_URL_TLV_MAX_LENGTH];
 } meshcop_provisioning_url_tlv_t;
+
+enum {
+    MESHCOP_VENDOR_NAME_TLV_MAX_LENGTH = 32,
+};
+
+typedef struct _meshcop_vendor_name_tlv {
+    meshcop_tlv_t tlv;
+    char vendor_name[MESHCOP_VENDOR_NAME_TLV_MAX_LENGTH];
+} meshcop_vendor_name_tlv_t;
+
+enum {
+    MESHCOP_VENDOR_MODEL_TLV_MAX_LENGTH = 32,
+};
+
+typedef struct _meshcop_vendor_model_tlv {
+    meshcop_tlv_t tlv;
+    char vendor_model[MESHCOP_VENDOR_MODEL_TLV_MAX_LENGTH];
+} meshcop_vendor_model_tlv_t;
+
+enum {
+    MESHCOP_VENDOR_SW_VERSION_TLV_MAX_LENGTH = 16,
+};
+
+typedef struct _meshcop_vendor_sw_version_tlv {
+    meshcop_tlv_t tlv;
+    char vendor_sw_version[MESHCOP_VENDOR_SW_VERSION_TLV_MAX_LENGTH];
+} meshcop_vendor_sw_version_tlv_t;
+
+enum {
+    MESHCOP_VENDOR_DATA_TLV_MAX_LENGTH = 64,
+};
+
+typedef struct _meshcop_vendor_data_tlv {
+    meshcop_tlv_t tlv;
+    char vendor_data[MESHCOP_VENDOR_DATA_TLV_MAX_LENGTH];
+} meshcop_vendor_data_tlv_t;
+
+enum {
+    MESHCOP_VENDOR_STACK_VERSION_TLV_BUILD_OFFSET = 4,
+    MESHCOP_VENDOR_STACK_VERSION_TLV_BUILD_MASK   = 0xfff << MESHCOP_VENDOR_STACK_VERSION_TLV_BUILD_OFFSET,
+    MESHCOP_VENDOR_STACK_VERSION_TLV_REV_OFFSET   = 0,
+    MESHCOP_VENDOR_STACK_VERSION_TLV_REV_MASK     = 0xf << MESHCOP_VENDOR_STACK_VERSION_TLV_REV_OFFSET,
+};
+
+enum {
+    MESHCOP_VENDOR_STACK_VERSION_TLV_MINOR_OFFSET = 4,
+    MESHCOP_VENDOR_STACK_VERSION_TLV_MINOR_MASK   = 0xf << MESHCOP_VENDOR_STACK_VERSION_TLV_MINOR_OFFSET,
+    MESHCOP_VENDOR_STACK_VERSION_TLV_MAJOR_OFFSET = 0,
+    MESHCOP_VENDOR_STACK_VERSION_TLV_MAJOR_MASK   = 0xf << MESHCOP_VENDOR_STACK_VERSION_TLV_MAJOR_OFFSET,
+};
+
+typedef struct _meshcop_vendor_stack_version_tlv {
+    meshcop_tlv_t tlv;
+    uint8_t oui[3];
+    uint16_t build_revision;
+    uint8_t minor_major;
+} meshcop_vendor_stack_version_tlv_t;
+
+typedef struct _meshcop_ip6_addr_tlv {
+    meshcop_tlv_t tlv;
+    ip6_addr_t addr;
+} meshcop_ipv6_addr_tlv_t;
+
+typedef struct _meshcop_udp_encapsulation_tlv {
+    meshcop_extended_tlv_t extended_tlv;
+    uint16_t source_port;
+    uint16_t destination_port;
+} meshcop_udp_encapsulation_tlv_t;
+
+enum {
+    MESHCOP_DISCOVERY_REQUEST_TLV_VERSION_OFFSET = 4,
+    MESHCOP_DISCOVERY_REQUEST_TLV_VERSION_MASK   = 0xf << MESHCOP_DISCOVERY_REQUEST_TLV_VERSION_OFFSET,
+    MESHCOP_DISCOVERY_REQUEST_TLV_JOINER_OFFSET  = 3,
+    MESHCOP_DISCOVERY_REQUEST_TLV_JOINER_MASK    = 1 << MESHCOP_DISCOVERY_REQUEST_TLV_JOINER_OFFSET,
+};
+
+typedef struct _meshcop_discovery_request_tlv {
+    meshcop_tlv_t tlv;
+    uint8_t flags;
+    uint8_t reserved;
+} meshcop_discovery_request_tlv_t;
+
+enum {
+    MESHCOP_DISCOVERY_RESPONSE_TLV_VERSION_OFFSET = 4,
+    MESHCOP_DISCOVERY_RESPONSE_TLV_VERSION_MASK   = 0xf << MESHCOP_DISCOVERY_RESPONSE_TLV_VERSION_OFFSET,
+    MESHCOP_DISCOVERY_RESPONSE_TLV_NATIVE_OFFSET  = 3,
+    MESHCOP_DISCOVERY_RESPONSE_TLV_NATIVE_MASK    = 1 << MESHCOP_DISCOVERY_RESPONSE_TLV_NATIVE_OFFSET,
+};
+
+typedef struct _meshcop_discovery_response_tlv {
+    meshcop_tlv_t tlv;
+    uint8_t flags;
+    uint8_t reserved;
+} meshcop_discovery_response_tlv_t;
 
 // --- meshcop tlv functions
 meshcop_tlv_type_t
@@ -689,5 +783,186 @@ meshcop_provisioning_url_tlv_get_provisioning_url(meshcop_provisioning_url_tlv_t
 ns_error_t
 meshcop_provisioning_url_tlv_set_provisioning_url(meshcop_provisioning_url_tlv_t *meshcop_provisioning_url_tlv,
                                                   const char *provisioning_url);
+
+// --- vendor name tlv funstions
+void
+meshcop_vendor_name_tlv_init(meshcop_vendor_name_tlv_t *meshcop_vendor_name_tlv);
+
+bool
+meshcop_vendor_name_tlv_is_valid(meshcop_vendor_name_tlv_t *meshcop_vendor_name_tlv);
+
+const char *
+meshcop_vendor_name_tlv_get_vendor_name(meshcop_vendor_name_tlv_t *meshcop_vendor_name_tlv);
+
+ns_error_t
+meshcop_vendor_name_tlv_set_vendor_name(meshcop_vendor_name_tlv_t *meshcop_vendor_name_tlv,
+                                        const char *vendor_name);
+
+// --- vendor mode tlv funstions
+void
+meshcop_vendor_model_tlv_init(meshcop_vendor_model_tlv_t *meshcop_vendor_model_tlv);
+
+bool
+mehscop_vendor_model_tlv_is_valid(meshcop_vendor_model_tlv_t *meshcop_vendor_model_tlv);
+
+const char *
+meshcop_vendor_model_tlv_get_vendor_model(meshcop_vendor_model_tlv_t *meshcop_vendor_model_tlv);
+
+ns_error_t
+meshcop_vendor_model_tlv_set_vendor_model(meshcop_vendor_model_tlv_t *meshcop_vendor_model_tlv,
+                                          const char *vendor_model);
+
+// --- vendor sw version tlv functions
+void
+meshcop_vendor_sw_version_tlv_init(meshcop_vendor_sw_version_tlv_t *meshcop_vendor_sw_version_tlv);
+
+bool
+meshcop_vendor_sw_version_tlv_is_valid(meshcop_vendor_sw_version_tlv_t *meshcop_vendor_sw_version_tlv);
+
+const char *
+meshcop_vendor_sw_version_tlv_get_vendor_sw_version(meshcop_vendor_sw_version_tlv_t *meshcop_vendor_sw_version_tlv);
+
+ns_error_t
+meshcop_vendor_sw_version_tlv_set_vendor_sw_version(meshcop_vendor_sw_version_tlv_t *meshcop_vendor_sw_version_tlv,
+                                                    const char *vendor_sw_version);
+
+// --- vendor data tlv functions
+void
+meshcop_vendor_data_tlv_init(meshcop_vendor_data_tlv_t *meshcop_vendor_data_tlv);
+
+bool
+meshcop_vendor_data_tlv_is_valid(meshcop_vendor_data_tlv_t *meshcop_vendor_data_tlv);
+
+const char *
+meshcop_vendor_data_tlv_get_vendor_data(meshcop_vendor_data_tlv_t *meshcop_vendor_data_tlv);
+
+ns_error_t
+meshcop_vendor_data_tlv_set_vendor_data(meshcop_vendor_data_tlv_t *meshcop_vendor_data_tlv,
+                                        const char *vendor_data);
+
+// --- vendor stack version tlv functions
+void
+meshcop_vendor_stack_version_tlv_ctor(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+void
+meshcop_vendor_stack_version_tlv_init(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+bool
+meshcop_vendor_stack_version_tlv_is_valid(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+uint32_t
+meshcop_vendor_stack_version_tlv_get_oui(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+void
+meshcop_vendor_stack_version_tlv_set_oui(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv,
+                                         uint32_t oui);
+
+uint16_t
+meshcop_vendor_stack_version_tlv_get_build(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+void
+meshcop_vendor_stack_version_tlv_set_build(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv,
+                                           uint16_t build);
+
+uint8_t
+meshcop_vendor_stack_version_tlv_get_revision(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+void
+meshcop_vendor_stack_version_tlv_set_revision(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv,
+                                              uint8_t revision);
+
+uint8_t
+meshcop_vendor_stack_version_tlv_get_minor(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+void
+meshcop_vendor_stack_version_tlv_set_minor(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv,
+                                           uint8_t minor);
+
+uint8_t
+meshcop_vendor_stack_version_tlv_get_major(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv);
+
+void
+meshcop_vendor_stack_version_tlv_set_major(meshcop_vendor_stack_version_tlv_t *meshcop_vendor_stack_version_tlv,
+                                           uint8_t major);
+
+// --- ipv6 address tlv functions
+void
+meshcop_ipv6_addr_tlv_init(meshcop_ipv6_addr_tlv_t *meshcop_ipv6_addr_tlv);
+
+const ip6_addr_t
+meshcop_ipv6_addr_tlv_get_addr(meshcop_ipv6_addr_tlv_t *meshcop_ipv6_addr_tlv);
+
+void
+meshcop_ipv6_addr_tlv_set_addr(meshcop_ipv6_addr_tlv_t *meshcop_ipv6_addr_tlv, const ip6_addr_t addr);
+
+// --- udp encapsulation tlv functions
+void
+meshcop_udp_encapsulation_tlv_init(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv);
+
+bool
+meshcop_udp_encapsulation_tlv_is_valid(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv);
+
+uint16_t
+meshcop_udp_encapsulation_tlv_get_source_port(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv);
+
+void
+meshcop_udp_encapsulation_tlv_set_source_port(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv,
+                                              uint16_t source_port);
+
+uint16_t
+meshcop_udp_encapsulation_tlv_get_destination_port(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv);
+
+void
+meshcop_udp_encapsulation_tlv_set_destination_port(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv,
+                                                   uint16_t destination_port);
+
+uint16_t
+meshcop_udp_encapsulation_tlv_get_udp_length(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv);
+
+void
+meshcop_udp_encapsulation_tlv_set_udp_length(meshcop_udp_encapsulation_tlv_t *meshcop_udp_encapsulation_tlv,
+                                             uint16_t length);
+
+// --- discovery request tlv functions
+void
+meshcop_discovery_request_tlv_init(meshcop_discovery_request_tlv_t *meshcop_discovery_request_tlv);
+
+bool
+meshcop_discovery_request_tlv_is_valid(meshcop_discovery_request_tlv_t *meshcop_discovery_request_tlv);
+
+uint8_t
+meshcop_discovery_request_tlv_get_version(meshcop_discovery_request_tlv_t *meshcop_discovery_request_tlv);
+
+void
+meshcop_discovery_request_tlv_set_version(meshcop_discovery_request_tlv_t *meshcop_discovery_request_tlv,
+                                          uint8_t version);
+
+bool
+meshcop_discovery_request_tlv_is_joiner(meshcop_discovery_request_tlv_t *meshcop_discovery_request_tlv);
+
+void
+meshcop_discovery_request_tlv_set_joiner(meshcop_discovery_request_tlv_t *meshcop_discovery_request_tlv,
+                                         bool joiner);
+
+// --- discovery response tlv funtions
+void
+meshcop_discovery_response_tlv_init(meshcop_discovery_response_tlv_t *meshcop_discovery_response_tlv);
+
+bool
+meshcop_discovery_response_tlv_is_valid(meshcop_discovery_response_tlv_t *meshcop_discovery_response_tlv);
+
+uint8_t
+meshcop_discovery_response_tlv_get_version(meshcop_discovery_response_tlv_t *meshcop_discovery_response_tlv);
+
+void
+meshcop_discovery_response_tlv_set_version(meshcop_discovery_response_tlv_t *meshcop_discovery_response_tlv,
+                                           uint8_t version);
+
+bool
+meshcop_discovery_response_tlv_is_native_commissioner(meshcop_discovery_response_tlv_t *meshcop_discovery_response_tlv);
+
+void
+meshcop_discovery_response_tlv_set_native_commissioner(meshcop_discovery_response_tlv_t *meshcop_discovery_response_tlv,
+                                                       bool native_commissioner);
 
 #endif // NS_CORE_MESHCOP_MESHCOP_TLVS_H_
