@@ -4,7 +4,7 @@ from lib import hello
 def callback():
     # network is ready, initialize coap resources
     hello.thread.post(hello.event_begin, None)
-    return;
+    return
 
 def main():
     ns.init.node_id(1)
